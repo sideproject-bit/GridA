@@ -50,6 +50,7 @@ export function useMandalart(mandalartId) {
       if (metaErr) console.error(metaErr);
       if (cellsErr) console.error(cellsErr);
       const completedMap = meta?.completed_cells || {};
+      console.log("[load] completed_cells from DB:", meta?.completed_cells, "map:", completedMap);
       if (meta) {
         setTitle(meta.title);
         setIsPublic(meta.is_public);
@@ -147,11 +148,14 @@ export function useMandalart(mandalartId) {
         if (comp[row][col]) updatedMap[`${row}-${col}`] = true;
       }
     }
+    console.log("[toggle] mandalartId:", mandalartId, "newVal:", newVal, "updatedMap:", updatedMap);
     supabase
       .from("mandalarts")
       .update({ completed_cells: updatedMap })
       .eq("id", mandalartId)
-      .then(({ error }) => { if (error) console.error("completed save error:", error); });
+      .then(({ error }) => {
+        console.log("[toggle] save result - error:", error);
+      });
   }, [mandalartId]);
 
   const updateTitle = useCallback((text) => {
