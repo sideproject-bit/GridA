@@ -11,11 +11,16 @@ function emptyGrid() {
 // writes back to the database. Works for both the owner (editable)
 // and a viewer (call update* less — the UI layer decides what's
 // reachable, RLS decides what's actually allowed to write).
+function emptyBool() {
+  return Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => false));
+}
+
 export function useMandalart(mandalartId) {
   const [title, setTitle] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [grid, setGrid] = useState(null);
   const [descriptions, setDescriptions] = useState(null);
+  const [completed, setCompleted] = useState(null);
   const [saveState, setSaveState] = useState("saved"); // "saved" | "unsaved" | "saving"
 
   // Refs mirror the latest grid/description state so a debounced flush
@@ -23,6 +28,7 @@ export function useMandalart(mandalartId) {
   // only one of the two fields actually changed.
   const gridRef = useRef(null);
   const descRef = useRef(null);
+  const compRef = useRef(null);
   const pendingCellKeys = useRef(new Set());
   const cellFlushTimer = useRef(null);
   const titleFlushTimer = useRef(null);
@@ -30,6 +36,7 @@ export function useMandalart(mandalartId) {
 
   useEffect(() => { gridRef.current = grid; }, [grid]);
   useEffect(() => { descRef.current = descriptions; }, [descriptions]);
+  useEffect(() => { compRef.current = completed; }, [completed]);
 
   useEffect(() => {
     if (!mandalartId) return;
@@ -37,7 +44,7 @@ export function useMandalart(mandalartId) {
     (async () => {
       const [{ data: meta, error: metaErr }, { data: cells, error: cellsErr }] = await Promise.all([
         supabase.from("mandalarts").select("title, is_public").eq("id", mandalartId).single(),
-        supabase.from("mandalart_cells").select("row, col, content, description").eq("mandalart_id", mandalartId),
+        supabase.from("mandalart_cells").select("row, col, content, description, completed").eq("mandalart_id", mandalartId),
       ]);
       if (cancelled) return;
       if (metaErr) console.error(metaErr);
@@ -48,12 +55,15 @@ export function useMandalart(mandalartId) {
       }
       const g = emptyGrid();
       const d = emptyGrid();
+      const comp = emptyBool();
       (cells || []).forEach((cell) => {
         g[cell.row][cell.col] = cell.content;
         d[cell.row][cell.col] = cell.description ?? "";
+        comp[cell.row][cell.col] = cell.completed ?? false;
       });
       setGrid(g);
       setDescriptions(d);
+      setCompleted(comp);
     })();
     return () => { cancelled = true; };
   }, [mandalartId]);
@@ -69,6 +79,7 @@ export function useMandalart(mandalartId) {
         col,
         content: gridRef.current[row][col],
         description: descRef.current[row][col],
+        completed: compRef.current?.[row][col] ?? false,
       };
     });
     pendingCellKeys.current.clear();
@@ -117,6 +128,16 @@ export function useMandalart(mandalartId) {
     queueCell(r, c);
   }, [queueCell]);
 
+  const toggleCompleted = useCallback((r, c) => {
+    setCompleted((prev) => {
+      const next = (prev || emptyBool()).map((row) => row.slice());
+      next[r][c] = !next[r][c];
+      compRef.current = next; // sync immediately so flushCells always reads latest
+      return next;
+    });
+    queueCell(r, c);
+  }, [queueCell]);
+
   const updateTitle = useCallback((text) => {
     setTitle(text);
     pendingTitleRef.current = text;
@@ -154,7 +175,7 @@ export function useMandalart(mandalartId) {
   // Flush immediately on unmount so nothing is lost on navigation.
   useEffect(() => () => { flushCells(); }, [flushCells]);
 
-  return { title, isPublic, grid, descriptions, updateTitle, updateVisibility, updateCell, updateDescription, saveState, saveNow };
+  return { title, isPublic, grid, descriptions, completed, updateTitle, updateVisibility, updateCell, updateDescription, toggleCompleted, saveState, saveNow };
 }
 
 // Subscribe to live changes on a mandalart's cells — the seed for
