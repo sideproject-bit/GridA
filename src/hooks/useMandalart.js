@@ -93,7 +93,20 @@ export function useMandalart(mandalartId) {
       return next;
     });
     queueCell(r, c);
-  }, [queueCell]);
+    // Keep title in sync with the main goal cell
+    if (r === 4 && c === 4) {
+      const next = content.trim();
+      setTitle(next);
+      pendingTitleRef.current = next;
+      setSaveState("unsaved");
+      clearTimeout(titleFlushTimer.current);
+      titleFlushTimer.current = setTimeout(async () => {
+        pendingTitleRef.current = null;
+        const { error } = await supabase.from("mandalarts").update({ title: next }).eq("id", mandalartId);
+        if (error) console.error(error);
+      }, 800);
+    }
+  }, [queueCell, mandalartId]);
 
   const updateDescription = useCallback((r, c, description) => {
     setDescriptions((d) => {
