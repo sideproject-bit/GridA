@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link2, StickyNote } from "lucide-react";
+import { Link2, StickyNote, CheckCircle2 } from "lucide-react";
 
 export default function Cell({
   r, c, value, isMain, isHeader, isOuterCenter, onChange, onLink,
-  description, onOpenDesc, pal, t, highlighted, size = "normal", readOnly = false,
+  description, onOpenDesc, completed = false, onToggleCompleted,
+  pal, t, highlighted, size = "normal", readOnly = false,
 }) {
   const [editing, setEditing] = useState(false);
   const taRef = useRef(null);
@@ -39,13 +40,12 @@ export default function Cell({
 
   const big = size === "large";
   const isMondrian = pal.accent !== pal.accent3;
-  const isDone = isDetail && !!value;
 
   const bg = isMain
     ? pal.accent
     : isHeader || isOuterCenter
     ? pal.accent2 + "44"
-    : isDone
+    : completed
     ? (isMondrian ? "rgba(242,237,225,0.28)" : pal.accent3 + "42")
     : pal.accent3 + "18";
 
@@ -53,8 +53,8 @@ export default function Cell({
     ? `2px solid ${pal.accent}`
     : isHeader || isOuterCenter
     ? `1px solid ${pal.accent2}66`
-    : isDone
-    ? (isMondrian ? "1px solid rgba(242,237,225,0.45)" : `1px solid ${pal.accent3}58`)
+    : completed
+    ? (isMondrian ? "1px solid rgba(242,237,225,0.5)" : `1px solid ${pal.accent3}60`)
     : `1px solid ${pal.accent3}30`;
 
   return (
@@ -152,11 +152,30 @@ export default function Cell({
             onOpenDesc(r, c);
           }}
           style={{
-            position: "absolute", bottom: 2, right: 2, background: "none", border: "none",
+            position: "absolute", bottom: 2, right: big ? 22 : 18, background: "none", border: "none",
             color: pal.ink, opacity: description ? 0.6 : 0.3, cursor: "pointer", padding: big ? 4 : 2,
           }}
         >
           <StickyNote size={big ? 13 : 10} />
+        </button>
+      )}
+
+      {isDetail && !readOnly && (
+        <button
+          aria-label={completed ? "uncheck" : "check"}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleCompleted?.(r, c);
+          }}
+          style={{
+            position: "absolute", bottom: 2, right: 2, background: "none", border: "none",
+            color: completed ? pal.accent : pal.ink,
+            opacity: completed ? 0.9 : 0.25,
+            cursor: "pointer", padding: big ? 4 : 2,
+            transition: "opacity 0.15s ease, color 0.15s ease",
+          }}
+        >
+          <CheckCircle2 size={big ? 14 : 11} />
         </button>
       )}
     </div>
