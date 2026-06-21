@@ -19,7 +19,7 @@ export function useMusicPlayer() {
     const audio = new Audio(`/music/${encodeURIComponent(MUSIC_TRACKS[trackIndex])}.mp3`);
     audio.loop = true;
     audio.volume = 0.45;
-    audio.play().catch(() => {});
+    audio.play().catch(() => { setTrackIndex(null); });
     audioRef.current = audio;
     return () => { audio.pause(); };
   }, [trackIndex]);

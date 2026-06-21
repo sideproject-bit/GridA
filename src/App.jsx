@@ -125,12 +125,12 @@ function AppShell() {
         button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid ${pal.accent}; }
         @media (prefers-reduced-motion: reduce) { .cell-pulse, .fade-in { animation: none !important; } }
         .home-tile { position: relative; z-index: 1; transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), filter 0.15s ease, z-index 0s; }
-        .home-tile:hover { transform: scale(1.05); filter: brightness(1.07); z-index: 2; }
+        .home-tile:hover { transform: scale(0.96); filter: brightness(1.07); z-index: 2; }
         .home-title-block { transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), filter 0.2s ease; }
-        .home-title-block:hover { transform: scale(1.01); filter: brightness(1.04); }
-        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-48px); } to { opacity: 1; transform: translateX(0); } }
-        .home-title { animation: slideInLeft 0.65s cubic-bezier(0.22,1,0.36,1) both; }
-        .home-tagline { animation: slideInLeft 0.65s cubic-bezier(0.22,1,0.36,1) 0.18s both; }
+        .home-title-block:hover { transform: scale(0.99); filter: brightness(1.04); }
+        @keyframes slideUpIn { from { opacity: 0; transform: translateY(36px); } to { opacity: 1; transform: translateY(0); } }
+        .home-title { animation: slideUpIn 0.65s cubic-bezier(0.22,1,0.36,1) both; }
+        .home-tagline { animation: slideUpIn 0.65s cubic-bezier(0.22,1,0.36,1) 0.18s both; }
       `}</style>
 
       {onboardingOpen && <Onboarding t={t} pal={pal} play={play} onClose={closeOnboarding} />}
