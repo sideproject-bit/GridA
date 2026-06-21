@@ -134,8 +134,12 @@ function AppShell() {
     }
   };
 
+  const isKo = lang === "ko";
+  const baseFontFamily = isKo ? "'Noto Sans KR', sans-serif" : "Helvetica, Arial, sans-serif";
+  const titleFontFamily = isKo ? "'Black Han Sans', sans-serif" : "Helvetica, Arial, sans-serif";
+
   return (
-    <div style={{ background: pal.bg, color: pal.ink, minHeight: "100vh", fontFamily: "Helvetica, Arial, sans-serif", padding: 28, position: "relative" }}>
+    <div style={{ background: pal.bg, color: pal.ink, minHeight: "100vh", fontFamily: baseFontFamily, padding: 28, position: "relative" }}>
       <style>{`
         @keyframes pulseOutline { 0%,100% { box-shadow: 0 0 0 0 ${pal.accent}66; } 50% { box-shadow: 0 0 0 6px ${pal.accent}33; } }
         .cell-pulse { animation: pulseOutline 0.9s ease-in-out; }
@@ -191,9 +195,10 @@ function AppShell() {
                 <div style={{ position: "relative", zIndex: 1 }}>
                   <h1 className="home-title" style={{
                     fontWeight: 900,
+                    fontFamily: titleFontFamily,
                     fontSize: "clamp(60px, 11vw, 180px)",
-                    letterSpacing: "-0.03em",
-                    lineHeight: 0.88,
+                    letterSpacing: isKo ? "-0.01em" : "-0.03em",
+                    lineHeight: isKo ? 1 : 0.88,
                     margin: 0,
                     color: "#fff",
                     textTransform: "uppercase",
@@ -201,7 +206,7 @@ function AppShell() {
                   }}>
                     {t.title}
                   </h1>
-                  <p className="home-tagline" style={{ fontSize: 11, letterSpacing: "0.12em", opacity: 0.6, margin: "14px 0 0", color: "#fff", textTransform: "uppercase", textAlign: "center" }}>
+                  <p className="home-tagline" style={{ fontSize: 11, fontFamily: baseFontFamily, letterSpacing: isKo ? "0.04em" : "0.12em", opacity: 0.6, margin: "14px 0 0", color: "#fff", textTransform: "uppercase", textAlign: "center" }}>
                     {t.tagline}
                   </p>
                 </div>

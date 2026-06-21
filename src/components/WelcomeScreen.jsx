@@ -307,8 +307,10 @@ export default function WelcomeScreen({ play, onFinish }) {
             {/* Title */}
             <h1 style={{
               fontWeight: 900, margin: "0 0 20px",
+              fontFamily: lang === "ko" ? "'Black Han Sans', sans-serif" : "Helvetica, Arial, sans-serif",
               fontSize: "clamp(28px, 4vw, 52px)",
-              lineHeight: 1.05, letterSpacing: "-0.03em",
+              lineHeight: lang === "ko" ? 1.2 : 1.05,
+              letterSpacing: lang === "ko" ? "-0.01em" : "-0.03em",
               color: "#F2EDE1", textTransform: "uppercase",
             }}>
               {cur.title.map((line, i) => (
