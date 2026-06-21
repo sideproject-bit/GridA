@@ -191,20 +191,30 @@ export default function WelcomeScreen({ play, onFinish }) {
     play?.("E5", "64n");
   };
 
+  const A = (delay, anim = "wsFadeUp") =>
+    ({ animation: `${anim} 1s cubic-bezier(0.22,1,0.36,1) ${delay}s both` });
+
   return (
     <div style={{
       position: "fixed", inset: 0, background: "#0d0d0d",
       display: "flex", flexDirection: "column",
       fontFamily: "Helvetica, Arial, sans-serif",
       overflow: "hidden",
-      animation: "wsEnter 0.7s cubic-bezier(0.22,1,0.36,1) both",
     }}>
-    <style>{`@keyframes wsEnter { from { opacity: 0; } to { opacity: 1; } }`}</style>
+      <style>{`
+        @keyframes wsFadeUp   { from { opacity:0; transform:translateY(22px); } to { opacity:1; transform:none; } }
+        @keyframes wsSlideLeft { from { opacity:0; transform:translateX(-72px); } to { opacity:1; transform:none; } }
+        @keyframes wsSlideRight { from { opacity:0; transform:translateX(48px); } to { opacity:1; transform:none; } }
+        @keyframes wsPopIn    { from { opacity:0; transform:scale(0.55); } to { opacity:1; transform:scale(1); } }
+        @keyframes wsSlideUp  { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+      `}</style>
+
       {/* Header bar */}
       <div style={{
         display: "flex", justifyContent: "space-between", alignItems: "center",
         padding: "14px 28px", background: "#111",
         borderBottom: "4px solid #000", flexShrink: 0,
+        ...A(0, "wsFadeUp"),
       }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
           <span style={{ fontWeight: 900, fontSize: 16, color: accent, letterSpacing: "-0.02em", transition: "color 0.4s ease" }}>
@@ -241,17 +251,25 @@ export default function WelcomeScreen({ play, onFinish }) {
           padding: 32, position: "relative",
           transition: "background 0.5s ease",
           borderRight: "4px solid #000",
+          ...A(0.12, "wsSlideLeft"),
         }}>
-          {/* Corner Mondrian accent */}
-          <div style={{ position: "absolute", top: 0, right: 0, width: 48, height: 48, background: "#000" }} />
-          <div style={{ position: "absolute", bottom: 0, left: 0, width: 32, height: 32,
-            background: accent === "#E3B22E" ? "#C7382E" : accent === "#C7382E" ? "#E3B22E" : "#E3B22E"
+          {/* Corner black block */}
+          <div style={{
+            position: "absolute", top: 0, right: 0, width: 48, height: 48, background: "#000",
+            ...A(0.38, "wsPopIn"),
+          }} />
+          {/* Corner color block */}
+          <div style={{
+            position: "absolute", bottom: 0, left: 0, width: 32, height: 32,
+            background: accent === "#E3B22E" ? "#C7382E" : accent === "#C7382E" ? "#E3B22E" : "#E3B22E",
+            ...A(0.48, "wsPopIn"),
           }} />
 
           <div style={{
             opacity: visible ? 1 : 0,
             transform: visible ? "scale(1)" : "scale(0.92)",
             transition: "opacity 0.3s ease, transform 0.3s ease",
+            ...A(0.6, "wsPopIn"),
           }}>
             <GridVisual type={cur.visual} />
           </div>
@@ -263,8 +281,9 @@ export default function WelcomeScreen({ play, onFinish }) {
           padding: "clamp(28px, 5vw, 64px)",
           background: "#111",
           position: "relative",
+          ...A(0.28, "wsSlideRight"),
         }}>
-          {/* Slide number */}
+          {/* Slide number watermark */}
           <div style={{
             position: "absolute", top: 24, right: 28,
             fontWeight: 900, fontSize: 48, color: accent + "18",
@@ -307,7 +326,6 @@ export default function WelcomeScreen({ play, onFinish }) {
 
             {/* Navigation */}
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              {/* Prev */}
               <button
                 onClick={goPrev}
                 disabled={slide === 0}
@@ -321,7 +339,6 @@ export default function WelcomeScreen({ play, onFinish }) {
                 <ChevronLeft size={16} />
               </button>
 
-              {/* Dots */}
               <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
                 {slides.map((_, i) => (
                   <button
@@ -338,7 +355,6 @@ export default function WelcomeScreen({ play, onFinish }) {
                 ))}
               </div>
 
-              {/* Next / Start */}
               <button
                 onClick={goNext}
                 style={{
@@ -362,13 +378,13 @@ export default function WelcomeScreen({ play, onFinish }) {
         </div>
       </div>
 
-      {/* Bottom Mondrian strip */}
+      {/* Bottom Mondrian strip — staggered per segment */}
       <div style={{ display: "flex", height: 8, flexShrink: 0 }}>
-        <div style={{ flex: 1, background: "#C7382E" }} />
-        <div style={{ width: 4, background: "#000" }} />
-        <div style={{ flex: 2, background: "#2B3DCB" }} />
-        <div style={{ width: 4, background: "#000" }} />
-        <div style={{ flex: 1, background: "#E3B22E" }} />
+        <div style={{ flex: 1, background: "#C7382E", ...A(0.55, "wsSlideUp") }} />
+        <div style={{ width: 4, background: "#000", ...A(0.6, "wsSlideUp") }} />
+        <div style={{ flex: 2, background: "#2B3DCB", ...A(0.65, "wsSlideUp") }} />
+        <div style={{ width: 4, background: "#000", ...A(0.7, "wsSlideUp") }} />
+        <div style={{ flex: 1, background: "#E3B22E", ...A(0.75, "wsSlideUp") }} />
       </div>
     </div>
   );
