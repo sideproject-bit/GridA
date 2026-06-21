@@ -44,7 +44,7 @@ export function useMandalart(mandalartId) {
     (async () => {
       const [{ data: meta, error: metaErr }, { data: cells, error: cellsErr }] = await Promise.all([
         supabase.from("mandalarts").select("title, is_public").eq("id", mandalartId).single(),
-        supabase.from("mandalart_cells").select("row, col, content, description, completed").eq("mandalart_id", mandalartId),
+        supabase.from("mandalart_cells").select("*").eq("mandalart_id", mandalartId),
       ]);
       if (cancelled) return;
       if (metaErr) console.error(metaErr);
