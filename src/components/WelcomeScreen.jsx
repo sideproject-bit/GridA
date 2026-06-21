@@ -197,7 +197,9 @@ export default function WelcomeScreen({ play, onFinish }) {
       display: "flex", flexDirection: "column",
       fontFamily: "Helvetica, Arial, sans-serif",
       overflow: "hidden",
+      animation: "wsEnter 0.7s cubic-bezier(0.22,1,0.36,1) both",
     }}>
+    <style>{`@keyframes wsEnter { from { opacity: 0; } to { opacity: 1; } }`}</style>
       {/* Header bar */}
       <div style={{
         display: "flex", justifyContent: "space-between", alignItems: "center",
