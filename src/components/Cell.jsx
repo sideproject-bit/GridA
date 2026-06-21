@@ -7,11 +7,16 @@ export default function Cell({
   pal, t, highlighted, size = "normal", readOnly = false,
 }) {
   const [editing, setEditing] = useState(false);
+  // Local state for instant visual feedback; syncs when prop changes from parent
+  const [localCompleted, setLocalCompleted] = useState(completed);
   const taRef = useRef(null);
   const originalRef = useRef(value);
   const placeholder = isMain ? t.grid.mainGoal : isHeader || isOuterCenter ? t.grid.subGoal : t.grid.detail;
   const isDetail = !isMain && !isHeader && !isOuterCenter;
   const showNote = isDetail && (description || !readOnly);
+  const big = size === "large";
+
+  useEffect(() => { setLocalCompleted(completed); }, [completed]);
 
   useEffect(() => {
     if (editing && taRef.current) {
@@ -38,14 +43,13 @@ export default function Cell({
     }
   };
 
-  const big = size === "large";
   const isMondrian = pal.accent !== pal.accent3;
 
   const bg = isMain
     ? pal.accent
     : isHeader || isOuterCenter
     ? pal.accent2 + "44"
-    : completed
+    : localCompleted
     ? (isMondrian ? "rgba(242,237,225,0.28)" : pal.accent3 + "42")
     : pal.accent3 + "18";
 
@@ -53,7 +57,7 @@ export default function Cell({
     ? `2px solid ${pal.accent}`
     : isHeader || isOuterCenter
     ? `1px solid ${pal.accent2}66`
-    : completed
+    : localCompleted
     ? (isMondrian ? "1px solid rgba(242,237,225,0.5)" : `1px solid ${pal.accent3}60`)
     : `1px solid ${pal.accent3}30`;
 
@@ -66,6 +70,7 @@ export default function Cell({
         border,
         color: isMain ? "#fff" : pal.ink,
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         padding: big ? 8 : 4,
@@ -73,6 +78,7 @@ export default function Cell({
         height: big ? undefined : "100%",
         boxSizing: "border-box",
         cursor: readOnly ? "default" : "text",
+        transition: "background 0.2s ease, border-color 0.2s ease",
       }}
       onClick={startEditing}
     >
@@ -100,22 +106,46 @@ export default function Cell({
           }}
         />
       ) : (
-        <span
-          style={{
-            fontSize: big ? (isMain ? 15 : 13) : (isMain ? 12 : 11),
-            fontWeight: isMain ? 800 : 500,
-            textTransform: isMain ? "uppercase" : "none",
-            opacity: value ? 1 : 0.4,
-            textAlign: "center",
-            wordBreak: "break-word",
-            overflow: "hidden",
-            display: "-webkit-box",
-            WebkitLineClamp: big ? 5 : 3,
-            WebkitBoxOrient: "vertical",
-          }}
-        >
-          {value || placeholder}
-        </span>
+        <>
+          <span
+            style={{
+              fontSize: big ? (isMain ? 15 : 13) : (isMain ? 12 : 11),
+              fontWeight: isMain ? 800 : 500,
+              textTransform: isMain ? "uppercase" : "none",
+              opacity: value ? 1 : 0.4,
+              textAlign: "center",
+              wordBreak: "break-word",
+              overflow: "hidden",
+              display: "-webkit-box",
+              WebkitLineClamp: big ? (description ? 3 : 5) : 3,
+              WebkitBoxOrient: "vertical",
+            }}
+          >
+            {value || placeholder}
+          </span>
+
+          {big && description && (
+            <p
+              style={{
+                fontSize: 10,
+                color: pal.ink,
+                opacity: 0.45,
+                margin: "5px 0 0",
+                textAlign: "center",
+                wordBreak: "break-word",
+                overflow: "hidden",
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                fontStyle: "italic",
+                lineHeight: 1.35,
+                width: "100%",
+              }}
+            >
+              {description}
+            </p>
+          )}
+        </>
       )}
 
       {(isHeader || isOuterCenter) && (
@@ -152,30 +182,33 @@ export default function Cell({
             onOpenDesc(r, c);
           }}
           style={{
-            position: "absolute", bottom: 2, right: big ? 22 : 18, background: "none", border: "none",
+            position: "absolute", bottom: 2,
+            right: big ? 26 : 16,
+            background: "none", border: "none",
             color: pal.ink, opacity: description ? 0.6 : 0.3, cursor: "pointer", padding: big ? 4 : 2,
           }}
         >
-          <StickyNote size={big ? 13 : 10} />
+          <StickyNote size={big ? 16 : 10} />
         </button>
       )}
 
       {isDetail && !readOnly && (
         <button
-          aria-label={completed ? "uncheck" : "check"}
+          aria-label={localCompleted ? "uncheck" : "check"}
           onClick={(e) => {
             e.stopPropagation();
+            setLocalCompleted((v) => !v);
             onToggleCompleted?.(r, c);
           }}
           style={{
             position: "absolute", bottom: 2, right: 2, background: "none", border: "none",
-            color: completed ? pal.accent : pal.ink,
-            opacity: completed ? 0.9 : 0.25,
+            color: localCompleted ? pal.accent : pal.ink,
+            opacity: localCompleted ? 0.9 : 0.25,
             cursor: "pointer", padding: big ? 4 : 2,
             transition: "opacity 0.15s ease, color 0.15s ease",
           }}
         >
-          <CheckCircle2 size={big ? 14 : 11} />
+          <CheckCircle2 size={big ? 16 : 11} />
         </button>
       )}
     </div>
