@@ -217,10 +217,10 @@ export default function WelcomeScreen({ play, onFinish }) {
         ...A(0, "wsFadeUp"),
       }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-          <span style={{ fontWeight: 900, fontSize: 16, color: accent, letterSpacing: "-0.02em", transition: "color 0.4s ease" }}>
+          <span style={{ fontWeight: 900, fontSize: 16, color: "rgba(255,255,255,0.85)", letterSpacing: "-0.02em" }}>
             MANDALART
           </span>
-          <span style={{ fontWeight: 400, fontSize: 13, color: "#F2EDE170" }}>.app</span>
+          <span style={{ fontWeight: 400, fontSize: 13, color: "rgba(255,255,255,0.35)" }}>.app</span>
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <button
