@@ -140,6 +140,7 @@ export default function Cell({
                 fontStyle: "italic",
                 lineHeight: 1.35,
                 width: "100%",
+                whiteSpace: "pre-wrap",
               }}
             >
               {description}
