@@ -43,12 +43,13 @@ export function useMandalart(mandalartId) {
     let cancelled = false;
     (async () => {
       const [{ data: meta, error: metaErr }, { data: cells, error: cellsErr }] = await Promise.all([
-        supabase.from("mandalarts").select("title, is_public").eq("id", mandalartId).single(),
-        supabase.from("mandalart_cells").select("*").eq("mandalart_id", mandalartId),
+        supabase.from("mandalarts").select("title, is_public, completed_cells").eq("id", mandalartId).single(),
+        supabase.from("mandalart_cells").select("row, col, content, description").eq("mandalart_id", mandalartId),
       ]);
       if (cancelled) return;
       if (metaErr) console.error(metaErr);
       if (cellsErr) console.error(cellsErr);
+      const completedMap = meta?.completed_cells || {};
       if (meta) {
         setTitle(meta.title);
         setIsPublic(meta.is_public);
@@ -59,9 +60,8 @@ export function useMandalart(mandalartId) {
       (cells || []).forEach((cell) => {
         g[cell.row][cell.col] = cell.content;
         d[cell.row][cell.col] = cell.description ?? "";
-        comp[cell.row][cell.col] = cell.completed ?? false;
+        comp[cell.row][cell.col] = completedMap[`${cell.row}-${cell.col}`] ?? false;
       });
-      if (cellsErr) console.error("cells load error:", cellsErr);
       setGrid(g);
       setDescriptions(d);
       setCompleted(comp);
@@ -80,7 +80,6 @@ export function useMandalart(mandalartId) {
         col,
         content: gridRef.current[row][col],
         description: descRef.current[row][col],
-        completed: compRef.current?.[row][col] ?? false,
       };
     });
     pendingCellKeys.current.clear();
@@ -130,10 +129,8 @@ export function useMandalart(mandalartId) {
   }, [queueCell]);
 
   const toggleCompleted = useCallback((r, c) => {
-    // Read current value from ref (always in sync) and compute new value BEFORE setState
     const newVal = !(compRef.current?.[r]?.[c] ?? false);
 
-    // Update local state
     setCompleted((prev) => {
       const next = (prev || emptyBool()).map((row) => row.slice());
       next[r][c] = newVal;
@@ -141,14 +138,19 @@ export function useMandalart(mandalartId) {
       return next;
     });
 
-    // Use RPC to bypass RLS edge cases in production
+    // Build updated completed_cells map and save to mandalarts table
+    // (same UPDATE path as title/visibility — known to work in production)
+    const updatedMap = {};
+    const comp = compRef.current || emptyBool();
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (comp[row][col]) updatedMap[`${row}-${col}`] = true;
+      }
+    }
     supabase
-      .rpc("set_cell_completed", {
-        p_mandalart_id: mandalartId,
-        p_row: r,
-        p_col: c,
-        p_completed: newVal,
-      })
+      .from("mandalarts")
+      .update({ completed_cells: updatedMap })
+      .eq("id", mandalartId)
       .then(({ error }) => { if (error) console.error("completed save error:", error); });
   }, [mandalartId]);
 
