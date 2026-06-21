@@ -38,16 +38,23 @@ export default function Cell({
   };
 
   const big = size === "large";
-  // Sub-goals (header + outerCenter) share accent2; details use faint accent3
+  const isMondrian = pal.accent !== pal.accent3;
+  const isDone = isDetail && !!value;
+
   const bg = isMain
     ? pal.accent
     : isHeader || isOuterCenter
     ? pal.accent2 + "44"
+    : isDone
+    ? (isMondrian ? "rgba(242,237,225,0.28)" : pal.accent3 + "42")
     : pal.accent3 + "18";
+
   const border = isMain
     ? `2px solid ${pal.accent}`
     : isHeader || isOuterCenter
     ? `1px solid ${pal.accent2}66`
+    : isDone
+    ? (isMondrian ? "1px solid rgba(242,237,225,0.45)" : `1px solid ${pal.accent3}58`)
     : `1px solid ${pal.accent3}30`;
 
   return (
