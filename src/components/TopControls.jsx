@@ -2,16 +2,20 @@ import React, { useState } from "react";
 import { Volume2, VolumeX, Moon, Sun, Globe, Music2 } from "lucide-react";
 import { THEMES } from "../theme";
 
-const BOX = (color, active = false, bare = false) => ({
-  width: 40, height: 40,
-  display: "flex", alignItems: "center", justifyContent: "center",
-  background: active ? color + "22" : "none",
-  border: bare ? "1px solid rgba(255,255,255,0.35)" : `1px solid ${color}44`,
-  cursor: "pointer",
-  color,
-  flexShrink: 0,
-  padding: 0,
-});
+const hex6 = (c) => (c && c.length === 4 ? "#" + c[1] + c[1] + c[2] + c[2] + c[3] + c[3] : c);
+const BOX = (color, active = false, bare = false) => {
+  const c = hex6(color);
+  return {
+    width: 40, height: 40,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    background: active ? c + "22" : "none",
+    border: bare ? "1px solid rgba(255,255,255,0.35)" : `1px solid ${c}44`,
+    cursor: "pointer",
+    color,
+    flexShrink: 0,
+    padding: 0,
+  };
+};
 
 export default function TopControls({ pal, dark, setDark, lang, setLang, theme, setTheme, soundOn, setSoundOn, t, play, music, dropdownUp = false }) {
   const [themeOpen, setThemeOpen] = useState(false);
@@ -85,7 +89,7 @@ export default function TopControls({ pal, dark, setDark, lang, setLang, theme, 
           title={t.theme}
           style={BOX(ink, false, bare)}
         >
-          <span style={{ width: 22, height: 22, display: "flex", overflow: "hidden" }}>
+          <span style={{ width: 22, height: 22, display: "flex", overflow: "hidden", boxShadow: "inset 0 0 0 1.5px rgba(255,255,255,0.55)" }}>
             {theme === "mondrian" ? (
               <>
                 <span style={{ flex: 1, background: "#C7382E" }} />

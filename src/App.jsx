@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { User, Plus, FolderKanban, HelpCircle, ArrowLeft, BookOpen } from "lucide-react";
+import { User, Plus, FolderKanban, HelpCircle, ArrowLeft, BookOpen, Lightbulb } from "lucide-react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { paletteFor, THEMES } from "./theme";
 import { T } from "./copy";
@@ -15,6 +15,8 @@ import FriendsPanel from "./components/FriendsPanel";
 import FriendMandalartList from "./components/FriendMandalartList";
 import { createMandalart } from "./api/mandalartsApi";
 import { supabase } from "./lib/supabaseClient";
+import FeatureGuide from "./components/FeatureGuide";
+import FloatingBlocks from "./components/FloatingBlocks";
 
 function AppShell() {
   const { session, profile, loading, signOut } = useAuth();
@@ -28,6 +30,7 @@ function AppShell() {
   const [viewingFriend, setViewingFriend] = useState(null);
   const [viewingMandalart, setViewingMandalart] = useState(null);
   const [signOutConfirm, setSignOutConfirm] = useState(false);
+  const [featureGuideOpen, setFeatureGuideOpen] = useState(false);
   const prevUserIdRef = useRef(null);
 
   const pal = paletteFor(theme, dark);
@@ -94,7 +97,7 @@ function AppShell() {
     return <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: pal.bg, color: pal.ink }}>{t.loading}</div>;
   }
   if (!session) {
-    return <AuthGate pal={pal} t={t} />;
+    return <AuthGate play={play} />;
   }
 
   const myId = session.user.id;
@@ -114,19 +117,29 @@ function AppShell() {
       <style>{`
         @keyframes pulseOutline { 0%,100% { box-shadow: 0 0 0 0 ${pal.accent}66; } 50% { box-shadow: 0 0 0 6px ${pal.accent}33; } }
         .cell-pulse { animation: pulseOutline 0.9s ease-in-out; }
-        .fade-in { animation: fadeIn 0.25s ease-out; }
-        @keyframes fadeIn { from { opacity:0; transform: translateY(6px);} to { opacity:1; transform:none; } }
+        .fade-in { animation: fadeIn 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform:none; } }
+        .home-enter { animation: homeEnter 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+        @keyframes homeEnter { from { opacity:0; } to { opacity:1; } }
         textarea::placeholder { opacity: 0.4; }
         button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid ${pal.accent}; }
         @media (prefers-reduced-motion: reduce) { .cell-pulse, .fade-in { animation: none !important; } }
+        .home-tile { position: relative; z-index: 1; transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), filter 0.15s ease, z-index 0s; }
+        .home-tile:hover { transform: scale(1.05); filter: brightness(1.07); z-index: 2; }
+        .home-title-block { transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), filter 0.2s ease; }
+        .home-title-block:hover { transform: scale(1.01); filter: brightness(1.04); }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-48px); } to { opacity: 1; transform: translateX(0); } }
+        .home-title { animation: slideInLeft 0.65s cubic-bezier(0.22,1,0.36,1) both; }
+        .home-tagline { animation: slideInLeft 0.65s cubic-bezier(0.22,1,0.36,1) 0.18s both; }
       `}</style>
 
       {onboardingOpen && <Onboarding t={t} pal={pal} play={play} onClose={closeOnboarding} />}
+      {featureGuideOpen && <FeatureGuide t={t} pal={pal} onClose={() => setFeatureGuideOpen(false)} />}
 
       {view === "home" && (() => {
         const newBg = theme === "yellow" ? "#C9991A" : "#E3B22E";
         return (
-          <div className="fade-in" style={{ margin: -28, height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div className="home-enter" style={{ margin: -28, height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
             <div style={{
               flex: 1, minHeight: 0,
               background: "#000", display: "grid", gap: 4, padding: 4,
@@ -134,14 +147,20 @@ function AppShell() {
               gridTemplateRows: "1fr 1fr",
             }}>
               {/* Title block — spans both rows */}
-              <div style={{
-                gridRow: "1 / 3", gridColumn: "1",
-                background: pal.accent2,
-                padding: "clamp(20px, 4vw, 56px)",
-                display: "flex", flexDirection: "column", justifyContent: "space-between",
-              }}>
-                <div>
-                  <h1 style={{
+              <div
+                className="home-title-block"
+                onMouseEnter={() => play("C6", "64n")}
+                style={{
+                  gridRow: "1 / 3", gridColumn: "1",
+                  background: pal.accent2,
+                  padding: "clamp(20px, 4vw, 56px)",
+                  display: "flex", flexDirection: "column", justifyContent: "space-between",
+                  position: "relative",
+                }}
+              >
+                <FloatingBlocks pal={pal} theme={theme} />
+                <div style={{ position: "relative", zIndex: 1 }}>
+                  <h1 className="home-title" style={{
                     fontWeight: 900,
                     fontSize: "clamp(60px, 11vw, 180px)",
                     letterSpacing: "-0.03em",
@@ -153,27 +172,34 @@ function AppShell() {
                   }}>
                     {t.title}
                   </h1>
-                  <p style={{ fontSize: 11, letterSpacing: "0.12em", opacity: 0.6, margin: "14px 0 0", color: "#fff", textTransform: "uppercase", textAlign: "center" }}>
+                  <p className="home-tagline" style={{ fontSize: 11, letterSpacing: "0.12em", opacity: 0.6, margin: "14px 0 0", color: "#fff", textTransform: "uppercase", textAlign: "center" }}>
                     {t.tagline}
                   </p>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12, position: "relative", zIndex: 1 }}>
                   <TopControls pal={{ ...pal, ink: "#fff" }} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={true} />
-                  <button onClick={() => { setOnboardingOpen(true); play("G4", "16n"); }} style={{ background: "none", border: "none", color: "#fff", opacity: 0.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>
-                    <HelpCircle size={14} /> {t.replay}
-                  </button>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5 }}>
+                    <button onClick={() => { setOnboardingOpen(true); play("G4", "16n"); }} style={{ background: "none", border: "none", color: "#fff", opacity: 0.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>
+                      <HelpCircle size={14} /> {t.replay}
+                    </button>
+                    <button onClick={() => { setFeatureGuideOpen(true); play("E5", "16n"); }} style={{ background: "none", border: "none", color: "#fff", opacity: 0.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>
+                      <Lightbulb size={14} /> {t.guide.btnLabel}
+                    </button>
+                  </div>
                 </div>
               </div>
 
               {/* Profile — top right */}
-              <button onClick={() => { setView("profile"); play("C5", "16n"); }}
+              <button onClick={() => { setView("profile"); play("C5", "16n"); }} onMouseEnter={() => play("E6", "64n")}
+                className="home-tile"
                 style={{ gridRow: "1", gridColumn: "2", background: pal.bg, border: "none", padding: "clamp(16px,2.5vw,32px) 20px", cursor: "pointer", color: pal.ink, textAlign: "left", display: "flex", flexDirection: "column", gap: 10 }}>
                 <User size={20} color={pal.ink} />
                 <span style={{ fontWeight: 800, fontSize: 13, textTransform: "uppercase" }}>{t.menu.profile}</span>
               </button>
 
               {/* New Mandalart — always yellow, bottom right */}
-              <button onClick={goCreate}
+              <button onClick={goCreate} onMouseEnter={() => play("G6", "64n")}
+                className="home-tile"
                 style={{ gridRow: "2", gridColumn: "2", background: newBg, border: "none", padding: "clamp(16px,2.5vw,32px) 20px", cursor: "pointer", color: "#1a1a1a", textAlign: "left", display: "flex", flexDirection: "column", gap: 10 }}>
                 <Plus size={20} color="#1a1a1a" />
                 <span style={{ fontWeight: 800, fontSize: 13, textTransform: "uppercase" }}>{t.menu.create}</span>
@@ -182,12 +208,14 @@ function AppShell() {
 
             {/* Bottom bar */}
             <div style={{ background: "#000", display: "grid", gap: 4, padding: "0 4px 4px", gridTemplateColumns: "1fr 1fr", flexShrink: 0 }}>
-              <button onClick={() => { setView("manage"); play("C5", "16n"); }}
+              <button onClick={() => { setView("manage"); play("C5", "16n"); }} onMouseEnter={() => play("A5", "64n")}
+                className="home-tile"
                 style={{ background: pal.accent, border: "none", padding: "18px 24px", cursor: "pointer", color: "#fff", textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
                 <FolderKanban size={18} color="#fff" />
                 <span style={{ fontWeight: 800, fontSize: 13, textTransform: "uppercase" }}>{t.menu.manage}</span>
               </button>
-              <button onClick={() => { setView("about"); play("G4", "16n"); }}
+              <button onClick={() => { setView("about"); play("G4", "16n"); }} onMouseEnter={() => play("B5", "64n")}
+                className="home-tile"
                 style={{ background: pal.bg, border: "none", padding: "18px 24px", cursor: "pointer", color: pal.ink, textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
                 <BookOpen size={18} color={pal.ink} />
                 <span style={{ fontWeight: 800, fontSize: 13, textTransform: "uppercase", opacity: 0.65 }}>{t.menu.about}</span>
