@@ -61,8 +61,7 @@ export function useMandalart(mandalartId) {
         d[cell.row][cell.col] = cell.description ?? "";
         comp[cell.row][cell.col] = cell.completed ?? false;
       });
-      const completedCells = (cells || []).filter(c => c.completed);
-      console.log("[load] cellsErr:", cellsErr, "| cells:", cells?.length, "| completed cells:", completedCells.map(c => `(${c.row},${c.col})=${c.completed}`));
+      if (cellsErr) console.error("cells load error:", cellsErr);
       setGrid(g);
       setDescriptions(d);
       setCompleted(comp);
@@ -133,7 +132,6 @@ export function useMandalart(mandalartId) {
   const toggleCompleted = useCallback((r, c) => {
     // Read current value from ref (always in sync) and compute new value BEFORE setState
     const newVal = !(compRef.current?.[r]?.[c] ?? false);
-    console.log("[toggleCompleted] r:", r, "c:", c, "newVal:", newVal);
 
     // Update local state
     setCompleted((prev) => {
@@ -154,9 +152,7 @@ export function useMandalart(mandalartId) {
         description: descRef.current?.[r][c] ?? "",
         completed: newVal,
       }, { onConflict: "mandalart_id,row,col" })
-      .then(({ error }) => {
-        console.log("[toggleCompleted] DB saved completed:", newVal, "error:", error);
-      });
+      .then(({ error }) => { if (error) console.error("completed save error:", error); });
   }, [mandalartId]);
 
   const updateTitle = useCallback((text) => {
