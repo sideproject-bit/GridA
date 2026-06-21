@@ -185,8 +185,8 @@ export const T = {
     sound: "Sound", lang: "Language", theme: "Theme", dark: "Dark", light: "Light",
   },
   ko: {
-    title: "만다라트",
-    tagline: "하나의 목표. 여덟 갈래. 예순네 걸음.",
+    title: "MANDALART",
+    tagline: "하나의 큰 목표. 8개의 소목표. 64개의 실행 방안.",
     loading: "불러오는 중…",
     menu: { profile: "프로필", create: "새 만다라트", manage: "만다라트 관리", about: "만다라트란?" },
     back: "뒤로",

@@ -195,10 +195,9 @@ function AppShell() {
                 <div style={{ position: "relative", zIndex: 1 }}>
                   <h1 className="home-title" style={{
                     fontWeight: 900,
-                    fontFamily: titleFontFamily,
                     fontSize: "clamp(60px, 11vw, 180px)",
-                    letterSpacing: isKo ? "-0.01em" : "-0.03em",
-                    lineHeight: isKo ? 1 : 0.88,
+                    letterSpacing: "-0.03em",
+                    lineHeight: 0.88,
                     margin: 0,
                     color: "#fff",
                     textTransform: "uppercase",
@@ -206,7 +205,7 @@ function AppShell() {
                   }}>
                     {t.title}
                   </h1>
-                  <p className="home-tagline" style={{ fontSize: 11, fontFamily: baseFontFamily, letterSpacing: isKo ? "0.04em" : "0.12em", opacity: 0.6, margin: "14px 0 0", color: "#fff", textTransform: "uppercase", textAlign: "center" }}>
+                  <p className="home-tagline" style={{ fontSize: 11, letterSpacing: isKo ? "0.04em" : "0.12em", opacity: 0.6, margin: "14px 0 0", color: "#fff", textTransform: "uppercase", textAlign: "center" }}>
                     {t.tagline}
                   </p>
                 </div>
