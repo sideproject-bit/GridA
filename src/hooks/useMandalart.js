@@ -141,17 +141,13 @@ export function useMandalart(mandalartId) {
       return next;
     });
 
-    // Save directly to DB
+    // Update the existing row directly — simpler and more reliable than upsert
     supabase
       .from("mandalart_cells")
-      .upsert({
-        mandalart_id: mandalartId,
-        row: r,
-        col: c,
-        content: gridRef.current?.[r][c] ?? "",
-        description: descRef.current?.[r][c] ?? "",
-        completed: newVal,
-      }, { onConflict: "mandalart_id,row,col" })
+      .update({ completed: newVal })
+      .eq("mandalart_id", mandalartId)
+      .eq("row", r)
+      .eq("col", c)
       .then(({ error }) => { if (error) console.error("completed save error:", error); });
   }, [mandalartId]);
 
