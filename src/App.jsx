@@ -119,7 +119,7 @@ function AppShell() {
         .cell-pulse { animation: pulseOutline 0.9s ease-in-out; }
         .fade-in { animation: fadeIn 0.5s cubic-bezier(0.22,1,0.36,1) both; }
         @keyframes fadeIn { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform:none; } }
-        .home-enter { animation: homeEnter 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+        .home-enter { animation: homeEnter 1.1s cubic-bezier(0.22,1,0.36,1) both; }
         @keyframes homeEnter { from { opacity:0; } to { opacity:1; } }
         textarea::placeholder { opacity: 0.4; }
         button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid ${pal.accent}; }

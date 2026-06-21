@@ -167,13 +167,15 @@ export default function WelcomeScreen({ play, onFinish }) {
   const accent = SLIDE_ACCENT[slide];
   const isLast = slide === slides.length - 1;
 
+  const FADE_MS = 600;
+
   const transition = (fn) => {
     setVisible(false);
-    setTimeout(() => { fn(); setVisible(true); }, 300);
+    setTimeout(() => { fn(); setVisible(true); }, FADE_MS);
   };
 
   const goNext = () => {
-    if (isLast) { setVisible(false); setTimeout(onFinish, 300); return; }
+    if (isLast) { setVisible(false); setTimeout(onFinish, FADE_MS); return; }
     transition(() => setSlide(s => s + 1));
     play?.("D5", "64n");
   };
@@ -184,7 +186,7 @@ export default function WelcomeScreen({ play, onFinish }) {
     play?.("B4", "64n");
   };
 
-  const skip = () => { setVisible(false); setTimeout(onFinish, 300); };
+  const skip = () => { setVisible(false); setTimeout(onFinish, FADE_MS); };
 
   const toggleLang = () => {
     transition(() => setLang(l => l === "en" ? "ko" : "en"));
@@ -268,7 +270,7 @@ export default function WelcomeScreen({ play, onFinish }) {
           <div style={{
             opacity: visible ? 1 : 0,
             transform: visible ? "scale(1)" : "scale(0.92)",
-            transition: "opacity 0.3s ease, transform 0.3s ease",
+            transition: "opacity 0.6s ease, transform 0.6s ease",
             ...A(0.6, "wsPopIn"),
           }}>
             <GridVisual type={cur.visual} />
@@ -297,7 +299,7 @@ export default function WelcomeScreen({ play, onFinish }) {
           <div style={{
             opacity: visible ? 1 : 0,
             transform: visible ? "translateX(0)" : "translateX(16px)",
-            transition: "opacity 0.3s ease, transform 0.3s ease",
+            transition: "opacity 0.6s ease, transform 0.6s ease",
           }}>
             {/* Accent stripe */}
             <div style={{ width: 40, height: 4, background: accent, marginBottom: 24, transition: "background 0.4s ease" }} />

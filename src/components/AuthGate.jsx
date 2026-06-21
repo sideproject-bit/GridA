@@ -106,7 +106,7 @@ export default function AuthGate({ play }) {
     <div style={{
       minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, position: "relative",
       opacity: loginVisible ? 1 : 0,
-      transition: "opacity 0.55s ease",
+      transition: "opacity 0.9s ease",
     }}>
       <MondrianBg play={play} />
 
