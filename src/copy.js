@@ -144,6 +144,17 @@ export const T = {
       ohtaniLabel: "The Ohtani method",
       ohtani: "Shohei Ohtani created his Mandalart at age 16 with the goal of becoming a pro baseball player. His 8 sub-goals included nutrition, mental strength, speed, and pitching power — each broken into 8 daily habits. He achieved every one of them.",
     },
+    gridTutorial: {
+      steps: [
+        { t: "Step 1 — Set your main goal", b: "Click the center cell of the center block and write your single most important goal. Be specific and personal." },
+        { t: "Step 2 — Define 8 sub-goals", b: "The 8 cells around the center become your sub-goals. They automatically link to the centers of the 8 surrounding blocks." },
+        { t: "Step 3 — Add 64 action items", b: "For each sub-goal block, fill its surrounding 8 cells with concrete daily actions. These are the habits that compound into real progress." },
+        { t: "Write as if it's done", b: "Phrase every entry in the present tense — as if already achieved. It shifts how you think about and work toward each goal." },
+      ],
+      dontShow: "Don't show this when creating new mandalarts",
+      showAgain: "Show tutorial",
+      close: "Got it, let's go",
+    },
     music: { off: "Off", loopNote: "Loops until stopped" },
     guide: {
       btnLabel: "How to use",
@@ -317,6 +328,17 @@ export const T = {
       ],
       ohtaniLabel: "오타니 방식",
       ohtani: "오타니 쇼헤이는 16살에 '프로야구 선수가 되겠다'는 목표로 만다라트를 작성했어요. 영양, 멘탈, 스피드, 구위 등 8개의 하위 목표, 각각을 위한 64가지 일상 습관을 세웠고 — 모두 실현했습니다.",
+    },
+    gridTutorial: {
+      steps: [
+        { t: "Step 1 — 메인 목표 설정", b: "중앙 블록의 가운데 칸을 클릭해 가장 중요한 목표를 하나 적어요. 구체적이고 내 것이어야 해요." },
+        { t: "Step 2 — 8개의 하위 목표", b: "중앙 칸 주변 8칸이 하위 목표가 돼요. 이 칸들은 바깥 8개 블록의 중심 칸과 자동으로 연결돼 있어요." },
+        { t: "Step 3 — 64가지 실행 항목", b: "각 하위 목표 블록의 나머지 8칸에 구체적인 일상 행동을 적어요. 64가지 습관이 쌓여 진짜 변화가 만들어져요." },
+        { t: "이미 이룬 것처럼 써요", b: "모든 항목을 현재형으로 — 이미 달성한 것처럼 적어보세요. 생각과 행동 방식이 달라져요." },
+      ],
+      dontShow: "새 만다라트 만들 때 튜토리얼 표시 안 함",
+      showAgain: "튜토리얼 보기",
+      close: "시작하기",
     },
     music: { off: "끄기", loopNote: "정지할 때까지 반복 재생" },
     guide: {

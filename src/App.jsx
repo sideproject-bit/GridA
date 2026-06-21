@@ -17,6 +17,7 @@ import { createMandalart } from "./api/mandalartsApi";
 import { supabase } from "./lib/supabaseClient";
 import FeatureGuide from "./components/FeatureGuide";
 import FloatingBlocks from "./components/FloatingBlocks";
+import GridTutorial from "./components/GridTutorial";
 
 function AppShell() {
   const { session, profile, loading, signOut } = useAuth();
@@ -33,6 +34,7 @@ function AppShell() {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deletebusy, setDeleteBusy] = useState(false);
   const [featureGuideOpen, setFeatureGuideOpen] = useState(false);
+  const [gridTutorialOpen, setGridTutorialOpen] = useState(false);
   const prevUserIdRef = useRef(null);
 
   const pal = paletteFor(theme, dark);
@@ -118,12 +120,17 @@ function AppShell() {
   const myId = session.user.id;
   const myCode = profile ? `${profile.username}#${profile.tag}` : "";
 
+  const TUTORIAL_SKIP_KEY = `gridTutorialSkip_${myId}`;
+
   const goCreate = async () => {
     const m = await createMandalart(myId, t.grid.untitled);
     if (m) {
       setCurrentMandalartId(m.id);
       setView("grid");
       play("C5", "16n");
+      if (!localStorage.getItem(TUTORIAL_SKIP_KEY)) {
+        setGridTutorialOpen(true);
+      }
     }
   };
 
@@ -150,6 +157,13 @@ function AppShell() {
 
       {onboardingOpen && <Onboarding t={t} pal={pal} play={play} onClose={closeOnboarding} />}
       {featureGuideOpen && <FeatureGuide t={t} pal={pal} onClose={() => setFeatureGuideOpen(false)} />}
+      {gridTutorialOpen && (
+        <GridTutorial
+          t={t} pal={pal}
+          onClose={() => setGridTutorialOpen(false)}
+          onDontShow={() => localStorage.setItem(TUTORIAL_SKIP_KEY, "1")}
+        />
+      )}
 
       {view === "home" && (() => {
         const newBg = theme === "yellow" ? "#C9991A" : "#E3B22E";
@@ -243,9 +257,14 @@ function AppShell() {
       {view === "grid" && currentMandalartId && (
         <div className="fade-in">
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
-            <button onClick={() => setView("home")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-              <ArrowLeft size={14} /> {t.back}
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <button onClick={() => setView("home")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+                <ArrowLeft size={14} /> {t.back}
+              </button>
+              <button onClick={() => setGridTutorialOpen(true)} style={{ background: "none", border: "none", color: pal.ink, opacity: 0.4, cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontSize: 11 }}>
+                <HelpCircle size={13} /> {t.gridTutorial.showAgain}
+              </button>
+            </div>
             <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} />
           </div>
           <MandalartGrid key={currentMandalartId} mandalartId={currentMandalartId} pal={pal} t={t} soundOn={soundOn} />
@@ -359,6 +378,7 @@ function AppShell() {
             <button onClick={() => setView("home")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
               <ArrowLeft size={14} /> {t.back}
             </button>
+            <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} />
           </div>
           <AboutPage pal={pal} t={t} />
         </div>
