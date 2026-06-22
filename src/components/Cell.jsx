@@ -251,7 +251,7 @@ export default function Cell({
           }}
           style={{
             position: "absolute", bottom: 2, right: 2, background: "none", border: "none",
-            color: localCompleted ? pal.accent : pal.ink,
+            color: localCompleted ? (isMondrian ? pal.accent3 : pal.accent) : pal.ink,
             opacity: localCompleted ? 0.9 : 0.25,
             cursor: "pointer", padding: big ? 4 : 2,
             transition: "opacity 0.15s ease, color 0.15s ease",
