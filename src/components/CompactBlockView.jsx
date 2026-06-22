@@ -4,6 +4,7 @@ import { isHeaderCell, isOuterCenterCell, blockLabel, isBlockAllDone } from "../
 
 export default function CompactBlockView({
   grid, descriptions, completed, focusBlock, setFocusBlock, pal, t, onChange, onLink, onOpenDesc, onToggleCompleted, highlightBlock, play, readOnly = false,
+  dragSrc, dragTgt, onDragStart, onDragOver, onDrop, onDragEnd,
 }) {
   const [fbr, fbc] = focusBlock;
   return (
@@ -68,11 +69,19 @@ export default function CompactBlockView({
               : isOC
               ? isBlockAllDone(Math.floor(r / 3), Math.floor(c / 3), completed)
               : false;
+            const isSrc = isHdr && dragSrc?.r === r && dragSrc?.c === c;
+            const isTgt = isHdr && dragTgt?.r === r && dragTgt?.c === c;
+            // Show swapped content as a preview while dragging
+            let displayValue = grid[r][c];
+            if (isHdr && dragSrc && dragTgt) {
+              if (isSrc) displayValue = grid[dragTgt.r][dragTgt.c];
+              else if (isTgt) displayValue = grid[dragSrc.r][dragSrc.c];
+            }
             return (
               <div key={`${r}-${c}`} style={{ background: pal.bg }}>
                 <Cell
                   r={r} c={c}
-                  value={grid[r][c]}
+                  value={displayValue}
                   isMain={r === 4 && c === 4}
                   isHeader={isHdr}
                   isOuterCenter={isOC}
@@ -89,6 +98,12 @@ export default function CompactBlockView({
                   readOnly={readOnly}
                   showIcons={true}
                   subGoalDone={subGoalDone}
+                  isDragSrc={isSrc}
+                  isDragTgt={isTgt}
+                  onCellDragStart={onDragStart}
+                  onCellDragOver={onDragOver}
+                  onCellDrop={onDrop}
+                  onCellDragEnd={onDragEnd}
                 />
               </div>
             );

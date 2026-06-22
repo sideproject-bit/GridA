@@ -153,6 +153,70 @@ if (meta) {
       });
   }, [mandalartId]);
 
+  const swapBlocks = useCallback((r1, c1, r2, c2) => {
+    // r1,c1 and r2,c2 are header cell coords (rows/cols 3-5, not 4,4)
+    const br1 = r1 - 3, bc1 = c1 - 3;
+    const br2 = r2 - 3, bc2 = c2 - 3;
+
+    const curGrid = gridRef.current;
+    const curDesc = descRef.current;
+    const curComp = compRef.current || emptyBool();
+
+    const newGrid = curGrid.map((row) => row.slice());
+    const newDesc = curDesc.map((row) => row.slice());
+    const newComp = curComp.map((row) => row.slice());
+
+    for (let cr = 0; cr < 3; cr++) {
+      for (let cc = 0; cc < 3; cc++) {
+        const [ar, ac] = [br1 * 3 + cr, bc1 * 3 + cc];
+        const [dr, dc] = [br2 * 3 + cr, bc2 * 3 + cc];
+        [newGrid[ar][ac], newGrid[dr][dc]] = [newGrid[dr][dc], newGrid[ar][ac]];
+        [newDesc[ar][ac], newDesc[dr][dc]] = [newDesc[dr][dc], newDesc[ar][ac]];
+        [newComp[ar][ac], newComp[dr][dc]] = [newComp[dr][dc], newComp[ar][ac]];
+      }
+    }
+    [newGrid[r1][c1], newGrid[r2][c2]] = [newGrid[r2][c2], newGrid[r1][c1]];
+    [newDesc[r1][c1], newDesc[r2][c2]] = [newDesc[r2][c2], newDesc[r1][c1]];
+    [newComp[r1][c1], newComp[r2][c2]] = [newComp[r2][c2], newComp[r1][c1]];
+
+    gridRef.current = newGrid;
+    descRef.current = newDesc;
+    compRef.current = newComp;
+    setGrid(newGrid);
+    setDescriptions(newDesc);
+    setCompleted(newComp);
+
+    setSaveState("saving");
+
+    const affectedKeys = new Set();
+    for (let cr = 0; cr < 3; cr++) {
+      for (let cc = 0; cc < 3; cc++) {
+        affectedKeys.add(`${br1 * 3 + cr}-${bc1 * 3 + cc}`);
+        affectedKeys.add(`${br2 * 3 + cr}-${bc2 * 3 + cc}`);
+      }
+    }
+    affectedKeys.add(`${r1}-${c1}`);
+    affectedKeys.add(`${r2}-${c2}`);
+
+    const rows = Array.from(affectedKeys).map((key) => {
+      const [row, col] = key.split("-").map(Number);
+      return { mandalart_id: mandalartId, row, col, content: newGrid[row][col], description: newDesc[row][col] };
+    });
+
+    const updatedMap = {};
+    for (let row = 0; row < 9; row++)
+      for (let col = 0; col < 9; col++)
+        if (newComp[row][col]) updatedMap[`${row}-${col}`] = true;
+
+    Promise.all([
+      supabase.from("mandalart_cells").upsert(rows, { onConflict: "mandalart_id,row,col" }),
+      supabase.from("mandalarts").update({ completed_cells: updatedMap }).eq("id", mandalartId),
+    ]).then(([{ error: e1 }, { error: e2 }]) => {
+      if (e1 || e2) { console.error("swap save error", e1, e2); setSaveState("unsaved"); }
+      else setSaveState("saved");
+    });
+  }, [mandalartId]);
+
   const updateTitle = useCallback((text) => {
     setTitle(text);
     pendingTitleRef.current = text;
@@ -190,7 +254,7 @@ if (meta) {
   // Flush immediately on unmount so nothing is lost on navigation.
   useEffect(() => () => { flushCells(); }, [flushCells]);
 
-  return { title, isPublic, grid, descriptions, completed, updateTitle, updateVisibility, updateCell, updateDescription, toggleCompleted, saveState, saveNow };
+  return { title, isPublic, grid, descriptions, completed, updateTitle, updateVisibility, updateCell, updateDescription, toggleCompleted, swapBlocks, saveState, saveNow };
 }
 
 // Subscribe to live changes on a mandalart's cells — the seed for

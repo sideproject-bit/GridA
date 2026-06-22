@@ -1,16 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link2, StickyNote, CheckCircle2, Check } from "lucide-react";
+import { Link2, StickyNote, CheckCircle2, Check, GripVertical } from "lucide-react";
 
 export default function Cell({
   r, c, value, isMain, isHeader, isOuterCenter, onChange, onLink,
   description, onOpenDesc, completed = false, onToggleCompleted,
   pal, t, highlighted, size = "normal", readOnly = false,
   showIcons = false, subGoalDone = false,
+  isDragSrc = false, isDragTgt = false,
+  onCellDragStart, onCellDragOver, onCellDrop, onCellDragEnd,
 }) {
   const [editing, setEditing] = useState(false);
   const [localCompleted, setLocalCompleted] = useState(completed);
   const taRef = useRef(null);
   const originalRef = useRef(value);
+  const justDraggedRef = useRef(false);
   const placeholder = isMain ? t.grid.mainGoal : isHeader || isOuterCenter ? t.grid.subGoal : t.grid.detail;
   const isDetail = !isMain && !isHeader && !isOuterCenter;
   const showNote = isDetail && (description || !readOnly);
@@ -27,6 +30,7 @@ export default function Cell({
 
   const startEditing = () => {
     if (readOnly) return;
+    if (justDraggedRef.current) return;
     originalRef.current = value;
     setEditing(true);
   };
@@ -47,6 +51,8 @@ export default function Cell({
 
   const bg = isMain
     ? pal.accent
+    : isDragTgt
+    ? pal.accent + "40"
     : isHeader || isOuterCenter
     ? subGoalDone ? pal.accent + "28" : pal.accent2 + "44"
     : localCompleted
@@ -54,6 +60,10 @@ export default function Cell({
     : (isMondrian ? pal.ink + "0e" : pal.accent3 + "0c");
 
   const border = isMain
+    ? `2px solid ${pal.accent}`
+    : isDragSrc
+    ? `2px dashed ${pal.accent}99`
+    : isDragTgt
     ? `2px solid ${pal.accent}`
     : isHeader || isOuterCenter
     ? subGoalDone ? `2px solid ${pal.accent}` : `1px solid ${pal.accent2}66`
@@ -64,6 +74,15 @@ export default function Cell({
   return (
     <div
       className={highlighted ? "cell-pulse" : ""}
+      onDragOver={isHeader ? (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        onCellDragOver?.(r, c);
+      } : undefined}
+      onDrop={isHeader ? (e) => {
+        e.preventDefault();
+        onCellDrop?.(r, c);
+      } : undefined}
       style={{
         position: "relative",
         background: bg,
@@ -78,7 +97,8 @@ export default function Cell({
         height: big ? undefined : "100%",
         boxSizing: "border-box",
         cursor: readOnly ? "default" : "text",
-        transition: "background 0.2s ease, border-color 0.2s ease",
+        opacity: isDragSrc ? 0.45 : 1,
+        transition: "background 0.2s ease, border-color 0.2s ease, opacity 0.15s ease",
       }}
       onClick={startEditing}
     >
@@ -175,6 +195,40 @@ export default function Cell({
         </>
       )}
 
+      {/* Drag handle — only on header cells */}
+      {isHeader && !readOnly && (
+        <div
+          draggable={true}
+          onDragStart={(e) => {
+            e.stopPropagation();
+            justDraggedRef.current = true;
+            e.dataTransfer.effectAllowed = "move";
+            onCellDragStart?.(r, c);
+          }}
+          onDragEnd={(e) => {
+            e.stopPropagation();
+            setTimeout(() => { justDraggedRef.current = false; }, 50);
+            onCellDragEnd?.();
+          }}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: "absolute",
+            bottom: big ? 6 : 3,
+            left: big ? 6 : 3,
+            cursor: isDragSrc ? "grabbing" : "grab",
+            color: isDragTgt ? pal.accent : pal.ink,
+            opacity: isDragTgt ? 0.9 : 0.3,
+            padding: big ? 2 : 1,
+            display: "flex",
+            alignItems: "center",
+            userSelect: "none",
+            transition: "opacity 0.15s ease, color 0.15s ease",
+          }}
+        >
+          <GripVertical size={big ? 13 : 8} />
+        </div>
+      )}
+
       {(isHeader || isOuterCenter) && (
         <button
           aria-label="link"
@@ -191,12 +245,12 @@ export default function Cell({
         </button>
       )}
 
-      {/* Sub-goal done badge */}
+      {/* Sub-goal done badge — bottom-right for header (handle is bottom-left), bottom-left for outerCenter */}
       {(isHeader || isOuterCenter) && subGoalDone && (
         <div style={{
           position: "absolute",
           bottom: big ? 6 : 3,
-          left: big ? 6 : 3,
+          ...(isHeader ? { right: big ? 6 : 3 } : { left: big ? 6 : 3 }),
           width: big ? 18 : 11,
           height: big ? 18 : 11,
           borderRadius: "50%",

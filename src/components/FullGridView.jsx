@@ -2,7 +2,7 @@ import React from "react";
 import Cell from "./Cell";
 import { isHeaderCell, isOuterCenterCell, isBlockAllDone } from "../gridUtils";
 
-export default function FullGridView({ grid, descriptions, completed, onChange, onLink, onOpenDesc, onToggleCompleted, pal, t, highlightBlock, readOnly = false }) {
+export default function FullGridView({ grid, descriptions, completed, onChange, onLink, onOpenDesc, onToggleCompleted, pal, t, highlightBlock, readOnly = false, dragSrc, dragTgt, onDragStart, onDragOver, onDrop, onDragEnd }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6, background: pal.ink, padding: 6, border: `3px solid ${pal.ink}` }}>
       {Array.from({ length: 3 }).map((_, br) =>
@@ -29,11 +29,18 @@ export default function FullGridView({ grid, descriptions, completed, onChange, 
                   : isOC
                   ? isBlockAllDone(Math.floor(r / 3), Math.floor(c / 3), completed)
                   : false;
+                const isSrc = isHdr && dragSrc?.r === r && dragSrc?.c === c;
+                const isTgt = isHdr && dragTgt?.r === r && dragTgt?.c === c;
+                let displayValue = grid[r][c];
+                if (isHdr && dragSrc && dragTgt) {
+                  if (isSrc) displayValue = grid[dragTgt.r][dragTgt.c];
+                  else if (isTgt) displayValue = grid[dragSrc.r][dragSrc.c];
+                }
                 return (
                   <div key={`${r}-${c}`} style={{ background: pal.bg, overflow: "hidden" }}>
                     <Cell
                       r={r} c={c}
-                      value={grid[r][c]}
+                      value={displayValue}
                       isMain={r === 4 && c === 4}
                       isHeader={isHdr}
                       isOuterCenter={isOC}
@@ -48,6 +55,12 @@ export default function FullGridView({ grid, descriptions, completed, onChange, 
                       highlighted={false}
                       readOnly={readOnly}
                       subGoalDone={subGoalDone}
+                      isDragSrc={isSrc}
+                      isDragTgt={isTgt}
+                      onCellDragStart={onDragStart}
+                      onCellDragOver={onDragOver}
+                      onCellDrop={onDrop}
+                      onCellDragEnd={onDragEnd}
                     />
                   </div>
                 );

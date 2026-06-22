@@ -8,7 +8,7 @@ import { useSound, useCompactDetect } from "../useSound";
 import { isHeaderCell, isOuterCenterCell, headerToBlock, blockToHeader } from "../gridUtils";
 
 export default function MandalartGrid({ mandalartId, pal, t, soundOn, readOnly = false, ownerLabel }) {
-  const { title, isPublic, grid, descriptions, completed, updateTitle, updateVisibility, updateCell, updateDescription, toggleCompleted, saveState, saveNow } = useMandalart(mandalartId);
+  const { title, isPublic, grid, descriptions, completed, updateTitle, updateVisibility, updateCell, updateDescription, toggleCompleted, swapBlocks, saveState, saveNow } = useMandalart(mandalartId);
   const [descTarget, setDescTarget] = useState(null);
   const [showSaved, setShowSaved] = useState(false);
   const [highlightBlock, setHighlightBlock] = useState(null);
@@ -16,6 +16,9 @@ export default function MandalartGrid({ mandalartId, pal, t, soundOn, readOnly =
   const [tick, setTick] = useState(0);
   const [focusBlock, setFocusBlock] = useState([1, 1]);
   const [catOpen, setCatOpen] = useState(false);
+  const [dragSrc, setDragSrc] = useState(null); // {r, c}
+  const [dragTgt, setDragTgt] = useState(null); // {r, c}
+  const dragSrcRef = useRef(null);
   const autoCompact = useCompactDetect();
   const [compactOverride, setCompactOverride] = useState(null);
   const compact = compactOverride === null ? autoCompact : compactOverride;
@@ -87,6 +90,35 @@ export default function MandalartGrid({ mandalartId, pal, t, soundOn, readOnly =
       }
     }
   }, [readOnly, grid, handleCellChange, play]);
+
+  const handleDragStart = useCallback((r, c) => {
+    setDragSrc({ r, c });
+    dragSrcRef.current = { r, c };
+  }, []);
+
+  const handleDragOver = useCallback((r, c) => {
+    if (!dragSrcRef.current) return;
+    if (r === dragSrcRef.current.r && c === dragSrcRef.current.c) return;
+    setDragTgt({ r, c });
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    setDragSrc(null);
+    setDragTgt(null);
+    dragSrcRef.current = null;
+  }, []);
+
+  const handleDrop = useCallback((r2, c2) => {
+    const src = dragSrcRef.current;
+    if (!src) return;
+    if (r2 !== src.r || c2 !== src.c) {
+      swapBlocks(src.r, src.c, r2, c2);
+      play("G5", "16n");
+    }
+    setDragSrc(null);
+    setDragTgt(null);
+    dragSrcRef.current = null;
+  }, [swapBlocks, play]);
 
   const toggleVisibility = useCallback(() => {
     if (readOnly) return;
@@ -205,6 +237,12 @@ export default function MandalartGrid({ mandalartId, pal, t, soundOn, readOnly =
               highlightBlock={highlightBlock}
               play={play}
               readOnly={readOnly}
+              dragSrc={dragSrc}
+              dragTgt={dragTgt}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onDragEnd={handleDragEnd}
             />
           ) : (
             <FullGridView
@@ -219,6 +257,12 @@ export default function MandalartGrid({ mandalartId, pal, t, soundOn, readOnly =
               t={t}
               highlightBlock={highlightBlock}
               readOnly={readOnly}
+              dragSrc={dragSrc}
+              dragTgt={dragTgt}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onDragEnd={handleDragEnd}
             />
           )}
         </div>
