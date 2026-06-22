@@ -5,9 +5,9 @@ export default function Cell({
   r, c, value, isMain, isHeader, isOuterCenter, onChange, onLink,
   description, onOpenDesc, completed = false, onToggleCompleted,
   pal, t, highlighted, size = "normal", readOnly = false,
+  showIcons = false, subGoalDone = false,
 }) {
   const [editing, setEditing] = useState(false);
-  // Local state for instant visual feedback; syncs when prop changes from parent
   const [localCompleted, setLocalCompleted] = useState(completed);
   const taRef = useRef(null);
   const originalRef = useRef(value);
@@ -48,7 +48,7 @@ export default function Cell({
   const bg = isMain
     ? pal.accent
     : isHeader || isOuterCenter
-    ? pal.accent2 + "44"
+    ? subGoalDone ? pal.accent + "28" : pal.accent2 + "44"
     : localCompleted
     ? (isMondrian ? "rgba(242,237,225,0.28)" : pal.accent3 + "42")
     : pal.accent3 + "18";
@@ -56,7 +56,7 @@ export default function Cell({
   const border = isMain
     ? `2px solid ${pal.accent}`
     : isHeader || isOuterCenter
-    ? `1px solid ${pal.accent2}66`
+    ? subGoalDone ? `2px solid ${pal.accent}` : `1px solid ${pal.accent2}66`
     : localCompleted
     ? (isMondrian ? "1px solid rgba(242,237,225,0.5)" : `1px solid ${pal.accent3}60`)
     : `1px solid ${pal.accent3}30`;
@@ -112,13 +112,16 @@ export default function Cell({
               fontSize: big ? (isMain ? 15 : 13) : (isMain ? 12 : 11),
               fontWeight: isMain ? 800 : 500,
               textTransform: isMain ? "uppercase" : "none",
-              opacity: value ? 1 : 0.4,
+              opacity: value ? (localCompleted ? 0.45 : 1) : 0.4,
               textAlign: "center",
               wordBreak: "break-word",
               overflow: "hidden",
               display: "-webkit-box",
               WebkitLineClamp: big ? (description ? 3 : 5) : 3,
               WebkitBoxOrient: "vertical",
+              transition: "opacity 0.2s ease",
+              position: "relative",
+              zIndex: 1,
             }}
           >
             {value || placeholder}
@@ -129,7 +132,7 @@ export default function Cell({
               style={{
                 fontSize: 10,
                 color: pal.ink,
-                opacity: 0.45,
+                opacity: localCompleted ? 0.3 : 0.45,
                 margin: "5px 0 0",
                 textAlign: "center",
                 wordBreak: "break-word",
@@ -141,10 +144,32 @@ export default function Cell({
                 lineHeight: 1.35,
                 width: "100%",
                 whiteSpace: "pre-wrap",
+                position: "relative",
+                zIndex: 1,
               }}
             >
               {description}
             </p>
+          )}
+
+          {/* Watermark checkmark for completed detail cells */}
+          {isDetail && localCompleted && (
+            <div style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              pointerEvents: "none",
+              overflow: "hidden",
+            }}>
+              <CheckCircle2
+                size={big ? 54 : 30}
+                color={pal.accent}
+                style={{ opacity: 0.2 }}
+                strokeWidth={1.5}
+              />
+            </div>
           )}
         </>
       )}
@@ -165,17 +190,38 @@ export default function Cell({
         </button>
       )}
 
+      {/* Sub-goal done badge */}
+      {(isHeader || isOuterCenter) && subGoalDone && (
+        <div style={{
+          position: "absolute",
+          bottom: big ? 6 : 3,
+          left: big ? 6 : 3,
+          width: big ? 18 : 11,
+          height: big ? 18 : 11,
+          borderRadius: "50%",
+          background: pal.accent,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          <CheckCircle2 size={big ? 11 : 7} color="#fff" strokeWidth={2.5} />
+        </div>
+      )}
+
+      {/* Memo dot (always visible when description exists) */}
       {isDetail && description && (
         <span
           title={description}
           style={{
             position: "absolute", top: 4, right: 4, width: 5, height: 5,
             borderRadius: "50%", background: pal.accent,
+            opacity: localCompleted ? 0.5 : 1,
           }}
         />
       )}
 
-      {isDetail && showNote && (
+      {/* Note button — focus view only */}
+      {isDetail && showNote && showIcons && (
         <button
           aria-label="note"
           onClick={(e) => {
@@ -193,7 +239,8 @@ export default function Cell({
         </button>
       )}
 
-      {isDetail && !readOnly && (
+      {/* Check button — focus view only */}
+      {isDetail && !readOnly && showIcons && (
         <button
           aria-label={localCompleted ? "uncheck" : "check"}
           onClick={(e) => {

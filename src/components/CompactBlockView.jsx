@@ -1,6 +1,6 @@
 import React from "react";
 import Cell from "./Cell";
-import { isHeaderCell, isOuterCenterCell, blockLabel } from "../gridUtils";
+import { isHeaderCell, isOuterCenterCell, blockLabel, isBlockAllDone } from "../gridUtils";
 
 export default function CompactBlockView({
   grid, descriptions, completed, focusBlock, setFocusBlock, pal, t, onChange, onLink, onOpenDesc, onToggleCompleted, highlightBlock, play, readOnly = false,
@@ -61,14 +61,21 @@ export default function CompactBlockView({
         {Array.from({ length: 3 }).map((_, cr) =>
           Array.from({ length: 3 }).map((_, cc) => {
             const r = fbr * 3 + cr, c = fbc * 3 + cc;
+            const isHdr = isHeaderCell(r, c);
+            const isOC = isOuterCenterCell(r, c);
+            const subGoalDone = isHdr
+              ? isBlockAllDone(r - 3, c - 3, completed)
+              : isOC
+              ? isBlockAllDone(Math.floor(r / 3), Math.floor(c / 3), completed)
+              : false;
             return (
               <div key={`${r}-${c}`} style={{ background: pal.bg }}>
                 <Cell
                   r={r} c={c}
                   value={grid[r][c]}
                   isMain={r === 4 && c === 4}
-                  isHeader={isHeaderCell(r, c)}
-                  isOuterCenter={isOuterCenterCell(r, c)}
+                  isHeader={isHdr}
+                  isOuterCenter={isOC}
                   onChange={onChange}
                   onLink={onLink}
                   description={descriptions[r][c]}
@@ -80,6 +87,8 @@ export default function CompactBlockView({
                   highlighted={false}
                   size="large"
                   readOnly={readOnly}
+                  showIcons={true}
+                  subGoalDone={subGoalDone}
                 />
               </div>
             );

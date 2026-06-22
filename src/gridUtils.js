@@ -24,3 +24,15 @@ export function blockLabel(grid, br, bc, t) {
   const centerVal = grid[br * 3 + 1][bc * 3 + 1];
   return centerVal || t.grid.detail;
 }
+
+// Returns true when all 8 detail cells in the outer block (br, bc) are completed
+export function isBlockAllDone(br, bc, completed) {
+  if (!completed) return false;
+  for (let cr = 0; cr < 3; cr++) {
+    for (let cc = 0; cc < 3; cc++) {
+      if (cr === 1 && cc === 1) continue;
+      if (!completed[br * 3 + cr][bc * 3 + cc]) return false;
+    }
+  }
+  return true;
+}
