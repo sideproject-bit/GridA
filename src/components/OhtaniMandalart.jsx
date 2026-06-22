@@ -2,27 +2,27 @@ import React, { useState } from "react";
 import { Maximize2, Minimize2 } from "lucide-react";
 
 const GRID_KO = [
-  ["몸관리",            "영양제 먹기",              "FSQ 90kg",                  "인스텝 개선",          "몸통 강화",          "축 흔들지 않기",     "각도를 만든다",          "위에서부터\n공을 던진다", "손목 강화"],
-  ["유연성",            "몸 만들기",                "RSQ 130kg",                 "릴리즈 포인트\n안정",  "제구",               "불안정 없애기",      "힘 모으기",              "구위",                "하반신 주도"],
-  ["스테미너",          "가동역",                   "식사\n저녁7순갈\n아침3순갈", "하체 강화",            "몸을 열지 않기",     "멘탈을 컨트롤",      "볼을\n앞에서 릴리즈",    "회전수 증가",         "가동력"],
-  ["뚜렷한\n목표·목적", "일희일비\n하지 않기",      "머리는 차갑게\n심장은 뜨겁게", "몸 만들기",          "제구",               "구위",               "축을 돌리기",            "하체 강화",           "체중 증가"],
-  ["핀치에 강하게",     "멘탈",                     "분위기에\n휩쓸리지 않기",   "멘탈",                 "8구단\n드래프트\n1순위", "스피드\n160km/h",  "몸통 강화",              "스피드\n160km/h",     "어깨주변 강화"],
-  ["마음의 파도를\n안만들기", "승리에\n대한 집념",   "동료를\n배려하는 마음",     "인간성",               "운",                 "변화구",             "가동력",                 "라이너 캐치볼",       "피칭 늘리기"],
-  ["감성",              "사랑받는 사람",            "계획성",                    "인사하기",             "쓰레기 줍기",        "부실 청소",          "카운트볼 늘리기",        "포크볼 완성",         "슬라이더 구위"],
-  ["배려",              "인간성",                   "감사",                      "물건을\n소중히 쓰자",  "운",                 "심판을\n대하는 태도","늦게 낙차가\n있는 커브", "변화구",              "좌타자 결정구"],
-  ["예의",              "신뢰받는 사람",            "지속력",                    "긍정적 사고",          "응원받는 사람",      "책읽기",             "직구와\n같은 폼으로",    "스트라이크볼\n던질 때 제구", "거리를 상상하기"],
+  ["몸을 건강한\n상태로 유지한다",  "영양제를\n꾸준히 먹는다",        "FSQ 90kg를 든다",               "인스텝을\n개선한다",             "몸의 코어를\n강화한다",          "몸의 축이\n흔들리지 않도록 한다", "던지는 각도를\n만든다",          "위에서부터\n공을 던진다",        "손목을 강화한다"],
+  ["유연성을 키운다",               "몸을 만든다",                    "RSQ 130kg를 든다",              "릴리즈 포인트를\n안정시킨다",   "제구력을 높인다",                "불안정함을 없앤다",               "힘을 모아\n피칭한다",            "구위를 높인다",                  "하반신으로\n투구를 리드한다"],
+  ["스태미나를 키운다",             "가동 범위를\n넓힌다",            "식사량을\n적정 수준으로\n고정한다", "하체를 강화한다",              "몸을 열지 않는다",               "멘탈을\n컨트롤한다",              "볼을 앞에서\n릴리즈한다",        "회전수를 늘린다",                "가동력을 키운다"],
+  ["뚜렷한 목표를\n세운다",         "일희일비하지\n않는다",           "머리는 차갑게,\n심장은 뜨겁게\n임한다", "몸을 만든다",               "제구력을 높인다",                "구위를 높인다",                   "축을 돌린다",                    "하체를 강화한다",                "체중을 늘린다"],
+  ["핀치에 강하게\n임한다",         "정신력을 강화한다",              "분위기에\n휩쓸리지 않는다",    "정신력을 강화한다",              "8구단\n드래프트\n1순위가 된다",  "스피드\n160km/h를 던진다",       "몸통을 강화한다",                "스피드\n160km/h를 던진다",       "어깨 주변을\n강화한다"],
+  ["마음의 파도를\n만들지 않는다",  "승리를 향한\n집념을 불태운다",  "동료를 항상\n배려한다",         "인간성을 갖춘다",                "운을 쌓는다",                    "변화구를\n마스터한다",            "가동력을 키운다",                "라이너 캐치볼을\n한다",          "피칭량을 늘린다"],
+  ["공감 능력을\n키운다",           "사랑받는\n사람이 된다",          "계획적으로\n행동한다",          "먼저 인사한다",                  "쓰레기를 줍는다",                "더그아웃과\n락커룸을 청소한다",  "카운트볼을\n늘린다",             "포크볼을\n완성한다",             "슬라이더\n구위를 높인다"],
+  ["배려하며\n행동한다",            "인간성을 갖춘다",                "감사함을\n표현한다",            "물건을 소중히\n쓴다",            "운을 쌓는다",                    "심판을 존중한다",                 "낙차 큰 커브를\n던진다",         "변화구를\n마스터한다",           "좌타자 결정구를\n완성한다"],
+  ["예의를 지킨다",                 "신뢰받는\n사람이 된다",          "꾸준히 지속한다",               "긍정적으로\n생각한다",           "응원받는\n사람이 된다",          "책을 읽는다",                     "직구와 같은\n폼으로 던진다",    "스트라이크\n제구력을 높인다",    "거리를 명확히\n상상한다"],
 ];
 
 const GRID_EN = [
-  ["Body care",         "Take supplements",         "FSQ 90kg",                  "Improve inStep",       "Core strength",      "Stable axis",        "Create angle",           "Throw from\nabove",    "Wrist strength"],
-  ["Flexibility",       "Body building",            "RSQ 130kg",                 "Stable release\npoint","Control",            "Eliminate\ninstability","Gather power",          "Pitch quality",       "Lower body-led"],
-  ["Stamina",           "Range of motion",          "Meals:\nDinner ×7\nBreakfast ×3","Leg strength",    "Don't open\nbody",   "Mental\ncontrol",    "Release out\nfront",     "Increase\nspin rate", "Mobility"],
-  ["Clear goals\n& purpose","No emotional\nswings", "Cool head,\nwarm heart",    "Body building",        "Control",            "Pitch quality",      "Rotate the\naxis",       "Leg strength",        "Weight gain"],
-  ["Strong under\npressure","Mental",               "Don't get\nswept up",       "Mental",               "Draft #1\nby all 8\nteams","Speed\n160km/h","Core strength",          "Speed\n160km/h",      "Shoulder\nstrength"],
-  ["Stay composed",     "Win at\nall costs",        "Care for\nteammates",       "Character",            "Luck",               "Breaking\nball",     "Mobility",               "Liner catch",         "More pitching"],
-  ["Empathy",           "Be loved",                 "Planning",                  "Greet people",         "Pick up\ntrash",     "Clean\ndugout",      "More count\npitches",    "Perfect\nfork ball",   "Slider\nquality"],
-  ["Consideration",     "Character",                "Gratitude",                 "Treat things\nwith care","Luck",             "Respect\numpires",   "Late-drop\ncurve",       "Breaking\nball",      "Lefty out-pitch"],
-  ["Etiquette",         "Be trustworthy",           "Persistence",               "Positive\nthinking",   "Be cheered on",      "Read books",         "Same form as\nfastball", "Strike\ncontrol",     "Visualize\ndistance"],
+  ["Keep my body\nin peak condition", "Take supplements\nconsistently",  "Lift FSQ 90kg",             "Improve\ninStep form",         "Strengthen\nmy core",        "Keep my body\naxis stable",  "Create\nthrowing angle",         "Throw from\nabove",           "Strengthen\nwrists"],
+  ["Build flexibility",               "Build my body",                   "Lift RSQ 130kg",            "Stabilize\nrelease point",    "Master control",             "Eliminate\ninstability",     "Channel power\ninto each pitch", "Elevate\npitch quality",      "Lead with\nlower body"],
+  ["Build stamina",                   "Expand range\nof motion",         "Maintain\nconsistent\nmeal portions", "Strengthen legs", "Keep body\nclosed",          "Control\nmental state",      "Release ball\nout front",        "Increase\nspin rate",         "Improve mobility"],
+  ["Set clear goals",                 "Avoid emotional\nswings",         "Stay cool-headed,\nwarm-hearted",   "Build my body",  "Master control",             "Elevate\npitch quality",     "Rotate the axis",                "Strengthen legs",             "Gain weight"],
+  ["Stay strong\nunder pressure",     "Strengthen\nmental fortitude",   "Resist the\natmosphere",    "Strengthen\nmental fortitude",  "Become draft #1\nby all 8 teams", "Throw\n160km/h",    "Strengthen core",                "Throw\n160km/h",              "Strengthen\nshoulders"],
+  ["Keep composure\nalways",          "Pursue victory\nrelentlessly",   "Care for\nteammates always", "Build character",               "Cultivate luck",             "Master\nbreaking balls",    "Improve mobility",               "Practice\nliner catches",     "Increase\npitching reps"],
+  ["Develop empathy",                 "Be someone\npeople love",        "Plan deliberately",          "Greet\neveryone first",         "Pick up trash",              "Clean the dugout\n& locker room", "Increase\ncount pitches",   "Perfect the\nfork ball",      "Improve\nslider quality"],
+  ["Show consideration",              "Build character",                "Express gratitude",          "Treat things\nwith care",       "Cultivate luck",             "Respect\numpires always",   "Develop\nlate-drop curve",       "Master\nbreaking balls",      "Develop lefty\nout-pitch"],
+  ["Practice etiquette",              "Earn people's\ntrust",           "Persist every day",          "Think positively",              "Be someone\nworth cheering",  "Read books\nregularly",    "Match fastball\nform",           "Control\nstrike pitches",     "Visualize the\ndistance clearly"],
 ];
 
 const MAIN = (r, c) => r === 4 && c === 4;
