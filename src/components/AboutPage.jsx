@@ -1,5 +1,6 @@
 import React from "react";
 import { Target, GitBranch, PenLine, Lightbulb } from "lucide-react";
+import OhtaniMandalart from "./OhtaniMandalart";
 
 const ICONS = [Target, GitBranch, PenLine];
 
@@ -46,6 +47,9 @@ export default function AboutPage({ pal, t }) {
           <div style={{ fontWeight: 800, fontSize: 11, textTransform: "uppercase", color: pal.accent, marginBottom: 8 }}>{about.ohtaniLabel}</div>
           <p style={{ fontSize: 12, lineHeight: 1.65, color: pal.ink, margin: 0, opacity: 0.75 }}>{about.ohtani}</p>
         </div>
+      </div>
+      <div style={{ gridColumn: "1 / -1" }}>
+        <OhtaniMandalart pal={pal} t={t} />
       </div>
     </div>
   );

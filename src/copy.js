@@ -142,7 +142,10 @@ export const T = {
         "Play background music to enter a focused, distraction-free writing state.",
       ],
       ohtaniLabel: "The Ohtani method",
-      ohtani: "Shohei Ohtani created his Mandalart at age 16 with the goal of becoming a pro baseball player. His 8 sub-goals included nutrition, mental strength, speed, and pitching power — each broken into 8 daily habits. He achieved every one of them.",
+      ohtani: "Shohei Ohtani created his Mandalart at age 16 with the goal of becoming a pro baseball player. His 8 sub-goals included nutrition, mental strength, speed, and pitching power — each broken into 8 concrete daily habits.",
+      ohtaniGridLabel: "Ohtani's actual Mandalart",
+      ohtaniGridCaption: "Goal: be drafted #1 by all 8 pro teams. 8 sub-goals, 64 daily habits.",
+      ohtaniGridCta: "Use this as a reference — then start filling in your own.",
     },
     gridTutorial: {
       steps: [
@@ -329,7 +332,10 @@ export const T = {
         "배경 음악을 틀면 집중력 있는 글쓰기 상태에 더 쉽게 들어갈 수 있어요.",
       ],
       ohtaniLabel: "오타니 방식",
-      ohtani: "오타니 쇼헤이는 16살에 '프로야구 선수가 되겠다'는 목표로 만다라트를 작성했어요. 영양, 멘탈, 스피드, 구위 등 8개의 하위 목표, 각각을 위한 64가지 일상 습관을 세웠고 — 모두 실현했습니다.",
+      ohtani: "오타니 쇼헤이는 고교 시절 '8개 구단 드래프트 1순위 지명'을 목표로 만다라트를 작성했어요. 영양, 멘탈, 스피드, 구위 등 8개의 하위 목표, 각각을 위한 64가지 일상 습관으로 구체화했어요.",
+      ohtaniGridLabel: "오타니의 실제 만다라트 (고교 시절)",
+      ohtaniGridCaption: "목표: 8개 구단 드래프트 1순위 지명. 8개 하위 목표, 64가지 일상 습관.",
+      ohtaniGridCta: "이 만다라트를 참고해서, 나만의 만다라트를 작성해보세요.",
     },
     gridTutorial: {
       steps: [
