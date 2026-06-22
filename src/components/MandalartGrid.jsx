@@ -189,7 +189,7 @@ export default function MandalartGrid({ mandalartId, pal, t, soundOn, readOnly =
 
       <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
         <div style={{ flex: compact ? "1 1 100%" : "1 1 560px", minWidth: 0 }}>
-          {console.log("[grid] readOnly:", readOnly, "toggleCompleted type:", typeof toggleCompleted) || compact ? (
+          {compact ? (
             <CompactBlockView
               grid={grid}
               descriptions={descriptions}

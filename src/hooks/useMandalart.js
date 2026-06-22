@@ -50,8 +50,7 @@ export function useMandalart(mandalartId) {
       if (metaErr) console.error(metaErr);
       if (cellsErr) console.error(cellsErr);
       const completedMap = meta?.completed_cells || {};
-      console.log("[load] completed_cells from DB:", meta?.completed_cells, "map:", completedMap);
-      if (meta) {
+if (meta) {
         setTitle(meta.title);
         setIsPublic(meta.is_public);
       }
@@ -130,31 +129,27 @@ export function useMandalart(mandalartId) {
   }, [queueCell]);
 
   const toggleCompleted = useCallback((r, c) => {
-    const newVal = !(compRef.current?.[r]?.[c] ?? false);
+    const base = compRef.current || emptyBool();
+    const newVal = !(base[r]?.[c] ?? false);
 
-    setCompleted((prev) => {
-      const next = (prev || emptyBool()).map((row) => row.slice());
-      next[r][c] = newVal;
-      compRef.current = next;
-      return next;
-    });
+    // Update compRef synchronously so the map below sees the new value
+    const next = base.map((row) => row.slice());
+    next[r][c] = newVal;
+    compRef.current = next;
+    setCompleted(next);
 
-    // Build updated completed_cells map and save to mandalarts table
-    // (same UPDATE path as title/visibility — known to work in production)
     const updatedMap = {};
-    const comp = compRef.current || emptyBool();
     for (let row = 0; row < 9; row++) {
       for (let col = 0; col < 9; col++) {
-        if (comp[row][col]) updatedMap[`${row}-${col}`] = true;
+        if (next[row][col]) updatedMap[`${row}-${col}`] = true;
       }
     }
-    console.log("[toggle] mandalartId:", mandalartId, "newVal:", newVal, "updatedMap:", updatedMap);
     supabase
       .from("mandalarts")
       .update({ completed_cells: updatedMap })
       .eq("id", mandalartId)
       .then(({ error }) => {
-        console.log("[toggle] save result - error:", error);
+        if (error) console.error("[toggle] save error:", error);
       });
   }, [mandalartId]);
 
