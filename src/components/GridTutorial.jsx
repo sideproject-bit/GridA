@@ -140,6 +140,45 @@ const STEP_VISUALS = [
       })}
     </svg>
   ),
+  // Step 7: sub-goal drag-to-swap
+  ({ accent }) => (
+    <svg width={108} height={108} viewBox="0 0 108 108">
+      {Array.from({ length: 9 }).map((_, i) => {
+        const col = i % 3, row = Math.floor(i / 3);
+        const isCenter = i === 4;
+        const isSrc = i === 0;
+        const isTgt = i === 8;
+        return (
+          <g key={i}>
+            <rect
+              x={col * 36 + 1} y={row * 36 + 1} width={34} height={34}
+              fill={isCenter ? accent + "66" : isSrc ? accent + "40" : isTgt ? accent + "40" : "#ffffff0a"}
+              stroke={isSrc || isTgt ? accent : isCenter ? accent : "#ffffff18"}
+              strokeWidth={isSrc || isTgt ? 2 : 1}
+              strokeDasharray={isSrc ? "4 2" : "none"}
+            />
+            {/* grip handle dots on src cell */}
+            {isSrc && (
+              <>
+                <circle cx={col * 36 + 7} cy={row * 36 + 27} r={1.2} fill={accent} opacity={0.7} />
+                <circle cx={col * 36 + 7} cy={row * 36 + 23} r={1.2} fill={accent} opacity={0.7} />
+                <circle cx={col * 36 + 10} cy={row * 36 + 27} r={1.2} fill={accent} opacity={0.7} />
+                <circle cx={col * 36 + 10} cy={row * 36 + 23} r={1.2} fill={accent} opacity={0.7} />
+              </>
+            )}
+          </g>
+        );
+      })}
+      {/* swap arrow */}
+      <path
+        d="M28,54 C40,40 68,68 80,54"
+        fill="none" stroke={accent} strokeWidth={2.5}
+        strokeLinecap="round"
+      />
+      <polygon points="24,50 24,58 30,54" fill={accent} />
+      <polygon points="84,50 84,58 78,54" fill={accent} />
+    </svg>
+  ),
 ];
 
 export default function GridTutorial({ t, pal, onClose, onDontShow }) {
