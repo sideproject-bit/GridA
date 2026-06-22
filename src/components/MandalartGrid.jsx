@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronDown, Lock, Users, Maximize2, Minimize2, Sparkles, Eye, Save } from "lucide-react";
 import FullGridView from "./FullGridView";
 import CompactBlockView from "./CompactBlockView";
