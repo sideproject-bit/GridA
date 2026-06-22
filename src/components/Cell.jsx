@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link2, StickyNote, CheckCircle2 } from "lucide-react";
+import { Link2, StickyNote, CheckCircle2, Check } from "lucide-react";
 
 export default function Cell({
   r, c, value, isMain, isHeader, isOuterCenter, onChange, onLink,
@@ -164,11 +164,11 @@ export default function Cell({
               overflow: "hidden",
               zIndex: 2,
             }}>
-              <CheckCircle2
+              <Check
                 size={big ? 54 : 30}
                 color={pal.accent}
-                style={{ opacity: 0.45 }}
-                strokeWidth={1.5}
+                style={{ opacity: 0.55 }}
+                strokeWidth={3.5}
               />
             </div>
           )}
