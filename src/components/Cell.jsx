@@ -162,13 +162,13 @@ export default function Cell({
               justifyContent: "center",
               pointerEvents: "none",
               overflow: "hidden",
-              zIndex: 2,
+              zIndex: 0,
             }}>
               <Check
-                size={big ? 54 : 30}
+                size={big ? 72 : 40}
                 color={pal.accent}
                 style={{ opacity: 0.55 }}
-                strokeWidth={3.5}
+                strokeWidth={4.0}
               />
             </div>
           )}
