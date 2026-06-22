@@ -162,11 +162,12 @@ export default function Cell({
               justifyContent: "center",
               pointerEvents: "none",
               overflow: "hidden",
+              zIndex: 2,
             }}>
               <CheckCircle2
                 size={big ? 54 : 30}
                 color={pal.accent}
-                style={{ opacity: 0.2 }}
+                style={{ opacity: 0.45 }}
                 strokeWidth={1.5}
               />
             </div>
