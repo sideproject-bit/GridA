@@ -102,26 +102,38 @@ const STEP_VISUALS = [
       <text x={82} y={20} textAnchor="middle" fill="#fff" fontSize={7} fontWeight={700} opacity={0.6}>FOCUS</text>
     </svg>
   ),
-  // Step 6: detail cells with completion check
+  // Step 6: focus view with watermark check, memo dot, check button
   ({ accent }) => (
     <svg width={108} height={108} viewBox="0 0 108 108">
       {Array.from({ length: 9 }).map((_, i) => {
         const col = i % 3, row = Math.floor(i / 3);
         const isCenter = i === 4;
-        const isDone = [0, 2, 5, 6].includes(i);
+        const isDone = [0, 2, 6].includes(i);
+        const hasMemo = i === 1;
+        const cx = col * 36 + 1, cy = row * 36 + 1;
         return (
           <g key={i}>
             <rect
-              x={col * 36 + 1} y={row * 36 + 1} width={34} height={34}
-              fill={isCenter ? accent : isDone ? accent + "38" : "#ffffff0a"}
-              stroke={isCenter ? accent : isDone ? accent + "70" : "#ffffff15"} strokeWidth={1}
+              x={cx} y={cy} width={34} height={34}
+              fill={isCenter ? accent : isDone ? accent + "50" : "#ffffff0a"}
+              stroke={isCenter ? accent : isDone ? accent + "90" : "#ffffff18"} strokeWidth={1}
             />
+            {/* Bold watermark check */}
             {isDone && (
               <polyline
-                points={`${col*36+23},${row*36+20} ${col*36+27},${row*36+26} ${col*36+33},${row*36+14}`}
-                fill="none" stroke={accent} strokeWidth={2.5}
+                points={`${cx+6},${cy+18} ${cx+13},${cy+26} ${cx+28},${cy+9}`}
+                fill="none" stroke={accent} strokeWidth={4.5}
                 strokeLinecap="round" strokeLinejoin="round"
+                opacity={0.5}
               />
+            )}
+            {/* Memo dot top-right */}
+            {hasMemo && (
+              <circle cx={cx+29} cy={cy+5} r={2.8} fill={accent} />
+            )}
+            {/* Check circle button bottom-right (uncompleted non-center cell) */}
+            {!isCenter && !isDone && i === 3 && (
+              <circle cx={cx+28} cy={cy+28} r={4.5} fill="none" stroke={accent} strokeWidth={1.5} opacity={0.55} />
             )}
           </g>
         );
