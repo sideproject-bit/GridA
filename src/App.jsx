@@ -35,9 +35,6 @@ function AppShell() {
   const [deletebusy, setDeleteBusy] = useState(false);
   const [featureGuideOpen, setFeatureGuideOpen] = useState(false);
   const [gridTutorialOpen, setGridTutorialOpen] = useState(false);
-  const [splashed, setSplashed] = useState(false);
-  // 0=hidden 1=fading-in 2=blocks-in 3=text-visible 4=exiting
-  const [splashPhase, setSplashPhase] = useState(0);
   const prevUserIdRef = useRef(null);
 
   const pal = paletteFor(theme, dark);
@@ -86,26 +83,6 @@ function AppShell() {
       setOnboardingOpen(true);
     }
   }, [profile]);
-
-  useEffect(() => {
-    if (splashed) return;
-    let t1, t2;
-    const id = requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setSplashPhase(1);
-        t1 = setTimeout(() => setSplashPhase(2), 500);
-        t2 = setTimeout(() => setSplashPhase(3), 2400);
-      });
-    });
-    return () => { cancelAnimationFrame(id); clearTimeout(t1); clearTimeout(t2); };
-  }, [splashed]);
-
-  const handleSplashClick = async () => {
-    if (splashPhase === 4) return;
-    setSplashPhase(4);
-    try { const Tone = await import("tone"); await Tone.start(); } catch (_) {}
-    setTimeout(() => setSplashed(true), 1300);
-  };
 
   const closeOnboarding = async () => {
     setOnboardingOpen(false);
@@ -190,69 +167,6 @@ function AppShell() {
           onClose={() => setGridTutorialOpen(false)}
           onDontShow={() => localStorage.setItem(TUTORIAL_SKIP_KEY, "1")}
         />
-      )}
-
-      {view === "home" && !splashed && (
-        <div
-          onClick={handleSplashClick}
-          style={{
-            position: "fixed", inset: 0, zIndex: 100,
-            background: "#000", overflow: "hidden", cursor: "pointer",
-            opacity: splashPhase === 0 ? 0 : splashPhase === 4 ? 0 : 1,
-            transition: splashPhase === 4 ? "opacity 0.9s ease 0.45s" : "opacity 2.2s ease",
-          }}
-        >
-          {/* Block 1 — accent2, slides from LEFT */}
-          <div style={{
-            position: "absolute", left: 0, top: 0, width: "44%", height: "100%",
-            background: pal.accent2,
-            transform: (splashPhase >= 2 && splashPhase < 4) ? "translateX(0)" : "translateX(-100%)",
-            transition: "transform 1.3s cubic-bezier(0.22,1,0.36,1)",
-          }} />
-          {/* Block 2 — accent, slides from TOP */}
-          <div style={{
-            position: "absolute", left: "44%", top: 0, right: 0, height: "60%",
-            background: pal.accent,
-            transform: (splashPhase >= 2 && splashPhase < 4) ? "translateY(0)" : "translateY(-100%)",
-            transition: "transform 1.3s cubic-bezier(0.22,1,0.36,1) 0.12s",
-          }} />
-          {/* Block 3 — accent3, slides from BOTTOM */}
-          <div style={{
-            position: "absolute", left: "44%", bottom: 0, right: 0, height: "40%",
-            background: pal.accent3,
-            transform: (splashPhase >= 2 && splashPhase < 4) ? "translateY(0)" : "translateY(100%)",
-            transition: "transform 1.3s cubic-bezier(0.22,1,0.36,1) 0.24s",
-          }} />
-          {/* Mondrian dividing lines */}
-          <div style={{ position: "absolute", left: "calc(44% - 2px)", top: 0, width: 5, height: "100%", background: "#000", zIndex: 1 }} />
-          <div style={{ position: "absolute", left: "44%", top: "calc(60% - 2px)", right: 0, height: 5, background: "#000", zIndex: 1 }} />
-          {/* Title + CTA */}
-          <div style={{
-            position: "absolute", inset: 0, zIndex: 2,
-            display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center",
-            pointerEvents: "none",
-            opacity: splashPhase === 3 ? 1 : 0,
-            transition: "opacity 1.4s ease",
-          }}>
-            <h1 style={{
-              fontFamily: titleFontFamily,
-              fontWeight: 900, fontSize: "clamp(52px,10vw,140px)",
-              color: "#fff", margin: 0,
-              textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 0.88,
-              textAlign: "center", textShadow: "0 2px 32px rgba(0,0,0,0.5)",
-            }}>
-              {t.title}
-            </h1>
-            <p style={{
-              color: "#fff", opacity: 0.38, marginTop: 24,
-              fontSize: "clamp(10px,1vw,12px)", letterSpacing: "0.1em",
-              textTransform: "uppercase", textAlign: "center", maxWidth: 400, padding: "0 20px",
-            }}>
-              {t.splash.cta}
-            </p>
-          </div>
-        </div>
       )}
 
       {view === "home" && (() => {
