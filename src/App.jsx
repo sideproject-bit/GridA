@@ -197,7 +197,7 @@ function AppShell() {
       )}
 
       {view === "home" && (() => {
-        const newBg = theme === "yellow" ? "#C9991A" : "#E3B22E";
+        const newBg = { mondrian: "#E3B22E", blue: "#dde0ff", red: "#c4956a", green: "#c4956a", yellow: "#C9991A", bw: "#e4e4e0" }[theme] ?? "#E3B22E";
         return (
           <div className="home-enter" style={{ margin: -28, height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
             <div style={{
@@ -212,7 +212,7 @@ function AppShell() {
                 onMouseEnter={() => play("C6", "64n")}
                 style={{
                   gridRow: "1 / 3", gridColumn: "1",
-                  background: pal.accent2,
+                  background: pal.homeTitleBg,
                   padding: "clamp(20px, 4vw, 56px)",
                   display: "flex", flexDirection: "column", justifyContent: "space-between",
                   position: "relative",
@@ -229,6 +229,7 @@ function AppShell() {
                     color: "#fff",
                     textTransform: "uppercase",
                     textAlign: "center",
+                    fontFamily: "Helvetica, Arial, sans-serif",
                   }}>
                     {t.title}
                   </h1>
@@ -270,7 +271,7 @@ function AppShell() {
             <div style={{ background: "#000", display: "grid", gap: 4, padding: "0 4px 4px", gridTemplateColumns: "1fr 1fr", flexShrink: 0 }}>
               <button onClick={() => { navigateTo("manage"); play("C5", "16n"); }} onMouseEnter={() => play("A5", "64n")}
                 className="home-tile"
-                style={{ background: pal.accent, border: "none", padding: "18px 24px", cursor: "pointer", color: "#fff", textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
+                style={{ background: pal.homeManageBg, border: "none", padding: "18px 24px", cursor: "pointer", color: "#fff", textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
                 <FolderKanban size={18} color="#fff" />
                 <span style={{ fontWeight: 800, fontSize: 13, textTransform: "uppercase" }}>{t.menu.manage}</span>
               </button>

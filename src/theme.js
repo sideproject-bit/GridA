@@ -1,18 +1,41 @@
 export const THEMES = {
   mondrian: { name: { en: "Mondrian", ko: "몬드리안" }, accents: ["#C7382E", "#2B3DCB", "#E3B22E"] },
-  blue:     { name: { en: "Blue", ko: "블루" }, accents: ["#2B3DCB", "#2B3DCB", "#2B3DCB"] },
-  red:      { name: { en: "Red", ko: "레드" }, accents: ["#C7382E", "#C7382E", "#C7382E"] },
-  green:    { name: { en: "Green", ko: "그린" }, accents: ["#1F7A4D", "#1F7A4D", "#1F7A4D"] },
-  yellow:   { name: { en: "Yellow", ko: "옐로우" }, accents: ["#E3B22E", "#E3B22E", "#E3B22E"] },
-  bw:       { name: { en: "B & W", ko: "블랙앤화이트" }, accents: ["#B9B9B4", "#B9B9B4", "#B9B9B4"] },
+  blue:     { name: { en: "Neptune",  ko: "해왕성" },   accents: ["#2B3DCB", "#2B3DCB", "#2B3DCB"] },
+  red:      { name: { en: "Mars",     ko: "화성" },     accents: ["#C7382E", "#C7382E", "#C7382E"] },
+  green:    { name: { en: "Earth",    ko: "지구" },     accents: ["#1F7A4D", "#1F7A4D", "#1F7A4D"] },
+  yellow:   { name: { en: "Venus",    ko: "금성" },     accents: ["#E3B22E", "#E3B22E", "#E3B22E"] },
+  bw:       { name: { en: "Mercury",  ko: "수성" },     accents: ["#888884", "#888884", "#888884"] },
+};
+
+// Per-theme home screen block colors (title block darker, manage block slightly lighter)
+const HOME_BLOCKS = {
+  mondrian: { title: "#2B3DCB", manage: "#C7382E" },
+  blue:     { title: "#1a2a9e", manage: "#2B3DCB" },
+  red:      { title: "#9e2822", manage: "#C7382E" },
+  green:    { title: "#145233", manage: "#1F7A4D" },
+  yellow:   { title: "#b38820", manage: "#E3B22E" },
+  bw:       { title: "#4a4a48", manage: "#6b6b68" },
+};
+
+// Per-theme "New Mandalart" button background (text is always dark #1a1a1a)
+export const NEW_BTN_BG = {
+  mondrian: "#E3B22E",
+  blue:     "#dde0ff",
+  red:      "#c4956a",
+  green:    "#c4956a",
+  yellow:   "#E3B22E",
+  bw:       "#e4e4e0",
 };
 
 export function paletteFor(theme, dark) {
+  const blocks = HOME_BLOCKS[theme] ?? HOME_BLOCKS.mondrian;
   return {
     bg: dark ? "#16150F" : "#F4F0E4",
     ink: dark ? "#F2EDE1" : "#1B1A17",
     accent: THEMES[theme].accents[0],
     accent2: THEMES[theme].accents[1],
     accent3: THEMES[theme].accents[2],
+    homeTitleBg: blocks.title,
+    homeManageBg: blocks.manage,
   };
 }
