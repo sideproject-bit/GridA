@@ -1,5 +1,8 @@
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Prevent mid-word breaks in Korean (keep-all = normal for non-CJK) */
+* { word-break: keep-all; }
+
 html, body, #root {
   margin: 0;
   padding: 0;

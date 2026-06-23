@@ -42,6 +42,8 @@ function AppShell() {
   const play = useSound(soundOn);
   const music = useMusicPlayer();
 
+  useEffect(() => { document.documentElement.lang = lang; }, [lang]);
+
   // Load theme + music from localStorage when user logs in; reset view to home
   useEffect(() => {
     if (!session?.user?.id) return;
