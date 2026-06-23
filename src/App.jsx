@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { User, Plus, FolderKanban, HelpCircle, ArrowLeft, BookOpen, Lightbulb } from "lucide-react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { paletteFor, THEMES } from "./theme";
@@ -43,6 +43,32 @@ function AppShell() {
   const music = useMusicPlayer();
 
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
+
+  // Browser history integration: push state on navigation, restore on popstate
+  const navigateTo = useCallback((newView, { mandalartId, friend, mandalart, resetConfirm } = {}) => {
+    if (mandalartId !== undefined) setCurrentMandalartId(mandalartId);
+    if (friend !== undefined) setViewingFriend(friend);
+    if (mandalart !== undefined) setViewingMandalart(mandalart);
+    if (resetConfirm) setSignOutConfirm(false);
+    setView(newView);
+    const state = { view: newView, currentMandalartId: mandalartId, viewingFriend: friend, viewingMandalart: mandalart };
+    history.pushState(state, "");
+  }, []);
+
+  useEffect(() => {
+    history.replaceState({ view: "home" }, "");
+    const handler = (e) => {
+      const s = e.state;
+      if (!s?.view) return;
+      setView(s.view);
+      if ("currentMandalartId" in s) setCurrentMandalartId(s.currentMandalartId ?? null);
+      if ("viewingFriend" in s) setViewingFriend(s.viewingFriend ?? null);
+      if ("viewingMandalart" in s) setViewingMandalart(s.viewingMandalart ?? null);
+      setSignOutConfirm(false);
+    };
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, []);
 
   // Load theme + music from localStorage when user logs in; reset view to home
   useEffect(() => {
@@ -127,8 +153,7 @@ function AppShell() {
   const goCreate = async () => {
     const m = await createMandalart(myId, t.grid.untitled);
     if (m) {
-      setCurrentMandalartId(m.id);
-      setView("grid");
+      navigateTo("grid", { mandalartId: m.id });
       play("C5", "16n");
       if (!localStorage.getItem(TUTORIAL_SKIP_KEY)) {
         setGridTutorialOpen(true);
@@ -225,7 +250,7 @@ function AppShell() {
               </div>
 
               {/* Profile — top right */}
-              <button onClick={() => { setView("profile"); play("C5", "16n"); }} onMouseEnter={() => play("E6", "64n")}
+              <button onClick={() => { navigateTo("profile"); play("C5", "16n"); }} onMouseEnter={() => play("E6", "64n")}
                 className="home-tile"
                 style={{ gridRow: "1", gridColumn: "2", background: pal.bg, border: "none", padding: "clamp(16px,2.5vw,32px) 20px", cursor: "pointer", color: pal.ink, textAlign: "left", display: "flex", flexDirection: "column", gap: 10 }}>
                 <User size={20} color={pal.ink} />
@@ -243,13 +268,13 @@ function AppShell() {
 
             {/* Bottom bar */}
             <div style={{ background: "#000", display: "grid", gap: 4, padding: "0 4px 4px", gridTemplateColumns: "1fr 1fr", flexShrink: 0 }}>
-              <button onClick={() => { setView("manage"); play("C5", "16n"); }} onMouseEnter={() => play("A5", "64n")}
+              <button onClick={() => { navigateTo("manage"); play("C5", "16n"); }} onMouseEnter={() => play("A5", "64n")}
                 className="home-tile"
                 style={{ background: pal.accent, border: "none", padding: "18px 24px", cursor: "pointer", color: "#fff", textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
                 <FolderKanban size={18} color="#fff" />
                 <span style={{ fontWeight: 800, fontSize: 13, textTransform: "uppercase" }}>{t.menu.manage}</span>
               </button>
-              <button onClick={() => { setView("about"); play("G4", "16n"); }} onMouseEnter={() => play("B5", "64n")}
+              <button onClick={() => { navigateTo("about"); play("G4", "16n"); }} onMouseEnter={() => play("B5", "64n")}
                 className="home-tile"
                 style={{ background: pal.bg, border: "none", padding: "18px 24px", cursor: "pointer", color: pal.ink, textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
                 <BookOpen size={18} color={pal.ink} />
@@ -264,7 +289,7 @@ function AppShell() {
         <div className="fade-in">
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <button onClick={() => setView("home")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+              <button onClick={() => navigateTo("home")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
                 <ArrowLeft size={14} /> {t.back}
               </button>
               <button onClick={() => setGridTutorialOpen(true)} style={{ background: "none", border: "none", color: pal.ink, opacity: 0.4, cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontSize: 11 }}>
@@ -280,7 +305,7 @@ function AppShell() {
       {view === "manage" && (
         <div className="fade-in">
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
-            <button onClick={() => setView("home")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+            <button onClick={() => navigateTo("home")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
               <ArrowLeft size={14} /> {t.back}
             </button>
             <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} />
@@ -289,7 +314,7 @@ function AppShell() {
             pal={pal}
             t={t}
             myId={myId}
-            onOpen={(id) => { setCurrentMandalartId(id); setView("grid"); play("C5", "16n"); }}
+            onOpen={(id) => { navigateTo("grid", { mandalartId: id }); play("C5", "16n"); }}
           />
         </div>
       )}
@@ -297,7 +322,7 @@ function AppShell() {
       {view === "profile" && (
         <div className="fade-in">
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
-            <button onClick={() => { setView("home"); setSignOutConfirm(false); }} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+            <button onClick={() => navigateTo("home", { resetConfirm: true })} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
               <ArrowLeft size={14} /> {t.back}
             </button>
             <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} />
@@ -322,7 +347,7 @@ function AppShell() {
             play={play}
             myId={myId}
             myCode={myCode}
-            onViewFriend={(friend) => { setViewingFriend(friend); setView("friendList"); play("C5", "16n"); }}
+            onViewFriend={(friend) => { navigateTo("friendList", { friend }); play("C5", "16n"); }}
           />
 
           {/* Delete account */}
@@ -364,7 +389,7 @@ function AppShell() {
       {view === "friendList" && (
         <div className="fade-in">
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
-            <button onClick={() => setView("profile")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+            <button onClick={() => navigateTo("profile")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
               <ArrowLeft size={14} /> {t.back}
             </button>
             <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} />
@@ -373,7 +398,7 @@ function AppShell() {
             friend={viewingFriend}
             pal={pal}
             t={t}
-            onOpen={(m) => { setViewingMandalart(m); setView("viewer"); play("C5", "16n"); }}
+            onOpen={(m) => { navigateTo("viewer", { mandalart: m }); play("C5", "16n"); }}
           />
         </div>
       )}
@@ -381,7 +406,7 @@ function AppShell() {
       {view === "about" && (
         <div className="fade-in">
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
-            <button onClick={() => setView("home")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+            <button onClick={() => navigateTo("home")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
               <ArrowLeft size={14} /> {t.back}
             </button>
             <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} />
@@ -393,7 +418,7 @@ function AppShell() {
       {view === "viewer" && viewingMandalart && (
         <div className="fade-in">
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
-            <button onClick={() => setView("friendList")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+            <button onClick={() => navigateTo("friendList")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
               <ArrowLeft size={14} /> {t.back}
             </button>
             <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} />

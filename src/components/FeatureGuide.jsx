@@ -75,10 +75,10 @@ export default function FeatureGuide({ pal, t, onClose }) {
         ) : (
           <div>
             <h3 style={{ fontWeight: 800, fontSize: 14, textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 16px", color: pal.ink }}>
-              {t.termsTitle}
+              {t.auth.termsTitle}
             </h3>
             <ol style={{ margin: 0, padding: "0 0 0 18px", display: "flex", flexDirection: "column", gap: 12 }}>
-              {t.termsClauses.map((clause, i) => (
+              {t.auth.termsClauses.map((clause, i) => (
                 <li key={i} style={{ fontSize: 13, lineHeight: 1.75, color: pal.ink, opacity: 0.8 }}>{clause}</li>
               ))}
             </ol>
