@@ -31,7 +31,9 @@ function AppShell() {
   const [viewingFriend, setViewingFriend] = useState(null);
   const [viewingMandalart, setViewingMandalart] = useState(null);
   const [signOutConfirm, setSignOutConfirm] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false); // false | "reason" | "final"
+  const [deleteReason, setDeleteReason] = useState("");
+  const [deleteFeedback, setDeleteFeedback] = useState("");
   const [deletebusy, setDeleteBusy] = useState(false);
   const [featureGuideOpen, setFeatureGuideOpen] = useState(false);
   const [gridTutorialOpen, setGridTutorialOpen] = useState(false);
@@ -353,7 +355,63 @@ function AppShell() {
 
           {/* Delete account */}
           <div style={{ marginTop: 40, paddingTop: 24, borderTop: `1px solid ${pal.ink}18` }}>
-            {deleteConfirm ? (
+            {deleteConfirm === "reason" ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <p style={{ fontSize: 12, color: pal.ink, margin: 0, opacity: 0.65, lineHeight: 1.6 }}>
+                  {t.auth.deleteAccountReasonTitle}
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {t.auth.deleteAccountReasons.map((reason) => (
+                    <button
+                      key={reason}
+                      onClick={() => setDeleteReason(reason)}
+                      style={{
+                        background: deleteReason === reason ? "#C7382E" : "none",
+                        border: `1px solid ${deleteReason === reason ? "#C7382E" : pal.ink + "40"}`,
+                        color: deleteReason === reason ? "#fff" : pal.ink,
+                        padding: "5px 12px", fontSize: 11, cursor: "pointer",
+                        opacity: deleteReason === reason ? 1 : 0.7,
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      {reason}
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  value={deleteFeedback}
+                  onChange={(e) => setDeleteFeedback(e.target.value)}
+                  placeholder={t.auth.deleteAccountFeedbackPlaceholder}
+                  rows={3}
+                  style={{
+                    background: pal.bg, color: pal.ink, border: `1px solid ${pal.ink}30`,
+                    padding: "8px 10px", fontSize: 12, resize: "vertical", fontFamily: "inherit",
+                    outline: "none", width: "100%", boxSizing: "border-box",
+                  }}
+                />
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button
+                    onClick={() => setDeleteConfirm("final")}
+                    disabled={!deleteReason}
+                    style={{
+                      background: deleteReason ? "#C7382E" : pal.ink + "20",
+                      color: deleteReason ? "#fff" : pal.ink,
+                      border: "none", padding: "7px 14px", fontSize: 11, fontWeight: 700,
+                      cursor: deleteReason ? "pointer" : "not-allowed", opacity: deleteReason ? 1 : 0.5,
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    {t.auth.deleteAccountNext}
+                  </button>
+                  <button
+                    onClick={() => { setDeleteConfirm(false); setDeleteReason(""); setDeleteFeedback(""); }}
+                    style={{ background: "none", border: `1px solid ${pal.ink}40`, color: pal.ink, padding: "7px 14px", fontSize: 11, cursor: "pointer" }}
+                  >
+                    {t.auth.deleteAccountNo}
+                  </button>
+                </div>
+              </div>
+            ) : deleteConfirm === "final" ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <p style={{ fontSize: 13, color: "#C7382E", margin: 0, lineHeight: 1.6 }}>
                   {t.auth.deleteAccountConfirm}
@@ -367,7 +425,7 @@ function AppShell() {
                     {deletebusy ? t.auth.deleteAccountDeleting : t.auth.deleteAccountYes}
                   </button>
                   <button
-                    onClick={() => setDeleteConfirm(false)}
+                    onClick={() => { setDeleteConfirm(false); setDeleteReason(""); setDeleteFeedback(""); }}
                     disabled={deletebusy}
                     style={{ background: "none", border: `1px solid ${pal.ink}40`, color: pal.ink, padding: "7px 14px", fontSize: 11, cursor: "pointer" }}
                   >
@@ -377,7 +435,7 @@ function AppShell() {
               </div>
             ) : (
               <button
-                onClick={() => { setSignOutConfirm(false); setDeleteConfirm(true); }}
+                onClick={() => { setSignOutConfirm(false); setDeleteConfirm("reason"); }}
                 style={{ background: "none", border: "none", color: "#C7382E", opacity: 0.5, fontSize: 11, cursor: "pointer", padding: 0 }}
               >
                 {t.auth.deleteAccount}
