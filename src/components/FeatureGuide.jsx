@@ -22,7 +22,7 @@ export default function FeatureGuide({ pal, t, onClose }) {
           <X size={18} />
         </button>
         <div style={{ display: "flex", gap: 0, marginBottom: 20, borderBottom: `1px solid ${pal.ink}20` }}>
-          {[["guide", t.guide.tabGuide], ["contact", t.guide.tabContact]].map(([key, label]) => (
+          {[["guide", t.guide.tabGuide], ["contact", t.guide.tabContact], ["terms", t.guide.tabTerms]].map(([key, label]) => (
             <button
               key={key}
               onClick={() => setTab(key)}
@@ -70,8 +70,19 @@ export default function FeatureGuide({ pal, t, onClose }) {
               </div>
             ))}
           </div>
-        ) : (
+        ) : tab === "contact" ? (
           <ContactPanel pal={pal} t={t} />
+        ) : (
+          <div>
+            <h3 style={{ fontWeight: 800, fontSize: 14, textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 16px", color: pal.ink }}>
+              {t.termsTitle}
+            </h3>
+            <ol style={{ margin: 0, padding: "0 0 0 18px", display: "flex", flexDirection: "column", gap: 12 }}>
+              {t.termsClauses.map((clause, i) => (
+                <li key={i} style={{ fontSize: 13, lineHeight: 1.75, color: pal.ink, opacity: 0.8 }}>{clause}</li>
+              ))}
+            </ol>
+          </div>
         )}
       </div>
     </div>
