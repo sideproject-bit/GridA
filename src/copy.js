@@ -131,6 +131,7 @@ export const T = {
         "A Mandalart is a 9×9 grid goal-setting technique built around one central goal, broken into 8 sub-goals, each of which is further broken into 8 concrete action items. It originated in Japan in the 1980s and became widely known after baseball player Shohei Ohtani's own Mandalart from his high school years was publicized.",
         "This app's grid follows one rule: the 8 cells around your main goal are directly linked to the center cell of each of the 8 outer blocks — edit one and the other updates too. Eight separate paths, converging on one goal.",
         "Write entries in the present tense, as if already achieved, rather than as something you intend to do. It changes how you act toward them.",
+        "Research backs this up. A study by Dr. Gail Matthews (Dominican University) found that people who write down their goals are 42% more likely to achieve them than those who don't. The Mandalart goes further — by forcing you to map the path from daily habit all the way up to your central goal, it turns vague intention into a structured, visible plan. Seeing the full picture at once makes it harder to ignore and easier to act on.",
       ],
       tipsTitle: "Quick tips",
       tips: [
@@ -142,7 +143,7 @@ export const T = {
         "Play background music to enter a focused, distraction-free writing state.",
       ],
       ohtaniLabel: "The Ohtani method",
-      ohtani: "Shohei Ohtani created his Mandalart at age 16 with the goal of becoming a pro baseball player. His 8 sub-goals included nutrition, mental strength, speed, and pitching power — each broken into 8 concrete daily habits.",
+      ohtani: "Shohei Ohtani created his Mandalart at age 16 with the goal of being drafted #1 by all 8 pro teams. His 8 sub-goals included nutrition, mental strength, speed, and pitching power — each broken into 8 concrete daily habits. He achieved it: drafted in 2013, he went on to become one of the greatest baseball players in history — a two-way MLB superstar who signed the largest contract in sports history ($700M, LA Dodgers) and won the World Series in 2024.",
       ohtaniGridLabel: "Ohtani's actual Mandalart",
       ohtaniGridCaption: "Goal: be drafted #1 by all 8 pro teams. 8 sub-goals, 64 daily habits.",
       ohtaniGridCta: "Use this as a reference — then start filling in your own.",
@@ -324,6 +325,7 @@ export const T = {
         "만다라트는 하나의 핵심 목표를 중심에 두고, 그것을 이루기 위한 8개의 하위 목표, 그리고 각 하위 목표를 다시 8개의 구체적인 실행 항목으로 쪼개는 9×9 격자 형태의 목표 설정 기법이에요. 1980년대 일본에서 만들어졌고, 야구선수 오타니 쇼헤이가 고교 시절 작성한 만다라트가 알려지면서 널리 퍼졌어요.",
         "이 앱의 그리드는 한 가지 원칙을 따라요 — 메인 목표 둘레의 8칸은 바깥에 있는 8개 블록 각각의 중심 칸과 그대로 연결돼 있어서, 한쪽을 고치면 다른 쪽도 같이 바뀌어요. 여덟 갈래로 흩어진 하위 목표들이 결국 하나의 중심으로 수렴한다는 뜻이에요.",
         "목표를 쓸 때는 '할 거야'가 아니라 '이미 하고 있어'처럼 현재형으로 적어보세요. 그렇게 쓴 말이 생각과 행동 모두를 바꿔요.",
+        "연구도 이를 뒷받침해요. 도미니칸 대학교의 게일 매튜스 박사 연구에 따르면, 목표를 직접 글로 적은 사람은 그렇지 않은 사람보다 목표를 달성할 확률이 42% 더 높았어요. 만다라트는 한 걸음 더 나아가, 일상 습관 하나하나가 핵심 목표로 어떻게 이어지는지를 직접 그려가게 해요. 막연한 의지가 눈에 보이는 구체적인 계획이 되면, 외면하기도 어렵고 실행하기도 훨씬 쉬워져요.",
       ],
       tipsTitle: "빠른 팁",
       tips: [
@@ -335,7 +337,7 @@ export const T = {
         "배경 음악을 틀면 집중력 있는 글쓰기 상태에 더 쉽게 들어갈 수 있어요.",
       ],
       ohtaniLabel: "오타니 방식",
-      ohtani: "오타니 쇼헤이는 고교 시절 '8개 구단 드래프트 1순위 지명'을 목표로 만다라트를 작성했어요. 영양, 멘탈, 스피드, 구위 등 8개의 하위 목표, 각각을 위한 64가지 일상 습관으로 구체화했어요.",
+      ohtani: "오타니 쇼헤이는 고교 시절 '8개 구단 드래프트 1순위 지명'을 목표로 만다라트를 작성했어요. 영양, 멘탈, 스피드, 구위 등 8개의 하위 목표, 각각을 위한 64가지 일상 습관으로 구체화했어요. 그리고 그는 실제로 해냈어요. 2013년 드래프트 1순위로 지명된 그는 이후 MLB에서 투수와 타자를 동시에 소화하는 역대 최고의 이도류 선수가 됐고, 스포츠 역사상 최대 규모의 계약(7억 달러, LA 다저스)을 맺은 뒤 2024년 월드 시리즈 우승까지 거머쥐었어요.",
       ohtaniGridLabel: "오타니의 실제 만다라트 (고교 시절)",
       ohtaniGridCaption: "목표: 8개 구단 드래프트 1순위 지명. 8개 하위 목표, 64가지 일상 습관.",
       ohtaniGridCta: "이 만다라트를 참고해서, 나만의 만다라트를 작성해보세요.",

@@ -1,8 +1,8 @@
 import React from "react";
-import { Target, GitBranch, PenLine, Lightbulb } from "lucide-react";
+import { Target, GitBranch, PenLine, Lightbulb, BookOpen } from "lucide-react";
 import OhtaniMandalart from "./OhtaniMandalart";
 
-const ICONS = [Target, GitBranch, PenLine];
+const ICONS = [Target, GitBranch, PenLine, BookOpen];
 
 export default function AboutPage({ pal, t }) {
   const about = t.about;
