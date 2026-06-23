@@ -131,7 +131,7 @@ export const T = {
         "A Mandalart is a 9×9 grid goal-setting technique built around one central goal, broken into 8 sub-goals, each of which is further broken into 8 concrete action items. It originated in Japan in the 1980s and became widely known after baseball player Shohei Ohtani's own Mandalart from his high school years was publicized.",
         "This app's grid follows one rule: the 8 cells around your main goal are directly linked to the center cell of each of the 8 outer blocks — edit one and the other updates too. Eight separate paths, converging on one goal.",
         "Write entries in the present tense, as if already achieved, rather than as something you intend to do. It changes how you act toward them.",
-        "Research backs this up. A study by Dr. Gail Matthews (Dominican University) found that people who write down their goals are 42% more likely to achieve them than those who don't. The Mandalart goes further — by forcing you to map the path from daily habit all the way up to your central goal, it turns vague intention into a structured, visible plan. Seeing the full picture at once makes it harder to ignore and easier to act on.",
+        "Visualizing your goals through a Mandalart actually increases your chances of achieving them. It also helps you map out how each daily habit connects to your core goal. When vague intentions become a concrete, visible plan, they're harder to ignore and much easier to act on.",
       ],
       tipsTitle: "Quick tips",
       tips: [
