@@ -90,8 +90,7 @@ function GridVisual({ type }) {
 
   if (type === "steps") {
     const MINI = 10, MGAP = 2;
-    const BRIGHT_Y = "#FFEF60";
-    const blockColors = [C.red, BRIGHT_Y, C.blue, BRIGHT_Y, C.red, C.blue, C.blue, C.cream, BRIGHT_Y];
+    const blockColors = [C.red, C.yellow, C.blue, C.yellow, C.red, C.blue, C.blue, C.cream, C.yellow];
     const s9 = 9 * MINI + 10 * MGAP;
     return (
       <svg width={s9} height={s9} viewBox={`0 0 ${s9} ${s9}`}>
@@ -99,12 +98,10 @@ function GridVisual({ type }) {
           const col = i % 9, row = Math.floor(i / 9);
           const bIdx = Math.floor(row / 3) * 3 + Math.floor(col / 3);
           const isCenter = row === 4 && col === 4;
-          const baseColor = blockColors[bIdx];
-          const fill = isCenter ? BRIGHT_Y : baseColor + (baseColor === BRIGHT_Y ? "cc" : "80");
           return <rect key={i}
             x={col * (MINI + MGAP)} y={row * (MINI + MGAP)}
             width={MINI} height={MINI}
-            fill={fill}
+            fill={isCenter ? C.yellow : blockColors[bIdx] + "80"}
           />;
         })}
       </svg>
@@ -113,14 +110,13 @@ function GridVisual({ type }) {
 
   if (type === "planner") {
     const cols = 3, rows = 6, w = (size - (cols - 1) * GAP) / cols, h = (size - (rows - 1) * GAP) / rows;
-    // Yellow background slide — use red/blue/white for blocks, no yellow
-    const blockFills = [C.red, "none", C.blue, C.blue, "none", "#fff", "none", C.blue, "none", "none", C.red, C.red, "none", "none", "#fff", "#fff", "none", "none"];
+    const blockFills = [C.red, "none", C.blue, C.blue, "none", C.yellow, "none", C.blue, "none", "none", C.red, C.red, "none", "none", C.yellow, C.yellow, "none", "none"];
     return (
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {Array.from({ length: cols * rows }).map((_, i) => {
           const col = i % cols, row = Math.floor(i / cols);
           const x = col * (w + GAP), y = row * (h + GAP);
-          const fill = blockFills[i] === "none" ? "rgba(0,0,0,0.12)" : blockFills[i] + "cc";
+          const fill = blockFills[i] === "none" ? "rgba(255,255,255,0.07)" : blockFills[i] + "bb";
           return <rect key={i} x={x} y={y} width={w} height={h} fill={fill} />;
         })}
       </svg>

@@ -79,15 +79,15 @@ function MondrianBg({ play, ready }) {
 
 // ── Insert page shown after "Get Started" ──────────────
 function InsertPage({ onDone }) {
-  // phase 0: logo fading in (slow)
-  // phase 1: logo slides up, title+copy fades in slowly
+  // phase 0: logo fading in (slow scale+fade)
+  // phase 1: logo slides up, title+copy fade in slowly
   // phase 2: everything fades out
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase(1), 1800);  // logo fully in → wait → slide up
-    const t2 = setTimeout(() => setPhase(2), 5200);  // hold for reading
-    const t3 = setTimeout(onDone, 6100);              // fade out complete
+    const t1 = setTimeout(() => setPhase(1), 1800);
+    const t2 = setTimeout(() => setPhase(2), 5400);
+    const t3 = setTimeout(onDone, 6300);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
@@ -104,36 +104,43 @@ function InsertPage({ onDone }) {
     }}>
       <style>{`
         @keyframes ipLogoIn {
-          0%   { opacity: 0; transform: scale(0.6); }
-          60%  { opacity: 1; }
+          0%   { opacity: 0; transform: scale(0.55); }
+          50%  { opacity: 1; }
           100% { opacity: 1; transform: scale(1); }
         }
         @keyframes ipTitleIn {
-          from { opacity: 0; transform: translateY(18px); }
-          to   { opacity: 1; transform: none; }
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes ipCopyIn {
           from { opacity: 0; transform: translateY(12px); }
-          to   { opacity: 0.55; transform: none; }
+          to   { opacity: 0.55; transform: translateY(0); }
         }
       `}</style>
 
-      {/* Logo */}
+      {/*
+        Two-layer structure to avoid animation/transform conflict:
+        - Outer div: CSS transition for the Y slide (phase 0→1)
+        - Inner div: CSS animation for scale+fade (always)
+      */}
       <div style={{
-        animation: "ipLogoIn 1.4s cubic-bezier(0.16,1,0.3,1) both",
-        transform: phase >= 1 ? "translateY(-44px)" : "translateY(0)",
-        transition: phase >= 1 ? "transform 0.9s cubic-bezier(0.22,1,0.36,1)" : "none",
+        display: "flex", flexDirection: "column", alignItems: "center",
+        transform: phase >= 1 ? "translateY(-36px)" : "translateY(0)",
+        transition: "transform 1s cubic-bezier(0.22,1,0.36,1)",
       }}>
-        <img src="/logo.png" alt="GridA" style={{ width: 210, height: 210, objectFit: "contain", display: "block" }} />
-      </div>
+        <div style={{ animation: "ipLogoIn 1.4s cubic-bezier(0.16,1,0.3,1) both" }}>
+          <img src="/logo.png" alt="GridA" style={{ width: 210, height: 210, objectFit: "contain", display: "block" }} />
+        </div>
 
-      {/* Title + tagline — only rendered after phase 1 */}
-      {phase >= 1 && (
-        <div style={{ textAlign: "center", marginTop: 28 }}>
+        {/* Title + tagline — conditionally rendered at phase 1 */}
+        <div style={{
+          textAlign: "center", marginTop: 20,
+          visibility: phase >= 1 ? "visible" : "hidden",
+        }}>
           <div style={{
             fontWeight: 900, fontSize: 30, letterSpacing: "0.55em",
-            color: "#F2EDE1", textTransform: "uppercase", marginBottom: 14,
-            animation: "ipTitleIn 1.1s 0.2s cubic-bezier(0.22,1,0.36,1) both",
+            color: "#F2EDE1", textTransform: "uppercase", marginBottom: 12,
+            animation: phase >= 1 ? "ipTitleIn 1.1s 0.15s cubic-bezier(0.22,1,0.36,1) both" : "none",
           }}>
             GRIDA
           </div>
@@ -141,12 +148,12 @@ function InsertPage({ onDone }) {
             fontStyle: "italic", fontSize: 13,
             color: "rgba(242,237,225,1)",
             letterSpacing: "0.06em", fontWeight: 400,
-            animation: "ipCopyIn 1.2s 0.55s cubic-bezier(0.22,1,0.36,1) both",
+            animation: phase >= 1 ? "ipCopyIn 1.3s 0.5s cubic-bezier(0.22,1,0.36,1) both" : "none",
           }}>
             Composition with Your Day, Year, and Life
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -208,15 +215,10 @@ export default function AuthGate({ play }) {
   };
 
   return (
-    <div style={{
-      minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      padding: 24, position: "relative",
-      opacity: loginVisible ? 1 : 0,
-      transition: "opacity 0.9s ease",
-    }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, position: "relative" }}>
       <MondrianBg play={play} ready={blockReady} />
 
-      {/* Language toggle */}
+      {/* Language toggle — fades in with form */}
       <button
         onClick={() => setLang(l => l === "en" ? "ko" : "en")}
         style={{
@@ -225,12 +227,19 @@ export default function AuthGate({ play }) {
           background: "rgba(18,18,18,0.75)", backdropFilter: "blur(6px)",
           border: "1px solid rgba(255,255,255,0.2)", color: "#F2EDE1",
           padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer",
+          opacity: loginVisible ? 1 : 0,
+          transition: "opacity 0.7s ease",
         }}
       >
         <Globe size={12} /> {lang === "en" ? "한국어" : "English"}
       </button>
 
-      <div style={{ width: 340, position: "relative", zIndex: 1 }}>
+      {/* Form wrapper — fades in after blocks settle */}
+      <div style={{
+        width: 340, position: "relative", zIndex: 1,
+        opacity: loginVisible ? 1 : 0,
+        transition: "opacity 0.7s ease",
+      }}>
         <form
           onSubmit={submit}
           style={{
