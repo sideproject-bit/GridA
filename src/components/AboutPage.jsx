@@ -1,7 +1,8 @@
 import React from "react";
-import { Grid3x3, CalendarDays, Timer, CheckCircle2 } from "lucide-react";
+import { Grid3x3, CalendarDays, CheckCircle2 } from "lucide-react";
+import TomatoIcon from "./TomatoIcon";
 
-const FEATURE_ICONS = [Grid3x3, CalendarDays, Timer];
+const FEATURE_ICONS = [Grid3x3, CalendarDays, TomatoIcon];
 const FEATURE_ACCENT_KEYS = ["accent", "accent2", "accent3"];
 
 function GridPhilosophyVisual({ pal }) {

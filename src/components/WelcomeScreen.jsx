@@ -79,21 +79,19 @@ function GridVisual({ type }) {
   const size = 3 * CELL + 2 * GAP;
 
   if (type === "intro") {
-    // Three colored columns = three tools
     const fills = [C.red, C.yellow, C.cream, C.red, C.yellow, C.blue, C.cream, C.yellow, C.blue];
     return (
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {fills.map((f, i) => { const p = pos(i); return <rect key={i} x={p.x} y={p.y} width={CELL} height={CELL} fill={f} />; })}
-        {/* Center overlay */}
         <rect x={pos(4).x} y={pos(4).y} width={CELL} height={CELL} fill={C.cream} />
-        <text x={pos(4).x + CELL / 2} y={pos(4).y + CELL / 2 + 5} textAnchor="middle" fontSize={14} fontWeight={900} fill="#0d0d0d">G</text>
       </svg>
     );
   }
 
   if (type === "steps") {
     const MINI = 10, MGAP = 2;
-    const blockColors = [C.red, C.yellow, C.blue, C.yellow, C.red, C.blue, C.blue, C.cream, C.yellow];
+    const BRIGHT_Y = "#FFEF60";
+    const blockColors = [C.red, BRIGHT_Y, C.blue, BRIGHT_Y, C.red, C.blue, C.blue, C.cream, BRIGHT_Y];
     const s9 = 9 * MINI + 10 * MGAP;
     return (
       <svg width={s9} height={s9} viewBox={`0 0 ${s9} ${s9}`}>
@@ -101,10 +99,12 @@ function GridVisual({ type }) {
           const col = i % 9, row = Math.floor(i / 9);
           const bIdx = Math.floor(row / 3) * 3 + Math.floor(col / 3);
           const isCenter = row === 4 && col === 4;
+          const baseColor = blockColors[bIdx];
+          const fill = isCenter ? BRIGHT_Y : baseColor + (baseColor === BRIGHT_Y ? "cc" : "80");
           return <rect key={i}
             x={col * (MINI + MGAP)} y={row * (MINI + MGAP)}
             width={MINI} height={MINI}
-            fill={isCenter ? C.yellow : blockColors[bIdx] + "80"}
+            fill={fill}
           />;
         })}
       </svg>
@@ -227,8 +227,8 @@ export default function WelcomeScreen({ play, onFinish }) {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <img src="/logo.png" alt="GridA" style={{ width: 22, height: 22, objectFit: "contain" }} />
           <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-            <span style={{ fontWeight: 900, fontSize: 16, color: "rgba(255,255,255,0.85)", letterSpacing: "-0.02em" }}>GRIDA</span>
-            <span style={{ fontWeight: 400, fontSize: 13, color: "rgba(255,255,255,0.35)" }}>.app</span>
+            <span style={{ fontWeight: 900, fontSize: 21, color: "rgba(255,255,255,0.85)", letterSpacing: "-0.02em" }}>GRIDA</span>
+            <span style={{ fontWeight: 400, fontSize: 14, color: "rgba(255,255,255,0.35)" }}>.app</span>
           </div>
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>

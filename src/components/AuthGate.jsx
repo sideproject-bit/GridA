@@ -53,9 +53,9 @@ function InsertPage({ onDone }) {
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase(1), 700);
-    const t2 = setTimeout(() => setPhase(2), 1900);
-    const t3 = setTimeout(onDone, 2600);
+    const t1 = setTimeout(() => setPhase(1), 1000);
+    const t2 = setTimeout(() => setPhase(2), 3800);
+    const t3 = setTimeout(onDone, 4700);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
@@ -82,7 +82,7 @@ function InsertPage({ onDone }) {
         transition: phase >= 1 ? "transform 0.55s cubic-bezier(0.22,1,0.36,1)" : "none",
         marginBottom: phase >= 1 ? 0 : 0,
       }}>
-        <img src="/logo.png" alt="GridA" style={{ width: 88, height: 88, objectFit: "contain", display: "block" }} />
+        <img src="/logo.png" alt="GridA" style={{ width: 160, height: 160, objectFit: "contain", display: "block" }} />
       </div>
 
       {/* Title + tagline */}
@@ -170,18 +170,6 @@ export default function AuthGate({ play }) {
       transition: "opacity 0.9s ease",
     }}>
       <MondrianBg play={play} />
-
-      {/* Top-left brand */}
-      <div style={{
-        position: "fixed", top: 16, left: 20, zIndex: 2,
-        display: "flex", alignItems: "center", gap: 8,
-      }}>
-        <img src="/logo.png" alt="GridA" style={{ width: 22, height: 22, objectFit: "contain" }} />
-        <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
-          <span style={{ fontWeight: 900, fontSize: 15, color: "rgba(242,237,225,0.85)", letterSpacing: "-0.01em" }}>GRIDA</span>
-          <span style={{ fontWeight: 400, fontSize: 12, color: "rgba(242,237,225,0.35)" }}>.app</span>
-        </div>
-      </div>
 
       {/* Language toggle */}
       <button

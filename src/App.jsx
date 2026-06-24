@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { User, Plus, FolderKanban, HelpCircle, ArrowLeft, BookOpen, Lightbulb, Grid3x3, CalendarDays, Timer } from "lucide-react";
+import { User, Plus, FolderKanban, HelpCircle, ArrowLeft, BookOpen, Lightbulb, Grid3x3, CalendarDays } from "lucide-react";
+import TomatoIcon from "./components/TomatoIcon";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { paletteFor, THEMES } from "./theme";
 import { T } from "./copy";
@@ -241,7 +242,7 @@ function AppShell() {
         const featTiles = [
           { key: "planner",   label: t.menu.planner,   Icon: CalendarDays, bg: plannerBg,          fg: plannerFg,          go: () => { navigateTo("planner"); if (!localStorage.getItem(`plannerGuideSkip_${myId}`)) setPlannerGuideOpen(true); }, note: "G5" },
           { key: "mandalart", label: t.menu.mandalart, Icon: Grid3x3,      bg: feat.mandalart[0], fg: feat.mandalart[1], go: () => { navigateTo("manage"); if (!localStorage.getItem(`mandalartGuideSkip_${myId}`)) setMandalartGuideOpen(true); }, note: "B5" },
-          { key: "pomodoro",  label: t.menu.pomodoro,  Icon: Timer,        bg: feat.pomodoro[0],  fg: feat.pomodoro[1],  go: () => { navigateTo("pomodoro"); if (!localStorage.getItem(`pomodoroGuideSkip_${myId}`)) setPomodoroGuideOpen(true); }, note: "E6" },
+          { key: "pomodoro",  label: t.menu.pomodoro,  Icon: TomatoIcon,   bg: feat.pomodoro[0],  fg: feat.pomodoro[1],  go: () => { navigateTo("pomodoro"); if (!localStorage.getItem(`pomodoroGuideSkip_${myId}`)) setPomodoroGuideOpen(true); }, note: "E6" },
         ];
         return (
           <div className="home-enter" style={{ margin: -28, height: "100vh", overflow: "hidden",
