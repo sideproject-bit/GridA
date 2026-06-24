@@ -22,6 +22,7 @@ import GridTutorial from "./components/GridTutorial";
 import PomodoroTimer from "./components/PomodoroTimer";
 import PomodoroGuide from "./components/PomodoroGuide";
 import PlannerGuide from "./components/PlannerGuide";
+import MandalartGuide from "./components/MandalartGuide";
 import Planner from "./components/Planner";
 
 function AppShell() {
@@ -42,8 +43,9 @@ function AppShell() {
   const [deletebusy, setDeleteBusy] = useState(false);
   const [featureGuideOpen, setFeatureGuideOpen] = useState(false);
   const [gridTutorialOpen, setGridTutorialOpen] = useState(false);
-  const [pomodoroGuideOpen, setPomodoroGuideOpen] = useState(false);
-  const [plannerGuideOpen,  setPlannerGuideOpen]  = useState(false);
+  const [pomodoroGuideOpen,  setPomodoroGuideOpen]  = useState(false);
+  const [plannerGuideOpen,   setPlannerGuideOpen]   = useState(false);
+  const [mandalartGuideOpen, setMandalartGuideOpen] = useState(false);
   const prevUserIdRef = useRef(null);
 
   const pal = paletteFor(theme, dark);
@@ -218,6 +220,13 @@ function AppShell() {
           onDontShow={() => localStorage.setItem(`plannerGuideSkip_${myId}`, "1")}
         />
       )}
+      {mandalartGuideOpen && (
+        <MandalartGuide
+          t={t} pal={pal}
+          onClose={() => setMandalartGuideOpen(false)}
+          onDontShow={() => localStorage.setItem(`mandalartGuideSkip_${myId}`, "1")}
+        />
+      )}
 
       {view === "home" && (() => {
         const feat = pal.homeFeatures;
@@ -229,7 +238,7 @@ function AppShell() {
         const profileFg = dark ? "#1B1A17" : "#fff";
         const featTiles = [
           { key: "planner",   label: t.menu.planner,   Icon: CalendarDays, bg: plannerBg,          fg: plannerFg,          go: () => { navigateTo("planner"); if (!localStorage.getItem(`plannerGuideSkip_${myId}`)) setPlannerGuideOpen(true); }, note: "G5" },
-          { key: "mandalart", label: t.menu.mandalart, Icon: Grid3x3,      bg: feat.mandalart[0], fg: feat.mandalart[1], go: () => navigateTo("manage"),   note: "B5" },
+          { key: "mandalart", label: t.menu.mandalart, Icon: Grid3x3,      bg: feat.mandalart[0], fg: feat.mandalart[1], go: () => { navigateTo("manage"); if (!localStorage.getItem(`mandalartGuideSkip_${myId}`)) setMandalartGuideOpen(true); }, note: "B5" },
           { key: "pomodoro",  label: t.menu.pomodoro,  Icon: Timer,        bg: feat.pomodoro[0],  fg: feat.pomodoro[1],  go: () => { navigateTo("pomodoro"); if (!localStorage.getItem(`pomodoroGuideSkip_${myId}`)) setPomodoroGuideOpen(true); }, note: "E6" },
         ];
         return (
@@ -333,9 +342,14 @@ function AppShell() {
       {view === "manage" && (
         <div className="fade-in">
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
-            <button onClick={() => navigateTo("home")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-              <ArrowLeft size={14} /> {t.back}
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <button onClick={() => navigateTo("home")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+                <ArrowLeft size={14} /> {t.back}
+              </button>
+              <button onClick={() => setMandalartGuideOpen(true)} style={{ background: "none", border: "none", color: pal.ink, opacity: 0.4, cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontSize: 11 }}>
+                <HelpCircle size={13} /> {t.mandalartGuide.showAgain}
+              </button>
+            </div>
             <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} />
           </div>
           <Manage

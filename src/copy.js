@@ -182,6 +182,17 @@ export const T = {
         },
       ],
     },
+    mandalartGuide: {
+      steps: [
+        { t: "Create & manage", b: "Tap 'New Mandalart' to start a fresh grid. You can have multiple mandalarts — switch between them anytime from this management screen." },
+        { t: "Fill the grid", b: "Start with your main goal in the center, then work outward: 8 sub-goals, then 64 concrete action items. Use Full Grid view to see everything at once, or Focus view to work one block at a time." },
+        { t: "Track & check off", b: "In Focus view, mark each action item complete with the check icon. Completed sub-goals earn a badge. Your progress is visible across the entire 9×9 grid." },
+        { t: "Share with friends", b: "Set a mandalart to Public and share it with friends using your unique friend code. Friends can view your progress — great for accountability." },
+      ],
+      dontShow: "Don't show this when entering Mandalart",
+      showAgain: "Show guide",
+      close: "Start",
+    },
     gridTutorial: {
       steps: [
         { t: "Step 1 — Set your main goal", b: "Click the center cell of the center block and write your single most important goal. Be specific and personal." },
@@ -480,6 +491,17 @@ export const T = {
           benefits: ["단일 과제 집중력을 키웁니다", "작업 시간을 유한하고 달성 가능하게 만들어줍니다", "작은 완료의 반복으로 추진력을 만들어줍니다"],
         },
       ],
+    },
+    mandalartGuide: {
+      steps: [
+        { t: "만들기 & 관리", b: "'새 만다라트' 버튼으로 새 그리드를 시작할 수 있어요. 여러 개의 만다라트를 만들고, 이 관리 화면에서 언제든 전환할 수 있어요." },
+        { t: "격자 채우기", b: "중앙에 핵심 목표를 적고 바깥으로 넓혀가세요 — 8개의 하위 목표, 그리고 64가지 구체적인 실행 항목 순서로요. 전체 그리드 뷰로 81칸을 한눈에, 포커스 뷰로 블록 하나씩 집중해서 작성할 수 있어요." },
+        { t: "진행 상황 체크", b: "포커스 뷰에서 실행 항목별로 완료 체크를 할 수 있어요. 하위 목표 8개가 모두 완료되면 뱃지가 붙어요. 9×9 그리드 전체에서 진행 상황을 한눈에 볼 수 있어요." },
+        { t: "친구와 공유", b: "만다라트를 '공개'로 설정하고, 나만의 친구 코드로 친구를 추가해보세요. 친구가 내 진행 상황을 볼 수 있어 서로 동기부여가 돼요." },
+      ],
+      dontShow: "만다라트 진입 시 자동으로 표시 안 함",
+      showAgain: "가이드 보기",
+      close: "시작하기",
     },
     gridTutorial: {
       steps: [

@@ -25,6 +25,31 @@ export default function Manage({ pal, t, myId, onOpen, onAbout }) {
 
   return (
     <div>
+      {/* Mandalart about banner — top */}
+      <button onClick={onAbout} style={{
+        display: "flex", alignItems: "center", gap: 14,
+        width: "100%", marginBottom: 20, padding: "16px 20px",
+        background: pal.accent + "10", border: `2px solid ${pal.accent}30`,
+        cursor: "pointer", textAlign: "left", color: pal.ink,
+        fontFamily: "inherit",
+      }}>
+        <div style={{
+          flexShrink: 0, width: 36, height: 36,
+          background: pal.accent, display: "flex", alignItems: "center", justifyContent: "center",
+          borderRadius: 3,
+        }}>
+          <BookOpen size={16} color="#fff" />
+        </div>
+        <div>
+          <div style={{ fontWeight: 800, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            {t.mandalartAbout.btn}
+          </div>
+          <div style={{ fontSize: 11, opacity: 0.5, marginTop: 2 }}>
+            {t.mandalartAbout.body[0].slice(0, 60)}…
+          </div>
+        </div>
+      </button>
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
         <h2 style={{ fontWeight: 900, fontSize: 24, textTransform: "uppercase", margin: 0, color: pal.ink }}>{t.manage.title}</h2>
         <button onClick={create} style={{ background: pal.accent3, color: "#1a1a1a", border: "none", padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
@@ -68,31 +93,6 @@ export default function Manage({ pal, t, myId, onOpen, onAbout }) {
           ))}
         </div>
       )}
-
-      {/* Mandalart about banner */}
-      <button onClick={onAbout} style={{
-        display: "flex", alignItems: "center", gap: 14,
-        width: "100%", marginTop: 28, padding: "16px 20px",
-        background: pal.accent + "10", border: `2px solid ${pal.accent}30`,
-        cursor: "pointer", textAlign: "left", color: pal.ink,
-        fontFamily: "inherit",
-      }}>
-        <div style={{
-          flexShrink: 0, width: 36, height: 36,
-          background: pal.accent, display: "flex", alignItems: "center", justifyContent: "center",
-          borderRadius: 3,
-        }}>
-          <BookOpen size={16} color="#fff" />
-        </div>
-        <div>
-          <div style={{ fontWeight: 800, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            {t.mandalartAbout.btn}
-          </div>
-          <div style={{ fontSize: 11, opacity: 0.5, marginTop: 2 }}>
-            {t.mandalartAbout.body[0].slice(0, 60)}…
-          </div>
-        </div>
-      </button>
     </div>
   );
 }
