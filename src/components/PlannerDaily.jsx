@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useViewport } from "../hooks/useViewport";
 
 const CELL_H   = 26;   // px per row
 const LABEL_W  = 44;   // px for hour label column
@@ -36,6 +37,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
   const bg    = pal.bg;
   const border = dark ? "#2a2920" : "#e0ddd2";
   const isMon  = theme === "mondrian";
+  const { isMobile } = useViewport();
 
   const [currentCell, setCurrentCell] = useState(getCurrentCell);
   const [selRange,    setSelRange]    = useState(null); // { start, end }
@@ -102,6 +104,9 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
     setSelRange(null);
     if (dragging) {
       openPopup(Math.min(start, end), Math.max(start, end));
+    } else if (e.pointerType === "touch" && start !== null) {
+      // Touch has no double-click — a single tap creates a one-cell event
+      openPopup(start, start);
     }
   }
 
@@ -172,8 +177,8 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
         <div style={{ fontSize: 11, opacity: 0.3, fontStyle: "italic" }}>{pl.resetNote}</div>
       </div>
 
-      {/* 3-column layout */}
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.5fr) minmax(0,1fr) minmax(0,1fr)", gap: 20, alignItems: "start" }}>
+      {/* 3-column layout on desktop, stacked single column on mobile */}
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(0,0.5fr) minmax(0,1fr) minmax(0,1fr)", gap: isMobile ? 28 : 20, alignItems: "start" }}>
 
         {/* ── Time Block Grid ── */}
         <div>

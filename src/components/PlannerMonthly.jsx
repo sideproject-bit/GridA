@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useViewport } from "../hooks/useViewport";
 
 const EVENT_COLORS = ["#FFAAAA", "#FFE599", "#AAD4FF", "#C7382E", "#C8960A", "#1A2A9E"];
 
@@ -13,6 +14,7 @@ export default function PlannerMonthly({ t, pal, dark, calEvents, onCalEventsCha
   const acc = pal.accent;
   const bg  = pal.bg;
   const border = dark ? "#2a2920" : "#ddd";
+  const { isMobile } = useViewport();
 
   const today = new Date();
   const [year,         setYear]         = useState(today.getFullYear());
@@ -109,7 +111,7 @@ export default function PlannerMonthly({ t, pal, dark, calEvents, onCalEventsCha
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: 28, alignItems: "start" }}>
+    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 260px", gap: 28, alignItems: "start" }}>
 
       {/* ── Calendar ── */}
       <div>
