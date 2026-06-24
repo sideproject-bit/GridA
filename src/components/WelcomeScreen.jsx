@@ -204,7 +204,7 @@ export default function WelcomeScreen({ play, onFinish }) {
       position: "fixed", inset: 0, background: "#0d0d0d",
       display: "flex", flexDirection: "column",
       fontFamily: "Helvetica, Arial, sans-serif",
-      overflow: "hidden",
+      overflow: "hidden", zIndex: 100,
     }}>
       <style>{`
         @keyframes wsFadeUp    { from { opacity:0; transform:translateY(22px); } to { opacity:1; transform:none; } }
