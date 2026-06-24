@@ -326,7 +326,7 @@ function AppShell() {
         <div className="fade-in">
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <button onClick={() => navigateTo("home")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+              <button onClick={() => navigateTo("manage")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
                 <ArrowLeft size={14} /> {t.back}
               </button>
               <button onClick={() => setGridTutorialOpen(true)} style={{ background: "none", border: "none", color: pal.ink, opacity: 0.4, cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontSize: 11 }}>
