@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import * as Tone from "tone";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { X } from "lucide-react";
 import BreathingBlocks from "./BreathingBlocks";
 
 const COLS = 9;
@@ -233,8 +233,16 @@ export default function PomodoroTimer({ t, pal, dark, theme, notifOn, userId }) 
 
   const ink = pal.ink;
   const accent = pal.accent;
+  const isMon = theme === "mondrian";
+  const liAccent = isMon ? "#2B3DCB" : accent; // locking-in uses blue in Mondrian
   const clearedBg = dark ? "#2a2920" : "#e0ddd2";
   const emptyBg = dark ? "#252418" : "#e8e5da";
+
+  // Locking-in time decomposition for the filling-grid visual
+  const liTotalSec = Math.floor(liElapsedMs / 1000);
+  const liH = Math.floor(liTotalSec / 3600);
+  const liM = Math.floor((liTotalSec % 3600) / 60);
+  const liS = liTotalSec % 60;
 
   return (
     <div style={{ position: "relative", minHeight: "80vh", overflow: "hidden" }}>
@@ -286,42 +294,43 @@ export default function PomodoroTimer({ t, pal, dark, theme, notifOn, userId }) 
               </div>
               <div style={{ fontSize: 12, opacity: 0.5, marginBottom: 20 }}>{li.goalSet}</div>
               <button onClick={() => setLiRunning(true)} disabled={liGoalMs === 0}
-                style={btnStyle(accent, "#fff", liGoalMs === 0 ? 0.4 : 1)}>
+                style={btnStyle(liAccent, "#fff", liGoalMs === 0 ? 0.4 : 1)}>
                 {li.start}
               </button>
             </div>
           ) : (
-            /* Stopwatch */
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 48, fontWeight: 900, letterSpacing: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.1 }}>
+            /* Stopwatch — filling grid (hours / minutes / seconds) */
+            <div>
+              <div style={{ textAlign: "center", fontSize: 30, fontWeight: 900, letterSpacing: 1.5, fontVariantNumeric: "tabular-nums", marginBottom: 4 }}>
                 {fmtClock(liElapsedMs)}
               </div>
               {liGoalMs > 0 && (
-                <div style={{ fontSize: 13, color: dark ? "#aaa" : "#888", marginTop: 4 }}>
+                <div style={{ textAlign: "center", fontSize: 12, color: dark ? "#aaa" : "#888", marginBottom: 16 }}>
                   {li.elapsed} {fmtDur(liElapsedMs)} {li.of} {fmtDur(liGoalMs)}
                 </div>
               )}
-              {/* progress bar */}
-              {liGoalMs > 0 && (
-                <div style={{ height: 6, background: dark ? "#333" : "#ddd", borderRadius: 3, margin: "14px 0", overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${Math.min(100, (liElapsedMs / liGoalMs) * 100)}%`, background: accent, transition: "width 0.5s" }} />
-                </div>
-              )}
+
+              {/* Filling block grids */}
+              <BlockGrid label={li.unitH || "Hours"} count={24} cols={12} filled={liH} cellH={18} color={liAccent} dark={dark} ink={ink} />
+              <BlockGrid label={li.unitM || "Minutes"} count={60} cols={15} filled={liM} cellH={11} color={liAccent} dark={dark} ink={ink} />
+              <BlockGrid label={li.unitS || "Seconds"} count={60} cols={20} filled={liS} cellH={7} color={liAccent} dark={dark} ink={ink} />
+
               {liGoalReached && (
-                <div style={{ background: accent + "22", border: `1px solid ${accent}`, color: ink, padding: "10px 14px", fontSize: 13, fontWeight: 700, margin: "0 0 16px" }}>
+                <div style={{ background: liAccent + "22", border: `1px solid ${liAccent}`, color: ink, padding: "10px 14px", fontSize: 13, fontWeight: 700, margin: "16px 0 0", textAlign: "center" }}>
                   {li.congrats}
                 </div>
               )}
-              <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginBottom: 16 }}>
+
+              <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", margin: "18px 0 12px" }}>
                 {liRunning ? (
-                  <button onClick={() => setLiRunning(false)} style={btnStyle(dark ? "#444" : "#ccc", ink, 1)}>{li.pause}</button>
+                  <button onClick={() => setLiRunning(false)} style={btnStyle(liAccent, "#fff", 1)}>{li.pause}</button>
                 ) : (
-                  <button onClick={() => setLiRunning(true)} disabled={liElapsedMs >= LI_MAX_MS} style={btnStyle(accent, "#fff", liElapsedMs >= LI_MAX_MS ? 0.4 : 1)}>{li.resume}</button>
+                  <button onClick={() => setLiRunning(true)} disabled={liElapsedMs >= LI_MAX_MS} style={btnStyle(liAccent, "#fff", liElapsedMs >= LI_MAX_MS ? 0.4 : 1)}>{li.resume}</button>
                 )}
                 <button onClick={liSave} style={btnStyle(liSavedFlash ? "#3CA45C" : pal.accent3, "#1a1a1a", 1)}>{liSavedFlash ? li.saved : li.save}</button>
-                <button onClick={liReset} style={btnStyle(dark ? "#333" : "#e0ddd0", ink, 1)}>{li.reset}</button>
+                <button onClick={liReset} style={btnStyle(liAccent, "#fff", 1)}>{li.reset}</button>
               </div>
-              <div style={{ fontSize: 11, opacity: 0.45 }}>{li.hint}</div>
+              <div style={{ fontSize: 11, opacity: 0.45, textAlign: "center" }}>{li.hint}</div>
             </div>
           )}
         </div>
@@ -438,47 +447,51 @@ export default function PomodoroTimer({ t, pal, dark, theme, notifOn, userId }) 
         </>
       )}
 
-        {/* About toggle */}
-        <button
-          onClick={() => setShowAbout(v => !v)}
-          style={{
-            display: "flex", alignItems: "center", gap: 6,
-            background: "none", border: "none", cursor: "pointer",
-            color: dark ? "#aaa" : "#888", fontSize: 13, padding: 0,
-            margin: "0 auto", fontFamily: "inherit",
-          }}
-        >
-          {p.about.title}
-          {showAbout ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </button>
+        {/* About — opens as a modal */}
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <button
+            onClick={() => setShowAbout(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: "none", border: `1px solid ${pal.ink}40`, cursor: "pointer",
+              color: ink, fontSize: 12, fontWeight: 700, padding: "7px 14px", fontFamily: "inherit",
+            }}
+          >
+            {p.about.title}
+          </button>
+        </div>
+      </div>
 
-        {showAbout && (
-          <div style={{
-            marginTop: 16, fontSize: 13, lineHeight: 1.7,
-            color: dark ? "#bbb" : "#555",
-            borderTop: `1px solid ${dark ? "#333" : "#ddd"}`,
-            paddingTop: 16,
-          }}>
-            {p.about.body.map((para, i) => (
-              <p key={i} style={{ margin: "0 0 12px" }}>{para}</p>
-            ))}
-            <div style={{ fontWeight: 700, marginBottom: 6, color: ink }}>{p.about.tipsTitle}</div>
-            <ul style={{ margin: "0 0 16px", paddingLeft: 18 }}>
-              {p.about.tips.map((tip, i) => (
-                <li key={i} style={{ marginBottom: 4 }}>{tip}</li>
+      {/* About modal */}
+      {showAbout && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 60, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={() => setShowAbout(false)}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: 460, maxWidth: "100%", maxHeight: "85vh", overflowY: "auto", background: pal.bg, color: ink, border: `2px solid ${accent}`, borderRadius: 10, padding: 24 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 14 }}>
+              <span style={{ fontWeight: 900, fontSize: 17, lineHeight: 1.2 }}>{p.about.title}</span>
+              <button onClick={() => setShowAbout(false)} style={{ background: "none", border: "none", color: ink, cursor: "pointer", padding: 2, display: "flex", flexShrink: 0 }}><X size={20} /></button>
+            </div>
+            <div style={{ fontSize: 13, lineHeight: 1.7, color: dark ? "#bbb" : "#555" }}>
+              {p.about.body.map((para, i) => (
+                <p key={i} style={{ margin: "0 0 12px" }}>{para}</p>
               ))}
-            </ul>
-            <div style={{
-              background: dark ? "#2a2418" : "#fff8ee",
-              border: `1px solid ${dark ? "#5a4020" : "#f0d080"}`,
-              borderRadius: 8, padding: "10px 14px", fontSize: 12,
-            }}>
-              <span style={{ fontWeight: 700 }}>{p.about.warningTitle}: </span>
-              {p.about.warning}
+              <div style={{ fontWeight: 700, marginBottom: 6, color: ink }}>{p.about.tipsTitle}</div>
+              <ul style={{ margin: "0 0 16px", paddingLeft: 18 }}>
+                {p.about.tips.map((tip, i) => (
+                  <li key={i} style={{ marginBottom: 4 }}>{tip}</li>
+                ))}
+              </ul>
+              <div style={{
+                background: dark ? "#2a2418" : "#fff8ee",
+                border: `1px solid ${dark ? "#5a4020" : "#f0d080"}`,
+                borderRadius: 8, padding: "10px 14px", fontSize: 12,
+              }}>
+                <span style={{ fontWeight: 700 }}>{p.about.warningTitle}: </span>
+                {p.about.warning}
+              </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Locking-in archive modal */}
       {showArchive && (
@@ -504,6 +517,23 @@ export default function PomodoroTimer({ t, pal, dark, theme, notifOn, userId }) 
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function BlockGrid({ label, count, cols, filled, cellH, color, dark, ink }) {
+  const empty = dark ? "#2a2920" : "#e0ddd2";
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+        <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", opacity: 0.55, color: ink }}>{label}</span>
+        <span style={{ fontSize: 10, fontVariantNumeric: "tabular-nums", opacity: 0.45, color: ink }}>{filled}/{count}</span>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 3 }}>
+        {Array.from({ length: count }).map((_, i) => (
+          <div key={i} style={{ height: cellH, background: i < filled ? color : empty, borderRadius: 2, transition: "background 0.25s" }} />
+        ))}
+      </div>
     </div>
   );
 }

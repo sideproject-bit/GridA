@@ -72,6 +72,26 @@ const STEP_VISUALS = [
       />
     </svg>
   ),
+  // Step 5: locking in — filling grid (blue)
+  () => {
+    const BLUE = "#2B3DCB";
+    const rows = [
+      { y: 14, n: 12, filled: 7 },
+      { y: 34, n: 12, filled: 4 },
+      { y: 54, n: 12, filled: 1 },
+    ];
+    return (
+      <svg width={160} height={80} viewBox="0 0 160 80">
+        {rows.map((row, ri) =>
+          Array.from({ length: row.n }).map((_, i) => (
+            <rect key={`${ri}-${i}`}
+              x={4 + i * 13} y={row.y} width={11} height={12}
+              fill={i < row.filled ? BLUE : "#ffffff12"} rx={2} />
+          ))
+        )}
+      </svg>
+    );
+  },
 ];
 
 export default function PomodoroGuide({ t, pal, onClose, onDontShow }) {
