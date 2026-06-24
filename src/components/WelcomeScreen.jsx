@@ -112,15 +112,15 @@ function GridVisual({ type }) {
   }
 
   if (type === "planner") {
-    // Mini daily planner grid: time column + blocks
     const cols = 3, rows = 6, w = (size - (cols - 1) * GAP) / cols, h = (size - (rows - 1) * GAP) / rows;
-    const blockFills = [C.red, "none", C.blue, C.blue, "none", C.yellow, "none", C.blue, "none", "none", C.red, C.red, "none", "none", C.yellow, C.yellow, "none", "none"];
+    // Yellow background slide — use red/blue/white for blocks, no yellow
+    const blockFills = [C.red, "none", C.blue, C.blue, "none", "#fff", "none", C.blue, "none", "none", C.red, C.red, "none", "none", "#fff", "#fff", "none", "none"];
     return (
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {Array.from({ length: cols * rows }).map((_, i) => {
           const col = i % cols, row = Math.floor(i / cols);
           const x = col * (w + GAP), y = row * (h + GAP);
-          const fill = blockFills[i] === "none" ? "rgba(255,255,255,0.07)" : blockFills[i] + "bb";
+          const fill = blockFills[i] === "none" ? "rgba(0,0,0,0.12)" : blockFills[i] + "cc";
           return <rect key={i} x={x} y={y} width={w} height={h} fill={fill} />;
         })}
       </svg>

@@ -18,7 +18,28 @@ const BLOCKS = [
 ];
 const BLOCK_NOTES = ["C5", "E5", "G5", "A5", "B5", "D5", "F5", "G4", "A4", "C6"];
 
-function MondrianBg({ play }) {
+// Slide direction and stagger delay per block
+const BLOCK_ANIMS = [
+  { dir: "left",   delay: 0   },
+  { dir: "top",    delay: 80  },
+  { dir: "right",  delay: 40  },
+  { dir: "top",    delay: 160 },
+  { dir: "left",   delay: 120 },
+  { dir: "bottom", delay: 200 },
+  { dir: "right",  delay: 240 },
+  { dir: "right",  delay: 100 },
+  { dir: "bottom", delay: 280 },
+  { dir: "bottom", delay: 320 },
+];
+
+const SLIDE_FROM = {
+  left:   "translateX(-110vw)",
+  right:  "translateX(110vw)",
+  top:    "translateY(-110vh)",
+  bottom: "translateY(110vh)",
+};
+
+function MondrianBg({ play, ready }) {
   const [hovered, setHovered] = useState(null);
   return (
     <div style={{
@@ -27,35 +48,46 @@ function MondrianBg({ play }) {
       gridTemplateColumns: "repeat(6, 1fr)",
       gridTemplateRows: "repeat(4, 1fr)",
       gap: 5, padding: 5, background: "#111", zIndex: 0,
+      overflow: "hidden",
     }}>
-      {BLOCKS.map((b, i) => (
-        <div
-          key={b.id}
-          onMouseEnter={() => { setHovered(b.id); play?.(BLOCK_NOTES[i % BLOCK_NOTES.length], "64n"); }}
-          onMouseLeave={() => setHovered(null)}
-          style={{
-            gridColumn: b.col, gridRow: b.row,
-            background: b.color,
-            transition: "transform 0.25s cubic-bezier(0.34,1.56,0.64,1), filter 0.2s ease",
-            transform: hovered === b.id ? "scale(0.96)" : "scale(1)",
-            filter: hovered === b.id ? "brightness(1.22)" : "brightness(1)",
-            cursor: "default",
-          }}
-        />
-      ))}
+      {BLOCKS.map((b, i) => {
+        const anim = BLOCK_ANIMS[i];
+        const isIn = ready;
+        return (
+          <div
+            key={b.id}
+            onMouseEnter={() => { setHovered(b.id); play?.(BLOCK_NOTES[i % BLOCK_NOTES.length], "64n"); }}
+            onMouseLeave={() => setHovered(null)}
+            style={{
+              gridColumn: b.col, gridRow: b.row,
+              background: b.color,
+              transform: isIn
+                ? (hovered === b.id ? "scale(0.96)" : "scale(1)")
+                : SLIDE_FROM[anim.dir],
+              filter: hovered === b.id ? "brightness(1.22)" : "brightness(1)",
+              transition: isIn
+                ? `transform 0.65s cubic-bezier(0.22,1,0.36,1) ${anim.delay}ms, filter 0.2s ease`
+                : "none",
+              cursor: "default",
+            }}
+          />
+        );
+      })}
     </div>
   );
 }
 
 // ── Insert page shown after "Get Started" ──────────────
 function InsertPage({ onDone }) {
-  // phase: 0 = logo fading in, 1 = logo up + tagline in, 2 = fade out
+  // phase 0: logo fading in (slow)
+  // phase 1: logo slides up, title+copy fades in slowly
+  // phase 2: everything fades out
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase(1), 1000);
-    const t2 = setTimeout(() => setPhase(2), 3800);
-    const t3 = setTimeout(onDone, 4700);
+    const t1 = setTimeout(() => setPhase(1), 1800);  // logo fully in → wait → slide up
+    const t2 = setTimeout(() => setPhase(2), 5200);  // hold for reading
+    const t3 = setTimeout(onDone, 6100);              // fade out complete
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
@@ -67,43 +99,54 @@ function InsertPage({ onDone }) {
       alignItems: "center", justifyContent: "center",
       fontFamily: "Helvetica, Arial, sans-serif",
       opacity: phase === 2 ? 0 : 1,
-      transition: phase === 2 ? "opacity 0.65s ease" : "none",
+      transition: phase === 2 ? "opacity 0.85s ease" : "none",
       zIndex: 10,
     }}>
       <style>{`
-        @keyframes ipLogoIn   { from { opacity:0; transform:scale(0.7); } to { opacity:1; transform:scale(1); } }
-        @keyframes ipTagIn    { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+        @keyframes ipLogoIn {
+          0%   { opacity: 0; transform: scale(0.6); }
+          60%  { opacity: 1; }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes ipTitleIn {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: none; }
+        }
+        @keyframes ipCopyIn {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 0.55; transform: none; }
+        }
       `}</style>
 
       {/* Logo */}
       <div style={{
-        animation: "ipLogoIn 0.65s cubic-bezier(0.22,1,0.36,1) both",
-        transform: phase >= 1 ? "translateY(-28px)" : "none",
-        transition: phase >= 1 ? "transform 0.55s cubic-bezier(0.22,1,0.36,1)" : "none",
-        marginBottom: phase >= 1 ? 0 : 0,
+        animation: "ipLogoIn 1.4s cubic-bezier(0.16,1,0.3,1) both",
+        transform: phase >= 1 ? "translateY(-44px)" : "translateY(0)",
+        transition: phase >= 1 ? "transform 0.9s cubic-bezier(0.22,1,0.36,1)" : "none",
       }}>
-        <img src="/logo.png" alt="GridA" style={{ width: 160, height: 160, objectFit: "contain", display: "block" }} />
+        <img src="/logo.png" alt="GridA" style={{ width: 210, height: 210, objectFit: "contain", display: "block" }} />
       </div>
 
-      {/* Title + tagline */}
-      <div style={{
-        textAlign: "center", marginTop: 22,
-        opacity: phase >= 1 ? 1 : 0,
-        animation: phase >= 1 ? "ipTagIn 0.55s 0.05s cubic-bezier(0.22,1,0.36,1) both" : "none",
-      }}>
-        <div style={{
-          fontWeight: 900, fontSize: 28, letterSpacing: "0.18em",
-          color: "#F2EDE1", textTransform: "uppercase", marginBottom: 10,
-        }}>
-          GRIDA
+      {/* Title + tagline — only rendered after phase 1 */}
+      {phase >= 1 && (
+        <div style={{ textAlign: "center", marginTop: 28 }}>
+          <div style={{
+            fontWeight: 900, fontSize: 30, letterSpacing: "0.55em",
+            color: "#F2EDE1", textTransform: "uppercase", marginBottom: 14,
+            animation: "ipTitleIn 1.1s 0.2s cubic-bezier(0.22,1,0.36,1) both",
+          }}>
+            GRIDA
+          </div>
+          <div style={{
+            fontStyle: "italic", fontSize: 13,
+            color: "rgba(242,237,225,1)",
+            letterSpacing: "0.06em", fontWeight: 400,
+            animation: "ipCopyIn 1.2s 0.55s cubic-bezier(0.22,1,0.36,1) both",
+          }}>
+            Composition with Your Day, Year, and Life
+          </div>
         </div>
-        <div style={{
-          fontStyle: "italic", fontSize: 13, color: "rgba(242,237,225,0.55)",
-          letterSpacing: "0.04em", fontWeight: 400,
-        }}>
-          Composition with Your Day, Year, and Life
-        </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -123,6 +166,7 @@ export default function AuthGate({ play }) {
 
   // flow: "welcome" → "insert" → "login"
   const [screen, setScreen] = useState("welcome");
+  const [blockReady, setBlockReady] = useState(false);
   const [loginVisible, setLoginVisible] = useState(false);
   const [lang, setLang] = useState("en");
   const t = T[lang];
@@ -143,7 +187,8 @@ export default function AuthGate({ play }) {
   if (screen === "insert") {
     return <InsertPage onDone={() => {
       setScreen("login");
-      setTimeout(() => setLoginVisible(true), 80);
+      setTimeout(() => setBlockReady(true), 60);
+      setTimeout(() => setLoginVisible(true), 900);
     }} />;
   }
 
@@ -169,7 +214,7 @@ export default function AuthGate({ play }) {
       opacity: loginVisible ? 1 : 0,
       transition: "opacity 0.9s ease",
     }}>
-      <MondrianBg play={play} />
+      <MondrianBg play={play} ready={blockReady} />
 
       {/* Language toggle */}
       <button
