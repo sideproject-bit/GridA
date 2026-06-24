@@ -22,7 +22,7 @@ const HOME_FEATURES = {
   mondrian: { planner: ["#1B1A17", "#fff"], mandalart: ["#E3B22E", "#1a1a1a"], pomodoro: ["#C7382E", "#fff"] },
   blue:     { planner: ["#1B1A17", "#fff"], mandalart: ["#2B3DCB", "#fff"],   pomodoro: ["#5B6BE0", "#fff"] },
   red:      { planner: ["#1B1A17", "#fff"], mandalart: ["#C7382E", "#fff"],   pomodoro: ["#E0655B", "#fff"] },
-  green:    { planner: ["#1B1A17", "#fff"], mandalart: ["#1F7A4D", "#fff"],   pomodoro: ["#3CA86E", "#fff"] },
+  green:    { planner: ["#1B1A17", "#fff"], mandalart: ["#1F7A4D", "#fff"],   pomodoro: ["#C4956A", "#1a1a1a"] },
   yellow:   { planner: ["#1B1A17", "#fff"], mandalart: ["#E3B22E", "#1a1a1a"], pomodoro: ["#F0C95A", "#1a1a1a"] },
   bw:       { planner: ["#2C2C2A", "#fff"], mandalart: ["#6b6b68", "#fff"],   pomodoro: ["#9a9a96", "#1a1a1a"] },
 };
