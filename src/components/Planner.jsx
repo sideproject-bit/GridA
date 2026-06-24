@@ -9,7 +9,7 @@ function todayKey() {
 const MON_RED  = "#C7382E";
 const MON_BLUE = "#2B3DCB";
 
-export default function Planner({ t, pal, dark, userId, theme }) {
+export default function Planner({ t, pal, dark, userId, theme, lang }) {
   const pl = t.planner;
   const isMon = theme === "mondrian";
   const [tab, setTab] = useState("daily");
@@ -101,6 +101,7 @@ export default function Planner({ t, pal, dark, userId, theme }) {
           todos={todos}
           onTodosChange={setTodos}
           theme={theme}
+          lang={lang}
         />
       )}
       {tab === "monthly" && (

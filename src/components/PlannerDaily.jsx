@@ -29,7 +29,7 @@ function getCurrentCell() {
 
 const MON = { red: "#C7382E", blue: "#2B3DCB", yellow: "#E3B22E" };
 
-export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, todos, onTodosChange, theme }) {
+export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, todos, onTodosChange, theme, lang }) {
   const pl    = t.planner;
   const ink   = pal.ink;
   const acc   = pal.accent;
@@ -165,9 +165,9 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
   return (
     <div>
       {/* Date */}
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginBottom: 18, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 18, flexWrap: "wrap" }}>
         <div style={{ fontSize: 13, fontWeight: 700, opacity: 0.5 }}>
-          {new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+          {new Date().toLocaleDateString(lang === "ko" ? "ko-KR" : "en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         </div>
         <div style={{ fontSize: 11, opacity: 0.3, fontStyle: "italic" }}>{pl.resetNote}</div>
       </div>

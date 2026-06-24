@@ -193,8 +193,9 @@ function AppShell() {
         .home-title-block { transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), filter 0.2s ease; }
         .home-title-block:hover { transform: scale(0.99); filter: brightness(1.04); }
         @keyframes slideUpIn { from { opacity: 0; transform: translateY(36px); } to { opacity: 1; transform: translateY(0); } }
-        .home-title { animation: slideUpIn 0.65s cubic-bezier(0.22,1,0.36,1) both; }
-        .home-tagline { animation: slideUpIn 0.65s cubic-bezier(0.22,1,0.36,1) 0.18s both; }
+        .home-logo { animation: slideUpIn 0.65s cubic-bezier(0.22,1,0.36,1) both; }
+        .home-title { animation: slideUpIn 0.65s cubic-bezier(0.22,1,0.36,1) 0.1s both; }
+        .home-tagline { animation: slideUpIn 0.65s cubic-bezier(0.22,1,0.36,1) 0.22s both; }
       `}</style>
 
       {onboardingOpen && <Onboarding t={t} pal={pal} play={play} onClose={closeOnboarding} />}
@@ -260,8 +261,8 @@ function AppShell() {
               }}
             >
               <FloatingBlocks pal={pal} theme={theme} />
-              {/* Logo — top left, aligned with sound button */}
-              <div style={{ position: "relative", zIndex: 1 }}>
+              {/* Logo — top left, animated same as title */}
+              <div className="home-logo" style={{ position: "relative", zIndex: 1 }}>
                 <img src="/logo.png" alt="GridA" style={{ height: 40, objectFit: "contain", display: "block" }} />
               </div>
               <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
@@ -543,7 +544,7 @@ function AppShell() {
             </div>
             <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />
           </div>
-          <Planner t={t} pal={pal} dark={dark} userId={myId} theme={theme} />
+          <Planner t={t} pal={pal} dark={dark} userId={myId} theme={theme} lang={lang} />
         </div>
       )}
 
