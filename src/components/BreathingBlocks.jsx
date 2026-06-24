@@ -5,8 +5,10 @@ const REPEL_RADIUS = 130;
 const REPEL_STRENGTH = 0.5;
 const MAX_SPEED = 2.2;
 
-function makeBlocks(w, h, accent) {
-  return Array.from({ length: COUNT }, () => ({
+const MONDRIAN_COLORS = ["#C7382E", "#2B3DCB", "#E3B22E", "#F2EDE1"];
+
+function makeBlocks(w, h, accent, colors) {
+  return Array.from({ length: COUNT }, (_, i) => ({
     x: Math.random() * w,
     y: Math.random() * h,
     bw: 40 + Math.random() * 110,
@@ -15,14 +17,15 @@ function makeBlocks(w, h, accent) {
     vy: (Math.random() < 0.5 ? 1 : -1) * (0.12 + Math.random() * 0.22),
     baseVx: 0,
     baseVy: 0,
+    color: colors[i % colors.length],
     alpha: 0.06 + Math.random() * 0.10,
     angle: (Math.random() - 0.5) * 0.5,
-    breathePeriod: 3000 + Math.random() * 5000, // ms
+    breathePeriod: 3000 + Math.random() * 5000,
     breathePhase: Math.random() * Math.PI * 2,
   }));
 }
 
-export default function BreathingBlocks({ accent }) {
+export default function BreathingBlocks({ accent, theme }) {
   const canvasRef = useRef(null);
   const stateRef = useRef({ blocks: null, w: 0, h: 0, raf: null, mx: -9999, my: -9999 });
 
@@ -34,12 +37,14 @@ export default function BreathingBlocks({ accent }) {
 
     s.blocks = null;
 
+    const colors = theme === "mondrian" ? MONDRIAN_COLORS : [accent];
+
     const init = (w, h) => {
       canvas.width = w;
       canvas.height = h;
       s.w = w;
       s.h = h;
-      s.blocks = makeBlocks(w, h, accent);
+      s.blocks = makeBlocks(w, h, accent, colors);
       s.blocks.forEach(b => { b.baseVx = b.vx; b.baseVy = b.vy; });
     };
 
@@ -108,7 +113,7 @@ export default function BreathingBlocks({ accent }) {
         ctx.translate(b.x, b.y);
         ctx.rotate(b.angle);
         ctx.globalAlpha = b.alpha;
-        ctx.fillStyle = accent;
+        ctx.fillStyle = b.color;
         ctx.fillRect(-hw, -hh, hw * 2, hh * 2);
         ctx.restore();
       }
@@ -124,7 +129,7 @@ export default function BreathingBlocks({ accent }) {
       canvas.parentElement?.removeEventListener("mousemove", onMouseMove);
       canvas.parentElement?.removeEventListener("mouseleave", onMouseLeave);
     };
-  }, [accent]);
+  }, [accent, theme]);
 
   return (
     <canvas

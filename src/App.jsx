@@ -517,7 +517,7 @@ function AppShell() {
             </div>
             <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} />
           </div>
-          <PomodoroTimer t={t} pal={pal} dark={dark} />
+          <PomodoroTimer t={t} pal={pal} dark={dark} theme={theme} />
         </div>
       )}
 

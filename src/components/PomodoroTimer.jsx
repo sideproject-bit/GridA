@@ -7,7 +7,7 @@ const COLS = 9;
 const ROWS = 5;
 const TOTAL = COLS * ROWS; // 45 minutes max
 
-export default function PomodoroTimer({ t, pal, dark }) {
+export default function PomodoroTimer({ t, pal, dark, theme }) {
   const p = t.pomodoro;
 
   const [duration, setDuration] = useState(0);       // minutes
@@ -168,7 +168,7 @@ export default function PomodoroTimer({ t, pal, dark }) {
   return (
     <div style={{ position: "relative", minHeight: "80vh", overflow: "hidden" }}>
       {/* Breathing background */}
-      <BreathingBlocks accent={accent} />
+      <BreathingBlocks accent={accent} theme={theme} />
 
       {/* Content */}
       <div style={{
