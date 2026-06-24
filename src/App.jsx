@@ -208,12 +208,12 @@ function AppShell() {
         return (
           <div className="home-enter" style={{ margin: -28, height: "100vh", overflow: "hidden",
             background: "#000", display: "grid", gap: 4, padding: 4,
-            gridTemplateColumns: "minmax(60px, 0.5fr) 3.4fr 1.6fr",
-            gridTemplateRows: "minmax(46px, 0.5fr) 2.7fr 0.8fr",
+            gridTemplateColumns: "60px 1fr 220px",
+            gridTemplateRows: "60px 1fr 72px",
           }}>
-            {/* Logo — top left */}
-            <div style={{ gridRow: "1", gridColumn: "1", background: pal.bg, display: "flex", alignItems: "center", justifyContent: "center", padding: 8 }}>
-              <img src="/logo.png" alt="GridA" style={{ width: "100%", maxWidth: 46, display: "block" }} />
+            {/* Logo — top left, always white bg, image fills cell */}
+            <div style={{ gridRow: "1", gridColumn: "1", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: 4 }}>
+              <img src="/logo.png" alt="GridA" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
             </div>
             {/* Top breathing-room bands */}
             <div style={{ gridRow: "1", gridColumn: "2", background: pal.bg }} />
@@ -278,14 +278,14 @@ function AppShell() {
             </div>
 
             {/* Bottom-left margin tile */}
-            <div style={{ gridRow: "3", gridColumn: "1", background: pal.ink }} />
+            <div style={{ gridRow: "3", gridColumn: "1", background: "#fff" }} />
 
             {/* Bottom bar — Profile / About */}
             <div style={{ gridRow: "3", gridColumn: "2", display: "grid", gap: 4, background: "#000", gridTemplateColumns: "1fr 1fr", minHeight: 0 }}>
               <button onClick={() => { navigateTo("profile"); play("C5", "16n"); }} onMouseEnter={() => play("A5", "64n")}
                 className="home-tile"
-                style={{ background: pal.homeManageBg, border: "none", padding: "16px 22px", cursor: "pointer", color: "#fff", textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
-                <User size={18} color="#fff" />
+                style={{ background: "#fff", border: "none", padding: "16px 22px", cursor: "pointer", color: "#1B1A17", textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
+                <User size={18} color="#1B1A17" />
                 <span style={{ fontWeight: 800, fontSize: 13, textTransform: "uppercase" }}>{t.menu.setting}</span>
               </button>
               <button onClick={() => { navigateTo("about"); play("G4", "16n"); }} onMouseEnter={() => play("B5", "64n")}
