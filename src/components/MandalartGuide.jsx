@@ -34,28 +34,48 @@ const STEP_VISUALS = [
       })}
     </svg>
   ),
-  // Step 3: check & progress
-  ({ accent }) => (
-    <svg width={180} height={90} viewBox="0 0 180 90">
-      {[
-        { y: 14, done: true,  label: "Run 5km daily" },
-        { y: 34, done: true,  label: "Read 20 pages" },
-        { y: 54, done: false, label: "Meditate 10min" },
-        { y: 74, done: false, label: "Sleep by 11pm" },
-      ].map(({ y, done, label }) => (
-        <g key={y}>
-          <rect x={20} y={y} width={12} height={12} rx={2}
-            fill={done ? accent : "#ffffff08"} stroke={done ? accent : "#ffffff25"} strokeWidth={1} />
-          {done && <polyline points={`22,${y+6} ${25},${y+9} ${30},${y+3}`}
-            fill="none" stroke="#fff" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />}
-          <text x={40} y={y+9} fill={done ? "#ffffff55" : "#fff"} fontSize={9}
-            textDecoration={done ? "line-through" : "none"} opacity={done ? 0.5 : 0.85}>{label}</text>
-        </g>
-      ))}
-      <rect x={140} y={14} width={24} height={24} rx={3} fill={accent + "22"} stroke={accent} strokeWidth={1.5} />
-      <text x={152} y={30} textAnchor="middle" fill={accent} fontSize={11} fontWeight={900}>✓</text>
-    </svg>
-  ),
+  // Step 3: check & progress — shows focus-view 3×3 block with completed cells
+  ({ accent }) => {
+    const S = 22, G = 4;
+    const done = [0, 1, 3, 4, 6]; // cells completed out of 8 (excluding center)
+    const cells = Array.from({ length: 9 });
+    const ox = 180 / 2 - (3 * S + 2 * G) / 2;
+    const oy = 90 / 2 - (3 * S + 2 * G) / 2;
+    return (
+      <svg width={180} height={90} viewBox="0 0 180 90">
+        {cells.map((_, i) => {
+          const col = i % 3, row = Math.floor(i / 3);
+          const x = ox + col * (S + G), y = oy + row * (S + G);
+          const isCenter = i === 4;
+          const isDone = done.includes(i);
+          return (
+            <g key={i}>
+              <rect x={x} y={y} width={S} height={S} rx={2}
+                fill={isCenter ? accent : isDone ? accent + "33" : "#ffffff0a"}
+                stroke={isCenter ? accent : isDone ? accent + "88" : "#ffffff20"}
+                strokeWidth={isCenter ? 1.5 : 1}
+              />
+              {isDone && !isCenter && (
+                <polyline
+                  points={`${x+5},${y+S/2} ${x+S/2-2},${y+S-6} ${x+S-5},${y+5}`}
+                  fill="none" stroke={accent} strokeWidth={1.8}
+                  strokeLinecap="round" strokeLinejoin="round"
+                />
+              )}
+              {isCenter && (
+                <text x={x + S/2} y={y + S/2 + 4} textAnchor="middle"
+                  fill="#fff" fontSize={9} fontWeight={800} opacity={0.9}>GOAL</text>
+              )}
+            </g>
+          );
+        })}
+        {/* progress badge */}
+        <rect x={138} y={8} width={34} height={16} rx={8}
+          fill={accent} />
+        <text x={155} y={20} textAnchor="middle" fill="#fff" fontSize={9} fontWeight={800}>5 / 8</text>
+      </svg>
+    );
+  },
   // Step 4: share with friends — two user icons connected
   ({ accent }) => (
     <svg width={180} height={90} viewBox="0 0 180 90">
