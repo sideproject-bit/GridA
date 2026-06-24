@@ -518,8 +518,8 @@ function AppShell() {
             </button>
             {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
-          {/* 2-column: Profile | User Guide */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 1fr", gap: "0 28px", alignItems: "start" }}>
+          {/* 2-column: Profile | User Guide (stacks on mobile) */}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1px 1fr", gap: isMobile ? "28px 0" : "0 28px", alignItems: "start" }}>
 
             {/* LEFT: Profile */}
             <div>
@@ -599,8 +599,8 @@ function AppShell() {
               </div>
             </div>
 
-            {/* Vertical divider */}
-            <div style={{ background: `${pal.ink}18`, alignSelf: "stretch" }} />
+            {/* Divider — vertical on desktop, horizontal on mobile */}
+            <div style={{ background: `${pal.ink}18`, alignSelf: "stretch", height: isMobile ? 1 : "auto" }} />
 
             {/* RIGHT: User Guide */}
             <div>

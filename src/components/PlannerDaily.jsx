@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useViewport } from "../hooks/useViewport";
 
 const CELL_H   = 26;   // px per row
@@ -457,7 +458,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
       )}
 
       {/* ── Event creation popup ── */}
-      {popup && (
+      {popup && createPortal((
         <>
           <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.45)" }} onClick={() => setPopup(null)} />
           <div style={{
@@ -510,10 +511,10 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             </div>
           </div>
         </>
-      )}
+      ), document.body)}
 
       {/* ── Event detail (tapped a filled block) ── */}
-      {viewEvent && (
+      {viewEvent && createPortal((
         <>
           <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.45)" }} onClick={() => setViewEvent(null)} />
           <div style={{
@@ -547,10 +548,10 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             )}
           </div>
         </>
-      )}
+      ), document.body)}
 
       {/* ── Desktop right-click context menu ── */}
-      {ctxMenu && (
+      {ctxMenu && createPortal((
         <>
           <div style={{ position: "fixed", inset: 0, zIndex: 52 }} onClick={() => setCtxMenu(null)} onContextMenu={(e) => { e.preventDefault(); setCtxMenu(null); }} />
           <div style={{
@@ -566,7 +567,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             </button>
           </div>
         </>
-      )}
+      ), document.body)}
     </div>
   );
 }

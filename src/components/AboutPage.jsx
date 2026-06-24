@@ -1,6 +1,7 @@
 import React from "react";
 import { Grid3x3, CalendarDays, CheckCircle2 } from "lucide-react";
 import TomatoIcon from "./TomatoIcon";
+import { useViewport } from "../hooks/useViewport";
 
 const FEATURE_ICONS = [Grid3x3, CalendarDays, TomatoIcon];
 const FEATURE_ACCENT_KEYS = ["accent", "accent2", "accent3"];
@@ -35,6 +36,7 @@ function GridPhilosophyVisual({ pal }) {
 
 export default function AboutPage({ pal, t, dark }) {
   const about = t.about;
+  const { isMobile } = useViewport();
 
   return (
     <div style={{ maxWidth: 860, margin: "0 auto", color: pal.ink }}>
@@ -52,9 +54,11 @@ export default function AboutPage({ pal, t, dark }) {
 
       {/* Philosophy */}
       <div style={{
-        display: "grid", gridTemplateColumns: "1fr auto", gap: 32,
-        alignItems: "center", marginBottom: 52,
-        padding: "28px 32px",
+        display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr auto",
+        justifyItems: isMobile ? "center" : "stretch",
+        gap: isMobile ? 20 : 32,
+        alignItems: "center", marginBottom: isMobile ? 36 : 52,
+        padding: isMobile ? "22px 20px" : "28px 32px",
         border: `2px solid ${pal.ink}18`,
         background: dark ? "#0f0e09" : "#f8f5ec",
       }}>
@@ -101,7 +105,7 @@ export default function AboutPage({ pal, t, dark }) {
               {/* Content */}
               <div style={{
                 padding: "20px 24px 22px",
-                display: "grid", gridTemplateColumns: "1fr 220px", gap: 24, alignItems: "start",
+                display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 220px", gap: isMobile ? 16 : 24, alignItems: "start",
                 background: dark ? "#0f0e09" : "#faf7ef",
               }}>
                 <div>
