@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from "react";
 
-const COUNT = 14;
+const COUNT = 38;
 const REPEL_RADIUS = 130;
 const REPEL_STRENGTH = 0.5;
 const MAX_SPEED = 2.2;

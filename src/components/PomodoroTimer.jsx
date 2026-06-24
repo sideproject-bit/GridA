@@ -34,7 +34,11 @@ export default function PomodoroTimer({ t, pal, dark }) {
   const remainingSeconds = Math.ceil(remainingMs / 1000);
   const elapsedMinutes = Math.floor(elapsedMs / 60000);
 
-  // current active cell fraction remaining (1 = full, 0 = empty)
+  // Drain starts from bottom-right of filled area, right-to-left per row, bottom-to-top
+  const currentCellIdx = duration > 0 && elapsedMinutes < duration
+    ? duration - 1 - elapsedMinutes
+    : -1;
+  // fraction of current cell still filled (1 = full, 0 = empty), drains right side first
   const currentCellFraction = duration > 0 && elapsedMinutes < duration
     ? 1 - (elapsedMs % 60000) / 60000
     : 0;
@@ -215,10 +219,11 @@ export default function PomodoroTimer({ t, pal, dark }) {
           touchAction: "none",
         }}>
           {Array.from({ length: TOTAL }).map((_, idx) => {
-            const isCleared = idx < elapsedMinutes;
-            const isCurrent = idx === elapsedMinutes && running && !finished && duration > 0 && idx < duration;
-            const isFilled = idx < duration && !isCleared && !isCurrent;
+            // drain from bottom-right: cleared cells are the last elapsedMinutes indices within [0, duration)
             const isEmpty = idx >= duration;
+            const isCleared = !isEmpty && idx > currentCellIdx;
+            const isCurrent = idx === currentCellIdx && running && !finished && duration > 0;
+            const isFilled = !isEmpty && !isCleared && !isCurrent;
 
             let cellBg;
             if (isEmpty) cellBg = emptyBg;
@@ -235,7 +240,7 @@ export default function PomodoroTimer({ t, pal, dark }) {
                   height: 32,
                   borderRadius: 4,
                   background: isCurrent
-                    ? `linear-gradient(to left, ${accent} ${currentCellFraction * 100}%, ${clearedBg} ${currentCellFraction * 100}%)`
+                    ? `linear-gradient(to right, ${accent} ${currentCellFraction * 100}%, ${clearedBg} ${currentCellFraction * 100}%)`
                     : cellBg,
                   cursor: running ? "default" : "pointer",
                   border: (isFilled || isCurrent) ? "none" : `1px solid ${dark ? "#333" : "#d0cdc0"}`,
