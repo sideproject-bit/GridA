@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Globe, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 
 const SLIDE_ACCENT = ["#2B3DCB", "#C7382E", "#E3B22E", "#2B3DCB", "#C7382E"];
@@ -7,64 +7,64 @@ const SLIDES = {
   en: [
     {
       label: "00",
-      title: ["One goal.", "Eight paths.", "Sixty-four steps."],
-      body: "Mandalart is a 9×9 goal-setting framework built around a single central goal — a method used by Shohei Ohtani at age 16.",
+      title: ["One grid.", "Three tools.", "One life."],
+      body: "'GridA' is a productivity suite built around the grid — a Mandalart for your goals, a Planner for your days, and a Pomodoro timer for your focus.",
       visual: "intro",
     },
     {
       label: "01",
-      title: ["Start with", "the center."],
-      body: "Place your main goal at the center of the grid. This one cell is the seed — every other cell exists to serve it.",
-      visual: "center",
-    },
-    {
-      label: "02",
-      title: ["Branch into", "8 sub-goals."],
-      body: "The 8 surrounding cells become sub-goals — different angles, dimensions, and areas of your main ambition.",
-      visual: "branch",
-    },
-    {
-      label: "03",
-      title: ["64 concrete", "actions."],
-      body: "Each sub-goal expands into 8 daily action items. 8 paths × 8 steps = 64 habits that compound into real progress.",
+      title: ["Set your goals.", "64 steps."],
+      body: "Build a 9×9 goal grid with your main goal at the center. Each of 8 sub-goals expands into 8 concrete actions — 64 daily habits that compound into real progress.",
       visual: "steps",
     },
     {
+      label: "02",
+      title: ["Plan your", "day."],
+      body: "A visual daily planner with time blocks, an event list, and to-dos. Set recurring events, view monthly plans, and watch your schedule take shape.",
+      visual: "planner",
+    },
+    {
+      label: "03",
+      title: ["Focus in", "sessions."],
+      body: "Set a focus timer by dragging on a grid. Watch the cells drain in real time. When it ends — step away. Then come back and repeat.",
+      visual: "pomodoro",
+    },
+    {
       label: "04",
-      title: ["Write it", "as done."],
-      body: "Phrase every entry in the present tense, as if already achieved. It changes how you think — and how you act.",
+      title: ["Your grid", "awaits."],
+      body: "Set your goals. Plan your days. Focus your hours. 'GridA' is a complete system for living intentionally.",
       visual: "done",
     },
   ],
   ko: [
     {
       label: "00",
-      title: ["하나의 목표.", "여덟 갈래.", "예순네 걸음."],
-      body: "만다라트는 하나의 핵심 목표를 중심으로 한 9×9 목표 설정 프레임워크예요. 오타니 쇼헤이가 16살에 사용한 방법으로 유명해졌어요.",
+      title: ["하나의 그리드.", "세 가지 도구.", "하나의 삶."],
+      body: "'그리다'(GridA)는 그리드 중심의 생산성 앱이에요 — 목표를 위한 만다라트, 하루를 위한 플래너, 집중을 위한 뽀모도로.",
       visual: "intro",
     },
     {
       label: "01",
-      title: ["중앙에서", "시작하세요."],
-      body: "9×9 그리드의 정중앙에 메인 목표를 적어요. 이 하나의 칸이 씨앗 — 나머지 모든 칸은 여기서 자라납니다.",
-      visual: "center",
-    },
-    {
-      label: "02",
-      title: ["8개의", "하위 목표로."],
-      body: "주변 8칸이 각각 하위 목표가 돼요. 같은 꿈을 다른 방향과 차원으로 바라보는 8개의 관점이에요.",
-      visual: "branch",
-    },
-    {
-      label: "03",
-      title: ["64가지", "구체적인 행동."],
-      body: "각 하위 목표가 8개의 실행 항목으로 펼쳐져요. 8 × 8 = 64가지 일상 습관이 쌓여 실제 변화가 됩니다.",
+      title: ["목표를 설정하세요.", "64가지 실행."],
+      body: "메인 목표를 중심에 두고 9×9 목표 그리드를 채워보세요. 8개의 하위 목표가 각각 8가지 실행 항목으로 펼쳐져 — 64가지 일상 습관이 됩니다.",
       visual: "steps",
     },
     {
+      label: "02",
+      title: ["하루를", "계획하세요."],
+      body: "타임 블럭, 일정 목록, 할 일로 구성된 시각적 일간 플래너예요. 반복 일정을 설정하고 월간 계획을 한눈에 확인해요.",
+      visual: "planner",
+    },
+    {
+      label: "03",
+      title: ["세션으로", "집중하세요."],
+      body: "그리드를 드래그해 집중 타이머를 설정하세요. 칸이 실시간으로 줄어드는 걸 지켜보다가 — 끝나면 잠깐 쉬고, 다시 반복해요.",
+      visual: "pomodoro",
+    },
+    {
       label: "04",
-      title: ["이미 이룬", "것처럼."],
-      body: "모든 항목을 현재형으로 — 이미 달성한 것처럼 적어보세요. 적힌 문장이 생각과 행동 모두를 바꿔요.",
+      title: ["당신의 그리드가", "기다려요."],
+      body: "목표를 세우고. 하루를 계획하고. 시간을 집중하세요. '그리다'(GridA)는 의도적인 삶을 위한 완결된 시스템이에요.",
       visual: "done",
     },
   ],
@@ -79,43 +79,14 @@ function GridVisual({ type }) {
   const size = 3 * CELL + 2 * GAP;
 
   if (type === "intro") {
-    const fills = [C.red, C.cream, C.blue, C.cream, C.yellow, C.cream, C.blue, C.cream, C.red];
+    // Three colored columns = three tools
+    const fills = [C.red, C.yellow, C.cream, C.red, C.yellow, C.blue, C.cream, C.yellow, C.blue];
     return (
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {fills.map((f, i) => { const p = pos(i); return <rect key={i} x={p.x} y={p.y} width={CELL} height={CELL} fill={f} />; })}
-      </svg>
-    );
-  }
-
-  if (type === "center") {
-    return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {Array.from({ length: 9 }).map((_, i) => {
-          const p = pos(i), isC = i === 4;
-          return <rect key={i} x={p.x} y={p.y} width={CELL} height={CELL} fill={isC ? C.yellow : "#ffffff18"} />;
-        })}
-        {/* Spotlight ring */}
-        <rect x={pos(4).x - 3} y={pos(4).y - 3} width={CELL + 6} height={CELL + 6} fill="none" stroke={C.yellow} strokeWidth={2.5} />
-      </svg>
-    );
-  }
-
-  if (type === "branch") {
-    const cx = pos(4).x + CELL / 2, cy = pos(4).y + CELL / 2;
-    return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {[0,1,2,3,5,6,7,8].map(i => {
-          const p = pos(i), tx = p.x + CELL / 2, ty = p.y + CELL / 2;
-          return <line key={i} x1={cx} y1={cy} x2={tx} y2={ty} stroke={C.yellow} strokeWidth={1.5} strokeDasharray="3,2" opacity={0.75} />;
-        })}
-        {Array.from({ length: 9 }).map((_, i) => {
-          const p = pos(i), isC = i === 4;
-          return <rect key={i} x={p.x} y={p.y} width={CELL} height={CELL} fill={isC ? C.red : "#2B3DCB55"} />;
-        })}
-        {[0,1,2,3,5,6,7,8].map(i => {
-          const p = pos(i);
-          return <rect key={`h${i}`} x={p.x + 8} y={p.y + 8} width={CELL - 16} height={CELL - 16} fill={C.yellow} opacity={0.7} />;
-        })}
+        {/* Center overlay */}
+        <rect x={pos(4).x} y={pos(4).y} width={CELL} height={CELL} fill={C.cream} />
+        <text x={pos(4).x + CELL / 2} y={pos(4).y + CELL / 2 + 5} textAnchor="middle" fontSize={14} fontWeight={900} fill="#0d0d0d">G</text>
       </svg>
     );
   }
@@ -123,7 +94,6 @@ function GridVisual({ type }) {
   if (type === "steps") {
     const MINI = 10, MGAP = 2;
     const blockColors = [C.red, C.yellow, C.blue, C.yellow, C.red, C.blue, C.blue, C.cream, C.yellow];
-    const total = 9 * MINI + 8 * MGAP + 2 * (MGAP * 2); // approximate
     const s9 = 9 * MINI + 10 * MGAP;
     return (
       <svg width={s9} height={s9} viewBox={`0 0 ${s9} ${s9}`}>
@@ -135,6 +105,42 @@ function GridVisual({ type }) {
             x={col * (MINI + MGAP)} y={row * (MINI + MGAP)}
             width={MINI} height={MINI}
             fill={isCenter ? C.yellow : blockColors[bIdx] + "80"}
+          />;
+        })}
+      </svg>
+    );
+  }
+
+  if (type === "planner") {
+    // Mini daily planner grid: time column + blocks
+    const cols = 3, rows = 6, w = (size - (cols - 1) * GAP) / cols, h = (size - (rows - 1) * GAP) / rows;
+    const blockFills = [C.red, "none", C.blue, C.blue, "none", C.yellow, "none", C.blue, "none", "none", C.red, C.red, "none", "none", C.yellow, C.yellow, "none", "none"];
+    return (
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        {Array.from({ length: cols * rows }).map((_, i) => {
+          const col = i % cols, row = Math.floor(i / cols);
+          const x = col * (w + GAP), y = row * (h + GAP);
+          const fill = blockFills[i] === "none" ? "rgba(255,255,255,0.07)" : blockFills[i] + "bb";
+          return <rect key={i} x={x} y={y} width={w} height={h} fill={fill} />;
+        })}
+      </svg>
+    );
+  }
+
+  if (type === "pomodoro") {
+    // Draining grid — bottom rows empty
+    const MINI = 10, MGAP = 2, COLS = 9, ROWS = 5;
+    const sw = COLS * MINI + (COLS - 1) * MGAP;
+    const sh = ROWS * MINI + (ROWS - 1) * MGAP;
+    return (
+      <svg width={sw} height={sh} viewBox={`0 0 ${sw} ${sh}`}>
+        {Array.from({ length: COLS * ROWS }).map((_, i) => {
+          const col = i % COLS, row = Math.floor(i / COLS);
+          const drained = row >= 3 || (row === 2 && col >= 5);
+          return <rect key={i}
+            x={col * (MINI + MGAP)} y={row * (MINI + MGAP)}
+            width={MINI} height={MINI}
+            fill={drained ? "rgba(255,255,255,0.08)" : C.red + "cc"}
           />;
         })}
       </svg>
@@ -204,11 +210,11 @@ export default function WelcomeScreen({ play, onFinish }) {
       overflow: "hidden",
     }}>
       <style>{`
-        @keyframes wsFadeUp   { from { opacity:0; transform:translateY(22px); } to { opacity:1; transform:none; } }
+        @keyframes wsFadeUp    { from { opacity:0; transform:translateY(22px); } to { opacity:1; transform:none; } }
         @keyframes wsSlideLeft { from { opacity:0; transform:translateX(-72px); } to { opacity:1; transform:none; } }
-        @keyframes wsSlideRight { from { opacity:0; transform:translateX(48px); } to { opacity:1; transform:none; } }
-        @keyframes wsPopIn    { from { opacity:0; transform:scale(0.55); } to { opacity:1; transform:scale(1); } }
-        @keyframes wsSlideUp  { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+        @keyframes wsSlideRight{ from { opacity:0; transform:translateX(48px); } to { opacity:1; transform:none; } }
+        @keyframes wsPopIn     { from { opacity:0; transform:scale(0.55); } to { opacity:1; transform:scale(1); } }
+        @keyframes wsSlideUp   { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
       `}</style>
 
       {/* Header bar */}
@@ -218,11 +224,12 @@ export default function WelcomeScreen({ play, onFinish }) {
         borderBottom: "4px solid #000", flexShrink: 0,
         ...A(0, "wsFadeUp"),
       }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-          <span style={{ fontWeight: 900, fontSize: 16, color: "rgba(255,255,255,0.85)", letterSpacing: "-0.02em" }}>
-            GRIDA
-          </span>
-          <span style={{ fontWeight: 400, fontSize: 13, color: "rgba(255,255,255,0.35)" }}>.app</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <img src="/logo.png" alt="GridA" style={{ width: 22, height: 22, objectFit: "contain" }} />
+          <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+            <span style={{ fontWeight: 900, fontSize: 16, color: "rgba(255,255,255,0.85)", letterSpacing: "-0.02em" }}>GRIDA</span>
+            <span style={{ fontWeight: 400, fontSize: 13, color: "rgba(255,255,255,0.35)" }}>.app</span>
+          </div>
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <button
@@ -255,18 +262,12 @@ export default function WelcomeScreen({ play, onFinish }) {
           borderRight: "4px solid #000",
           ...A(0.12, "wsSlideLeft"),
         }}>
-          {/* Corner black block */}
-          <div style={{
-            position: "absolute", top: 0, right: 0, width: 48, height: 48, background: "#000",
-            ...A(0.38, "wsPopIn"),
-          }} />
-          {/* Corner color block */}
+          <div style={{ position: "absolute", top: 0, right: 0, width: 48, height: 48, background: "#000", ...A(0.38, "wsPopIn") }} />
           <div style={{
             position: "absolute", bottom: 0, left: 0, width: 32, height: 32,
             background: accent === "#E3B22E" ? "#C7382E" : accent === "#C7382E" ? "#E3B22E" : "#E3B22E",
             ...A(0.48, "wsPopIn"),
           }} />
-
           <div style={{
             opacity: visible ? 1 : 0,
             transform: visible ? "scale(1)" : "scale(0.92)",
@@ -281,17 +282,14 @@ export default function WelcomeScreen({ play, onFinish }) {
         <div style={{
           display: "flex", flexDirection: "column", justifyContent: "center",
           padding: "clamp(28px, 5vw, 64px)",
-          background: "#111",
-          position: "relative",
+          background: "#111", position: "relative",
           ...A(0.28, "wsSlideRight"),
         }}>
-          {/* Slide number watermark */}
           <div style={{
             position: "absolute", top: 24, right: 28,
             fontWeight: 900, fontSize: 48, color: accent + "18",
             letterSpacing: "-0.05em", lineHeight: 1,
-            transition: "color 0.4s ease",
-            userSelect: "none",
+            transition: "color 0.4s ease", userSelect: "none",
           }}>
             {cur.label}
           </div>
@@ -301,10 +299,8 @@ export default function WelcomeScreen({ play, onFinish }) {
             transform: visible ? "translateX(0)" : "translateX(16px)",
             transition: "opacity 0.6s ease, transform 0.6s ease",
           }}>
-            {/* Accent stripe */}
             <div style={{ width: 40, height: 4, background: accent, marginBottom: 24, transition: "background 0.4s ease" }} />
 
-            {/* Title */}
             <h1 style={{
               fontWeight: 900, margin: "0 0 20px",
               fontSize: "clamp(28px, 4vw, 52px)",
@@ -316,17 +312,14 @@ export default function WelcomeScreen({ play, onFinish }) {
               ))}
             </h1>
 
-            {/* Body */}
             <p style={{
               fontSize: "clamp(13px, 1.4vw, 16px)",
               lineHeight: 1.75, color: "#F2EDE1",
-              opacity: 0.7, margin: "0 0 40px",
-              maxWidth: 420,
+              opacity: 0.7, margin: "0 0 40px", maxWidth: 420,
             }}>
               {cur.body}
             </p>
 
-            {/* Navigation */}
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <button
                 onClick={goPrev}
@@ -347,8 +340,7 @@ export default function WelcomeScreen({ play, onFinish }) {
                     key={i}
                     onClick={() => transition(() => { setSlide(i); play?.("D5", "64n"); })}
                     style={{
-                      width: i === slide ? 20 : 6,
-                      height: 6,
+                      width: i === slide ? 20 : 6, height: 6,
                       background: i === slide ? accent : "#ffffff30",
                       border: "none", cursor: "pointer", padding: 0,
                       transition: "all 0.3s ease",
@@ -380,7 +372,7 @@ export default function WelcomeScreen({ play, onFinish }) {
         </div>
       </div>
 
-      {/* Bottom Mondrian strip — staggered per segment */}
+      {/* Bottom Mondrian strip */}
       <div style={{ display: "flex", height: 8, flexShrink: 0 }}>
         <div style={{ flex: 1, background: "#C7382E", ...A(0.55, "wsSlideUp") }} />
         <div style={{ width: 4, background: "#000", ...A(0.6, "wsSlideUp") }} />

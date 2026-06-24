@@ -91,11 +91,13 @@ export const T = {
       termsRequired: "Please accept the Terms of Use to continue.",
       termsTitle: "Terms of Use",
       termsClauses: [
-        "Your goal data is stored securely on Supabase servers. We do not sell or share your data with third parties.",
-        "Your mandalarts are private by default. You control what is shared with friends.",
-        "You may delete your account and all associated data at any time by contacting support.",
-        "Do not use this service for any unlawful, harmful, or abusive purposes.",
-        "This app is provided as-is. We are not liable for any loss of data or unintended use.",
+        "Your data (mandalarts, planner events, to-dos, pomodoro sessions) is stored securely on Supabase servers. We do not sell or share your personal data with third parties.",
+        "Mandalarts are private by default. You control what is made public and visible to friends. Friends can only view your public content — never edit it.",
+        "Time blocks and daily planner events reset at midnight each day. Monthly calendar events and to-dos are preserved.",
+        "You may delete your account and all associated data at any time through the Profile page. Deletion is permanent and cannot be undone.",
+        "Do not use 'GridA' for any unlawful, harmful, or abusive purpose.",
+        "'GridA' is provided as-is. We are not liable for loss of data, session interruptions, or unintended use of the service.",
+        "Background music tracks are original compositions. Some were produced with Suno AI as a base and further edited. All rights reserved.",
       ],
     },
     friends: {
@@ -267,14 +269,44 @@ export const T = {
       contactPending: "Pending",
       contactReplied: "Replied",
       contactAdminReply: "Reply",
-      items: [
-        { t: "9×9 Grid", b: "The center cell is your main goal. The 8 cells around it are sub-goals — each one links directly to the center of an outer block. Edit either side and both update instantly." },
-        { t: "Focus view", b: "Switch to Focus view to edit one block at a time with a minimap on the left side. Great for deep-diving into a single sub-goal without distraction." },
-        { t: "Cell notes", b: "Tap the sticky-note icon on any detail cell to add a longer description or note. A small dot appears on the cell when a note is saved." },
-        { t: "Themes & Music", b: "Switch between themes (Mondrian, Neptune, Mars, Earth, Venus, Mercury) and toggle dark/light mode from the toolbar. Select a background music track — it loops until you stop it. Some tracks were created with Suno AI as a base and further edited by hand." },
-        { t: "Friends & Sharing", b: "Share your friend code from the Profile page. Set a mandalart to Public so friends can view it. They cannot edit your mandalarts — view only." },
-        { t: "Manage", b: "Create multiple mandalarts from the Manage page. Each one is saved separately and can be opened or deleted independently." },
-        { t: "Saving & navigation", b: "Refreshing the page always takes you back to the home screen — your current view is not preserved. Work is auto-saved when your connection is stable, but we recommend pressing the Save button after major edits, just to be safe." },
+      sections: [
+        {
+          category: "General",
+          items: [
+            { t: "Themes & Appearance", b: "Switch between 6 themes (Mondrian, Neptune, Mars, Earth, Venus, Mercury) and toggle dark/light mode or language (EN/KO) from the top bar on any screen." },
+            { t: "Sound & Music", b: "Toggle sound on/off and select a background music track — it loops until you stop it. Some tracks were produced with Suno AI as a base and further edited by hand." },
+            { t: "Friends & Sharing", b: "Share your friend code from the Profile page. Friends you add can view your public content. They cannot edit anything — view only." },
+            { t: "Saving", b: "Your work auto-saves when your connection is stable. After major edits, press the save button to be safe. Refreshing the page always returns you to the home screen." },
+          ],
+        },
+        {
+          category: "Planner",
+          items: [
+            { t: "Time Blocks", b: "Drag across the grid to mark time slots — each cell is 30 minutes. Double-click a single cell to add a quick event. Release to open the event form." },
+            { t: "Events & To-dos", b: "Events are tied to specific dates. To-dos are global and persist across dates. Check to complete, × to delete." },
+            { t: "Monthly View & Recurring", b: "In the Monthly tab, add events to future dates or set events that repeat by day of week. They appear automatically in the daily view on the right day." },
+            { t: "Midnight Reset", b: "Time blocks and events in the daily view reset at midnight each day. To-dos and monthly calendar events are not affected." },
+          ],
+        },
+        {
+          category: "Mandalart",
+          items: [
+            { t: "9×9 Grid", b: "The center cell is your main goal. The 8 surrounding cells are sub-goals — each links directly to the center of an outer block. Edit either side and both update instantly." },
+            { t: "Focus View", b: "Switch to Focus view to edit one outer block at a time with a minimap on the left. Great for deep work on a single sub-goal without distraction." },
+            { t: "Cell Notes", b: "Tap the sticky-note icon on any detail cell to add a longer note. A small dot appears on the cell when a note is saved." },
+            { t: "Manage", b: "Create multiple mandalarts from the Manage page. Each is saved separately and can be opened or deleted independently." },
+            { t: "Sharing", b: "Set a mandalart to Public so friends can view it from their Profile page. Friends cannot edit it — view only." },
+          ],
+        },
+        {
+          category: "Pomodoro",
+          items: [
+            { t: "Setting Duration", b: "Drag across the grid to set your session length. Each cell is 1 minute — up to 45 minutes total. You can adjust it before starting." },
+            { t: "Focus Goal", b: "Type what you're working on in the goal field at the top. Naming your focus keeps you anchored during the session." },
+            { t: "Timer", b: "Press Start and watch the grid drain in real time. The active cell empties as seconds pass, then disappears when the minute is up." },
+            { t: "Breaks", b: "When the timer ends, you'll hear a sound and receive a notification. Step away — rest is part of the system." },
+          ],
+        },
       ],
     },
     splash: { cta: "Click anywhere to begin writing your Mandalart." },
@@ -402,11 +434,13 @@ export const T = {
       termsRequired: "계속하려면 이용약관에 동의해주세요.",
       termsTitle: "이용약관",
       termsClauses: [
-        "작성하신 목표 데이터는 Supabase 서버에 안전하게 저장되며, 제3자에게 제공되거나 판매되지 않습니다.",
-        "만다라트는 기본적으로 비공개입니다. 공유 여부는 직접 설정할 수 있습니다.",
-        "언제든지 고객 지원을 통해 계정 및 모든 데이터를 삭제 요청할 수 있습니다.",
-        "서비스를 불법적이거나 유해한 목적으로 사용하지 않습니다.",
-        "이 앱은 현 상태로 제공되며, 데이터 손실이나 의도치 않은 사용으로 인한 책임을 지지 않습니다.",
+        "만다라트, 플래너 일정, 할 일, 뽀모도로 세션 등 모든 데이터는 Supabase 서버에 안전하게 저장되며, 제3자에게 제공되거나 판매되지 않습니다.",
+        "만다라트는 기본적으로 비공개입니다. 공개 여부는 직접 설정할 수 있으며, 친구는 공개된 콘텐츠를 보기만 할 수 있고 수정은 불가능합니다.",
+        "일간 플래너의 타임 블럭과 일정은 매일 자정에 초기화됩니다. 월간 캘린더 일정과 할 일은 유지됩니다.",
+        "프로필 페이지에서 언제든지 계정 및 모든 데이터를 영구 삭제할 수 있습니다. 삭제는 되돌릴 수 없습니다.",
+        "'그리다'(GridA)를 불법적이거나 유해한 목적으로 사용하지 않습니다.",
+        "'그리다'(GridA)는 현 상태로 제공되며, 데이터 손실, 세션 중단, 또는 의도치 않은 사용으로 인한 책임을 지지 않습니다.",
+        "배경 음악은 자체 제작된 곡들입니다. 일부는 Suno AI를 베이스로 추가 편집해 제작됐습니다. 모든 권리는 제작자에게 있습니다.",
       ],
     },
     friends: {
@@ -578,14 +612,44 @@ export const T = {
       contactPending: "답변 대기",
       contactReplied: "답변 완료",
       contactAdminReply: "답변",
-      items: [
-        { t: "9×9 그리드", b: "중앙이 메인 목표예요. 주변 8칸은 하위 목표로, 각각 바깥 블록의 중심 칸과 연결돼 있어요. 한쪽을 수정하면 다른 쪽도 자동으로 바뀌어요." },
-        { t: "포커스 보기", b: "포커스 보기로 전환하면 왼쪽 미니맵을 보면서 한 블록씩 집중해서 편집할 수 있어요. 하나의 하위 목표에 깊이 집중하기 좋아요." },
-        { t: "셀 메모", b: "세부 항목 칸의 메모 아이콘을 탭하면 더 긴 설명이나 메모를 추가할 수 있어요. 메모가 저장되면 칸에 작은 점이 표시돼요." },
-        { t: "테마 & 음악", b: "상단 바에서 테마(몬드리안/해왕성/화성/지구/금성/수성)와 다크/라이트 모드를 전환하세요. 배경음악을 선택하면 정지하기 전까지 반복 재생돼요. 일부 배경음악은 Suno AI를 베이스로 편집해 제작된 곡들이에요." },
-        { t: "친구 & 공유", b: "프로필 페이지에서 친구 코드를 공유하세요. 만다라트를 공개로 설정하면 친구가 볼 수 있어요. 친구는 수정할 수 없고 보기만 가능해요." },
-        { t: "만다라트 관리", b: "관리 페이지에서 여러 개의 만다라트를 만들 수 있어요. 각각 독립적으로 저장되고, 개별적으로 열거나 삭제할 수 있어요." },
-        { t: "저장 & 내비게이션", b: "새로고침하면 항상 홈 화면으로 돌아와요. 인터넷 연결이 안정적이면 자동으로 저장되지만, 중요한 작업 후에는 저장 버튼을 눌러두는 걸 권장해요." },
+      sections: [
+        {
+          category: "전역",
+          items: [
+            { t: "테마 & 외관", b: "모든 화면 상단 바에서 6가지 테마(몬드리안, 해왕성, 화성, 지구, 금성, 수성), 다크/라이트 모드, 언어(EN/KO)를 전환할 수 있어요." },
+            { t: "사운드 & 음악", b: "사운드 켜기/끄기와 배경 음악 선택이 가능해요. 음악은 직접 끄기 전까지 반복 재생돼요. 일부 음악은 Suno AI를 베이스로 추가 편집해 제작됐어요." },
+            { t: "친구 & 공유", b: "프로필 페이지에서 친구 코드를 공유하세요. 추가된 친구는 내가 공개로 설정한 콘텐츠를 볼 수 있어요. 수정은 불가능하고 보기만 가능해요." },
+            { t: "저장", b: "인터넷 연결이 안정적이면 자동으로 저장돼요. 중요한 작업 후에는 저장 버튼을 누르는 걸 권장해요. 새로고침하면 항상 홈 화면으로 돌아가요." },
+          ],
+        },
+        {
+          category: "플래너",
+          items: [
+            { t: "타임 블럭", b: "그리드를 드래그해 시간대를 선택하세요 — 한 칸이 30분이에요. 한 칸만 더블클릭해도 일정 추가가 가능해요." },
+            { t: "일정 & 할 일", b: "일정은 특정 날짜에 연결돼요. 할 일은 날짜에 관계없이 전역으로 유지돼요. 체크하면 완료, ×로 삭제할 수 있어요." },
+            { t: "월간 보기 & 반복 일정", b: "월간 탭에서 미래 날짜에 일정을 추가하거나 요일별 반복 일정을 설정할 수 있어요. 해당 요일이 되면 일간 보기에 자동으로 표시돼요." },
+            { t: "자정 초기화", b: "일간 보기의 타임 블럭과 일정은 매일 자정에 초기화돼요. 할 일과 월간 캘린더 일정은 유지돼요." },
+          ],
+        },
+        {
+          category: "만다라트",
+          items: [
+            { t: "9×9 그리드", b: "중앙이 메인 목표예요. 주변 8칸은 하위 목표로, 각 바깥 블록의 중심 칸과 연결돼 있어요. 한쪽을 수정하면 다른 쪽도 자동으로 바뀌어요." },
+            { t: "포커스 보기", b: "포커스 모드로 전환하면 왼쪽 미니맵을 보면서 한 블록씩 집중해서 편집할 수 있어요. 산만함 없이 하위 목표 하나에 깊이 집중하기 좋아요." },
+            { t: "셀 메모", b: "세부 항목 칸의 메모 아이콘을 탭해 더 긴 메모를 추가할 수 있어요. 메모가 저장되면 칸에 작은 점이 표시돼요." },
+            { t: "관리", b: "관리 페이지에서 여러 개의 만다라트를 만들 수 있어요. 각각 독립적으로 저장되고 개별 삭제도 가능해요." },
+            { t: "공유", b: "만다라트를 공개로 설정하면 친구가 프로필 페이지에서 볼 수 있어요. 친구는 수정할 수 없어요." },
+          ],
+        },
+        {
+          category: "뽀모도로",
+          items: [
+            { t: "시간 설정", b: "그리드를 드래그해 세션 시간을 설정하세요. 한 칸이 1분 — 최대 45분이에요. 시작 전 언제든 조정 가능해요." },
+            { t: "집중 목표", b: "상단 목표 칸에 지금 하는 일을 적어보세요. 목표를 이름으로 정하면 세션 내내 집중하는 데 도움이 돼요." },
+            { t: "타이머", b: "시작을 누르면 그리드가 실시간으로 줄어들어요. 활성 칸이 초마다 비워지다가 1분이 지나면 사라져요." },
+            { t: "휴식", b: "타이머가 끝나면 소리와 알림이 울려요. 잠깐 자리를 비우세요 — 휴식도 시스템의 일부예요." },
+          ],
+        },
       ],
     },
     splash: { cta: "클릭해서 나만의 만다라트 작성을 시작하세요." },

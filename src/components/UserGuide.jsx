@@ -5,7 +5,7 @@ import ContactPanel from "./ContactPanel";
 export default function UserGuide({ pal, t }) {
   const [open, setOpen]  = useState(null);
   const [tab, setTab]    = useState("guide");
-  const items = t.guide.items;
+  const sections = t.guide.sections;
   const acc = pal.accent2;
   const ink = pal.ink;
 
@@ -29,28 +29,45 @@ export default function UserGuide({ pal, t }) {
       {/* Content */}
       <div style={{ flex: 1, overflowY: "auto" }}>
         {tab === "guide" ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {items.map((item, i) => (
-              <div key={i}>
-                <button onClick={() => setOpen(open === i ? null : i)} style={{
-                  width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center",
-                  background: open === i ? acc + "18" : "none",
-                  border: `1px solid ${ink}20`,
-                  padding: "11px 14px", cursor: "pointer", color: ink, textAlign: "left",
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {sections.map((section) => (
+              <div key={section.category}>
+                <div style={{
+                  fontSize: 10, fontWeight: 800, letterSpacing: "0.1em",
+                  textTransform: "uppercase", color: acc,
+                  padding: "0 2px 8px", borderBottom: `1px solid ${acc}30`,
+                  marginBottom: 6,
                 }}>
-                  <span style={{ fontWeight: 700, fontSize: 13 }}>{item.t}</span>
-                  <ChevronRight size={14} style={{ flexShrink: 0, transform: open === i ? "rotate(90deg)" : "none", transition: "transform 0.18s ease" }} />
-                </button>
-                {open === i && (
-                  <div style={{
-                    padding: "12px 14px",
-                    background: acc + "0a",
-                    borderLeft: `3px solid ${acc}`,
-                    fontSize: 13, lineHeight: 1.75, color: ink, opacity: 0.85,
-                  }}>
-                    {item.b}
-                  </div>
-                )}
+                  {section.category}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {section.items.map((item, i) => {
+                    const key = `${section.category}_${i}`;
+                    return (
+                      <div key={key}>
+                        <button onClick={() => setOpen(open === key ? null : key)} style={{
+                          width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center",
+                          background: open === key ? acc + "18" : "none",
+                          border: `1px solid ${ink}20`,
+                          padding: "11px 14px", cursor: "pointer", color: ink, textAlign: "left",
+                        }}>
+                          <span style={{ fontWeight: 700, fontSize: 13 }}>{item.t}</span>
+                          <ChevronRight size={14} style={{ flexShrink: 0, transform: open === key ? "rotate(90deg)" : "none", transition: "transform 0.18s ease" }} />
+                        </button>
+                        {open === key && (
+                          <div style={{
+                            padding: "12px 14px",
+                            background: acc + "0a",
+                            borderLeft: `3px solid ${acc}`,
+                            fontSize: 13, lineHeight: 1.75, color: ink, opacity: 0.85,
+                          }}>
+                            {item.b}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             ))}
           </div>
