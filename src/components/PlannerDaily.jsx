@@ -71,15 +71,8 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
     return row * COLS + col;
   }
 
-  function openPopup(startCell, endCell, clientX, clientY) {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    let x = clientX + 16;
-    let y = clientY - 80;
-    if (x + 280 > vw - 8) x = clientX - 296;
-    if (y + 240 > vh - 8) y = vh - 248;
-    if (y < 8) y = 8;
-    setPopup({ startCell, endCell, x, y });
+  function openPopup(startCell, endCell) {
+    setPopup({ startCell, endCell });
     setPopTitle(""); setPopColor(EVENT_COLORS[0]); setPopMemo("");
   }
 
@@ -110,7 +103,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
     dragRef.current = { active: false, start: null, end: null, dragging: false };
     setSelRange(null);
     if (dragging) {
-      openPopup(Math.min(start, end), Math.max(start, end), e.clientX, e.clientY);
+      openPopup(Math.min(start, end), Math.max(start, end));
     }
   }
 
@@ -118,7 +111,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
     if (!editMode) return;
     const cell = getCellAt(e.clientX, e.clientY);
     if (cell === null) return;
-    openPopup(cell, cell, e.clientX, e.clientY);
+    openPopup(cell, cell);
   }
 
   function saveEvent() {
@@ -294,14 +287,16 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
       {/* ── Event creation popup ── */}
       {popup && (
         <>
-          <div style={{ position: "fixed", inset: 0, zIndex: 50 }} onClick={() => setPopup(null)} />
+          <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.45)" }} onClick={() => setPopup(null)} />
           <div style={{
-            position: "fixed", left: popup.x, top: popup.y,
-            zIndex: 51, width: 268,
+            position: "fixed",
+            left: "50%", top: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: 51, width: 300, maxWidth: "90vw",
             background: bg, color: ink,
             border: `2px solid ${acc}`,
-            borderRadius: 8, padding: 16,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
+            borderRadius: 10, padding: 20,
+            boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
           }}>
             <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.45, marginBottom: 10, letterSpacing: "0.04em", textTransform: "uppercase" }}>
               {cellToTime(popup.startCell)} – {cellToTimeEnd(popup.endCell)}

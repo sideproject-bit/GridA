@@ -186,6 +186,17 @@ export const T = {
       days: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
       months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
     },
+    plannerGuide: {
+      steps: [
+        { t: "Set time blocks", b: "Drag across the grid to select multiple cells, or double-click for a single cell. The event popup appears as soon as you release." },
+        { t: "Add an event", b: "Enter a title, pick a color, and add optional notes. Hit Add and the blocks are colored and your event appears in the list." },
+        { t: "Manage to-dos", b: "To-dos are global — they persist across dates. Check to complete, × to delete. Add as many as you need." },
+        { t: "Monthly view & recurring", b: "In the Monthly tab, add events to future dates or set recurring events by day of week. They'll appear automatically in the daily view on the right day." },
+      ],
+      dontShow: "Don't show this when entering Planner",
+      showAgain: "Show guide",
+      close: "Let's plan",
+    },
     pomodoroGuide: {
       steps: [
         { t: "Set your focus time", b: "Drag across the grid to set your session length. Each cell is 1 minute — up to 45 minutes total. You can adjust it any time before starting." },
@@ -445,7 +456,16 @@ export const T = {
       days: ["일", "월", "화", "수", "목", "금", "토"],
       months: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
     },
-    pomodoroGuide: {
+    plannerGuide: {
+      steps: [
+        { t: "타임 블록 설정", b: "격자 위를 드래그하면 여러 칸을, 더블클릭하면 한 칸을 선택할 수 있어요. 선택이 끝나면 일정 추가 팝업이 바로 떠요." },
+        { t: "일정 등록", b: "제목과 색상, 메모를 입력하고 추가 버튼을 누르면 일정이 생성돼요. 타임 블록에 색상이 칠해지고 일정 목록에도 표시돼요." },
+        { t: "할 일 관리", b: "할 일은 날짜와 무관하게 전역으로 유지돼요. 체크로 완료 표시하고, × 버튼으로 삭제할 수 있어요." },
+        { t: "월간 뷰 & 반복 일정", b: "월간 탭에서 미래 날짜의 일정을 미리 등록하거나 요일 기반 반복 일정을 설정할 수 있어요. 해당 날짜가 되면 일일 뷰에 자동으로 표시돼요." },
+      ],
+      dontShow: "플래너 진입 시 자동으로 표시 안 함",
+      showAgain: "가이드 보기",
+      close: "시작하기",
     },
     pomodoroGuide: {
       steps: [
