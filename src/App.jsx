@@ -8,6 +8,7 @@ import { useSound } from "./useSound";
 import { useMusicPlayer } from "./useMusic";
 import AuthGate from "./components/AuthGate";
 import Onboarding from "./components/Onboarding";
+import WelcomeScreen from "./components/WelcomeScreen";
 import TopControls from "./components/TopControls";
 import MandalartGrid from "./components/MandalartGrid";
 import Manage from "./components/Manage";
@@ -35,6 +36,7 @@ function AppShell() {
   const [soundOn, setSoundOn] = useState(true);
   const [view, setView] = useState("home");
   const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
   const [currentMandalartId, setCurrentMandalartId] = useState(null);
   const [viewingFriend, setViewingFriend] = useState(null);
   const [viewingMandalart, setViewingMandalart] = useState(null);
@@ -201,6 +203,7 @@ function AppShell() {
       `}</style>
 
       {onboardingOpen && <Onboarding t={t} pal={pal} play={play} onClose={closeOnboarding} />}
+      {showWelcome && <WelcomeScreen play={play} onFinish={() => setShowWelcome(false)} />}
       {featureGuideOpen && <FeatureGuide t={t} pal={pal} onClose={() => setFeatureGuideOpen(false)} />}
       {gridTutorialOpen && (
         <GridTutorial
@@ -288,7 +291,7 @@ function AppShell() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12, position: "relative", zIndex: 1 }}>
                 <TopControls pal={{ ...pal, ink: "#fff" }} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={true} />
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5 }}>
-                  <button onClick={() => { setOnboardingOpen(true); play("G4", "16n"); }} style={{ background: "none", border: "none", color: "#fff", opacity: 0.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>
+                  <button onClick={() => { setShowWelcome(true); play("G4", "16n"); }} style={{ background: "none", border: "none", color: "#fff", opacity: 0.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>
                     <HelpCircle size={14} /> {t.replay}
                   </button>
                 </div>
