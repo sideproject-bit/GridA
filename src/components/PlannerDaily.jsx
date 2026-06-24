@@ -30,7 +30,80 @@ function getCurrentCell() {
 
 const MON = { red: "#C7382E", blue: "#2B3DCB", yellow: "#E3B22E" };
 
-export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, todos, onTodosChange, theme, lang }) {
+// Single event row. Mobile: swipe left = delete, swipe right = move to tomorrow.
+// Desktop: × button + right-click to move to tomorrow.
+function EventRow({ evt, isMobile, editMode, dark, ink, pl, onDelete, onMove, onContext }) {
+  const [dx, setDx] = useState(0);
+  const startX = useRef(null);
+  const canAct = editMode && !evt.fromCalendar;
+  const THRESH = 80;
+
+  const onTouchStart = (e) => { if (!canAct) return; startX.current = e.touches[0].clientX; };
+  const onTouchMove  = (e) => {
+    if (startX.current == null) return;
+    setDx(e.touches[0].clientX - startX.current);
+  };
+  const onTouchEnd = () => {
+    if (startX.current == null) return;
+    if (dx < -THRESH)      onDelete(evt.id);
+    else if (dx > THRESH)  onMove(evt);
+    startX.current = null;
+    setDx(0);
+  };
+
+  const card = (
+    <div style={{
+      display: "flex", alignItems: "flex-start", gap: 8,
+      padding: "8px 10px",
+      background: dark ? "#1e1d16" : "#f0ede2",
+      borderLeft: `3px solid ${evt.color}`,
+      borderRadius: 4,
+      transform: isMobile ? `translateX(${dx}px)` : "none",
+      transition: startX.current == null ? "transform 0.2s ease" : "none",
+      position: "relative",
+    }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 700, fontSize: 13, wordBreak: "keep-all" }}>{evt.title}</div>
+        <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>
+          {cellToTime(evt.startCell)} – {cellToTimeEnd(evt.endCell)}
+        </div>
+        {evt.memo && <div style={{ fontSize: 11, opacity: 0.6, marginTop: 4, wordBreak: "keep-all" }}>{evt.memo}</div>}
+        {evt.fromCalendar && <div style={{ fontSize: 10, opacity: 0.35, marginTop: 4 }}>📅 {pl.fromCalendar}</div>}
+      </div>
+      {!evt.fromCalendar && editMode && !isMobile && (
+        <button onClick={() => onDelete(evt.id)} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.3, fontSize: 16, padding: 0, lineHeight: 1, flexShrink: 0 }}>×</button>
+      )}
+    </div>
+  );
+
+  if (!isMobile) {
+    return (
+      <div
+        onContextMenu={canAct ? (e) => { e.preventDefault(); onContext(evt, e.clientX, e.clientY); } : undefined}
+        style={{ marginBottom: 6 }}
+      >
+        {card}
+      </div>
+    );
+  }
+
+  // Mobile: swipe container with delete (right) / move (left) hints behind the card
+  return (
+    <div style={{ position: "relative", marginBottom: 6, overflow: "hidden", borderRadius: 4 }}>
+      {canAct && (
+        <div style={{ position: "absolute", inset: 0, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 14px", fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <span style={{ color: MON.blue, opacity: dx > 20 ? 1 : 0.3 }}>→ {pl.moveTomorrow || "Tomorrow"}</span>
+          <span style={{ color: MON.red, opacity: dx < -20 ? 1 : 0.3 }}>{pl.delete || "Delete"} ✕</span>
+        </div>
+      )}
+      <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
+        {card}
+      </div>
+    </div>
+  );
+}
+
+export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, todos, onTodosChange, onMoveToTomorrow, theme, lang }) {
   const pl    = t.planner;
   const ink   = pal.ink;
   const acc   = pal.accent;
@@ -47,6 +120,8 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
   const [popMemo,     setPopMemo]     = useState("");
   const [todoInput,   setTodoInput]   = useState("");
   const [section,     setSection]     = useState("time"); // mobile segment: time | events | todo
+  const [viewEvent,   setViewEvent]   = useState(null); // tapped a filled block → show its details
+  const [ctxMenu,     setCtxMenu]     = useState(null); // desktop right-click menu { evt, x, y }
 
   const dragRef = useRef({ active: false, start: null, end: null, dragging: false });
   const gridRef = useRef(null);
@@ -104,10 +179,21 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
     dragRef.current = { active: false, start: null, end: null, dragging: false };
     setSelRange(null);
     if (dragging) {
-      openPopup(Math.min(start, end), Math.max(start, end));
-    } else if (e.pointerType === "touch" && start !== null) {
-      // Touch has no double-click — a single tap creates a one-cell event
-      openPopup(start, start);
+      // Only create over a fully empty range; otherwise show the existing event
+      const lo = Math.min(start, end), hi = Math.max(start, end);
+      let existing = null;
+      for (let i = lo; i <= hi; i++) { if (cellEventMap[i]) { existing = cellEventMap[i]; break; } }
+      if (existing) setViewEvent(existing);
+      else openPopup(lo, hi);
+    } else if (start !== null) {
+      const evt = cellEventMap[start];
+      if (evt) {
+        // Tapping a filled block shows its details (no overwrite)
+        setViewEvent(evt);
+      } else if (e.pointerType === "touch" && editMode) {
+        // Touch has no double-click — a single tap on an empty cell creates an event
+        openPopup(start, start);
+      }
     }
   }
 
@@ -115,7 +201,25 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
     if (!editMode) return;
     const cell = getCellAt(e.clientX, e.clientY);
     if (cell === null) return;
-    openPopup(cell, cell);
+    const evt = cellEventMap[cell];
+    if (evt) setViewEvent(evt);
+    else openPopup(cell, cell);
+  }
+
+  function moveToTomorrow(evt) {
+    onMoveToTomorrow?.({
+      id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
+      title: evt.title,
+      color: evt.color,
+      memo: evt.memo ?? "",
+      startTime: cellToTime(evt.startCell),
+      endTime: cellToTimeEnd(evt.endCell),
+      startCell: evt.startCell,
+      endCell: evt.endCell,
+    });
+    if (!evt.fromCalendar) deleteEvent(evt.id);
+    setViewEvent(null);
+    setCtxMenu(null);
   }
 
   function saveEvent() {
@@ -222,25 +326,12 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
     events.length === 0
       ? <div style={{ fontSize: 12, opacity: 0.3, paddingTop: 4 }}>{pl.noEvents}</div>
       : [...events].sort((a, b) => a.startCell - b.startCell).map(evt => (
-        <div key={evt.id} style={{
-          display: "flex", alignItems: "flex-start", gap: 8,
-          padding: "8px 10px", marginBottom: 6,
-          background: dark ? "#1e1d16" : "#f0ede2",
-          borderLeft: `3px solid ${evt.color}`,
-          borderRadius: 4,
-        }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 700, fontSize: 13, wordBreak: "keep-all" }}>{evt.title}</div>
-            <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>
-              {cellToTime(evt.startCell)} – {cellToTimeEnd(evt.endCell)}
-            </div>
-            {evt.memo && <div style={{ fontSize: 11, opacity: 0.6, marginTop: 4, wordBreak: "keep-all" }}>{evt.memo}</div>}
-            {evt.fromCalendar && <div style={{ fontSize: 10, opacity: 0.35, marginTop: 4 }}>📅 {pl.fromCalendar}</div>}
-          </div>
-          {!evt.fromCalendar && editMode && (
-            <button onClick={() => deleteEvent(evt.id)} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.3, fontSize: 16, padding: 0, lineHeight: 1, flexShrink: 0 }}>×</button>
-          )}
-        </div>
+        <EventRow
+          key={evt.id} evt={evt}
+          isMobile={isMobile} editMode={editMode} dark={dark} ink={ink} pl={pl}
+          onDelete={deleteEvent} onMove={moveToTomorrow}
+          onContext={(ev, x, y) => setCtxMenu({ evt: ev, x, y })}
+        />
       ))
   );
 
@@ -289,9 +380,15 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
 
   return (
     <div>
-      {/* Date */}
+      {/* Date — larger and color-accented on mobile (dark→yellow, light→blue) */}
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 18, flexWrap: "wrap" }}>
-        <div style={{ fontSize: 13, fontWeight: 700, opacity: 0.5 }}>
+        <div style={{
+          fontSize: isMobile ? 22 : 13,
+          fontWeight: isMobile ? 900 : 700,
+          letterSpacing: isMobile ? "-0.01em" : "normal",
+          color: isMobile ? (dark ? "#E3B22E" : "#2B3DCB") : ink,
+          opacity: isMobile ? 1 : 0.5,
+        }}>
           {new Date().toLocaleDateString(lang === "ko" ? "ko-KR" : "en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         </div>
         <div style={{ fontSize: 11, opacity: 0.3, fontStyle: "italic" }}>{pl.resetNote}</div>
@@ -317,7 +414,24 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
               );
             })}
           </div>
-          {section === "time"   && timeBody}
+          {section === "time" && (
+            <div style={{ display: "flex", alignItems: "stretch" }}>
+              <div style={{ flex: 1, minWidth: 0 }}>{timeBody}</div>
+              {/* Scroll rail — drag here to scroll (grid itself captures drag for selection) */}
+              <div style={{
+                width: 26, marginLeft: 6, alignSelf: "stretch",
+                touchAction: "pan-y",
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
+                background: dark ? "#ffffff0a" : "#0000000a",
+                border: `1px solid ${border}`,
+                color: ink, opacity: 0.4, fontSize: 13, userSelect: "none",
+              }}>
+                <span>⌃</span>
+                <span style={{ writingMode: "vertical-rl", fontSize: 9, letterSpacing: "0.15em", textTransform: "uppercase" }}>scroll</span>
+                <span>⌄</span>
+              </div>
+            </div>
+          )}
           {section === "events" && eventsBody}
           {section === "todo"   && todoBody}
         </>
@@ -345,8 +459,9 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
           <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.45)" }} onClick={() => setPopup(null)} />
           <div style={{
             position: "fixed",
-            left: "50%", top: "50%",
-            transform: "translate(-50%, -50%)",
+            left: "50%",
+            top: isMobile ? 16 : "50%",
+            transform: isMobile ? "translateX(-50%)" : "translate(-50%, -50%)",
             zIndex: 51, width: 300, maxWidth: "90vw",
             background: bg, color: ink,
             border: `2px solid ${acc}`,
@@ -387,6 +502,60 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
                 {pl.save}
               </button>
             </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Event detail (tapped a filled block) ── */}
+      {viewEvent && (
+        <>
+          <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.45)" }} onClick={() => setViewEvent(null)} />
+          <div style={{
+            position: "fixed", left: "50%",
+            top: isMobile ? 16 : "50%",
+            transform: isMobile ? "translateX(-50%)" : "translate(-50%, -50%)",
+            zIndex: 51, width: 300, maxWidth: "90vw",
+            background: bg, color: ink, border: `2px solid ${viewEvent.color}`,
+            borderRadius: 10, padding: 20, boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <span style={{ width: 12, height: 12, borderRadius: 3, background: viewEvent.color, flexShrink: 0 }} />
+              <div style={{ fontWeight: 800, fontSize: 15, wordBreak: "keep-all" }}>{viewEvent.title}</div>
+            </div>
+            <div style={{ fontSize: 12, opacity: 0.5, marginBottom: viewEvent.memo ? 10 : 0 }}>
+              {cellToTime(viewEvent.startCell)} – {cellToTimeEnd(viewEvent.endCell)}
+            </div>
+            {viewEvent.memo && <div style={{ fontSize: 13, lineHeight: 1.6, opacity: 0.8, wordBreak: "keep-all", whiteSpace: "pre-wrap" }}>{viewEvent.memo}</div>}
+            {viewEvent.fromCalendar && <div style={{ fontSize: 11, opacity: 0.4, marginTop: 8 }}>📅 {pl.fromCalendar}</div>}
+            {editMode && !viewEvent.fromCalendar && (
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 16 }}>
+                <button onClick={() => { deleteEvent(viewEvent.id); setViewEvent(null); }} style={{ background: "none", border: `1px solid ${MON.red}`, color: MON.red, borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
+                  {pl.delete || "Delete"}
+                </button>
+                <button onClick={() => moveToTomorrow(viewEvent)} style={{ background: MON.blue, color: "#fff", border: "none", borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
+                  → {pl.moveTomorrow || "Tomorrow"}
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ── Desktop right-click context menu ── */}
+      {ctxMenu && (
+        <>
+          <div style={{ position: "fixed", inset: 0, zIndex: 52 }} onClick={() => setCtxMenu(null)} onContextMenu={(e) => { e.preventDefault(); setCtxMenu(null); }} />
+          <div style={{
+            position: "fixed", left: ctxMenu.x, top: ctxMenu.y, zIndex: 53,
+            background: bg, color: ink, border: `1px solid ${ink}33`,
+            borderRadius: 6, padding: 4, boxShadow: "0 8px 24px rgba(0,0,0,0.3)", minWidth: 150,
+          }}>
+            <button onClick={() => moveToTomorrow(ctxMenu.evt)} style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", color: ink, fontSize: 12, padding: "8px 10px", fontFamily: "inherit" }}>
+              → {pl.moveTomorrow || "Move to tomorrow"}
+            </button>
+            <button onClick={() => { deleteEvent(ctxMenu.evt.id); setCtxMenu(null); }} style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", color: MON.red, fontSize: 12, padding: "8px 10px", fontFamily: "inherit" }}>
+              {pl.delete || "Delete"}
+            </button>
           </div>
         </>
       )}

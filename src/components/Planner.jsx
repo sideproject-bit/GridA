@@ -6,6 +6,12 @@ function todayKey() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function tomorrowKey() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
 const MON_RED  = "#C7382E";
 const MON_BLUE = "#2B3DCB";
 
@@ -36,6 +42,12 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
   useEffect(() => { localStorage.setItem(TODO_KEY,  JSON.stringify(todos));     }, [todos]);
   useEffect(() => { localStorage.setItem(CAL_KEY,   JSON.stringify(calEvents)); }, [calEvents]);
   useEffect(() => { localStorage.setItem(RECUR_KEY, JSON.stringify(recurring)); }, [recurring]);
+
+  // Move an event to tomorrow (same time) by adding it to the calendar
+  const moveEventToTomorrow = (calEvt) => {
+    const key = tomorrowKey();
+    setCalEvents(prev => ({ ...prev, [key]: [...(prev[key] ?? []), calEvt] }));
+  };
 
   const today    = todayKey();
   const todayDow = new Date().getDay();
@@ -100,6 +112,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
           onEventsChange={setEvents}
           todos={todos}
           onTodosChange={setTodos}
+          onMoveToTomorrow={moveEventToTomorrow}
           theme={theme}
           lang={lang}
         />
