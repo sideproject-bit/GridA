@@ -224,24 +224,27 @@ function AppShell() {
               }}
             >
               <FloatingBlocks pal={pal} theme={theme} />
-              {/* Logo — top-left inside hero */}
-              <div style={{ position: "absolute", top: 16, left: 18, zIndex: 2, width: 36, height: 36 }}>
-                <img src="/logo.png" alt="GridA" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
-              </div>
-              <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                <h1 className="home-title" style={{
-                  fontWeight: 900,
-                  fontSize: "clamp(52px, 9vw, 150px)",
-                  letterSpacing: "-0.03em",
-                  lineHeight: 0.88,
-                  margin: 0,
-                  color: "#fff",
-                  textTransform: "uppercase",
-                  textAlign: "center",
-                  fontFamily: "Helvetica, Arial, sans-serif",
-                }}>
-                  {t.title}
-                </h1>
+              <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+                <div className="home-title" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "clamp(12px, 2vw, 32px)" }}>
+                  <img
+                    src="/logo.png"
+                    alt=""
+                    aria-hidden="true"
+                    style={{ height: "clamp(52px, 8vw, 130px)", width: "auto", display: "block", flexShrink: 0 }}
+                  />
+                  <h1 style={{
+                    fontWeight: 900,
+                    fontSize: "clamp(52px, 9vw, 150px)",
+                    letterSpacing: "-0.03em",
+                    lineHeight: 0.88,
+                    margin: 0,
+                    color: "#fff",
+                    textTransform: "uppercase",
+                    fontFamily: "Helvetica, Arial, sans-serif",
+                  }}>
+                    {t.title}
+                  </h1>
+                </div>
                 <p className="home-tagline" style={{ fontSize: 11, letterSpacing: isKo ? "0.04em" : "0.1em", opacity: 0.6, margin: "14px 0 0", color: "#fff", textTransform: "uppercase", textAlign: "center" }}>
                   {t.tagline}
                 </p>
