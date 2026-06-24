@@ -138,7 +138,7 @@ function InsertPage({ onDone }) {
           visibility: phase >= 1 ? "visible" : "hidden",
         }}>
           <div style={{
-            fontWeight: 900, fontSize: 30, letterSpacing: "0.55em",
+            fontWeight: 900, fontSize: 30, letterSpacing: "0.55em", paddingLeft: "0.55em",
             color: "#F2EDE1", textTransform: "uppercase", marginBottom: 12,
             animation: phase >= 1 ? "ipTitleIn 1.1s 0.15s cubic-bezier(0.22,1,0.36,1) both" : "none",
           }}>
