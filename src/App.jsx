@@ -17,6 +17,7 @@ import FriendMandalartList from "./components/FriendMandalartList";
 import { createMandalart } from "./api/mandalartsApi";
 import { supabase } from "./lib/supabaseClient";
 import FeatureGuide from "./components/FeatureGuide";
+import UserGuide from "./components/UserGuide";
 import FloatingBlocks from "./components/FloatingBlocks";
 import GridTutorial from "./components/GridTutorial";
 import PomodoroTimer from "./components/PomodoroTimer";
@@ -289,9 +290,6 @@ function AppShell() {
                   <button onClick={() => { setOnboardingOpen(true); play("G4", "16n"); }} style={{ background: "none", border: "none", color: "#fff", opacity: 0.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>
                     <HelpCircle size={14} /> {t.replay}
                   </button>
-                  <button onClick={() => { setFeatureGuideOpen(true); play("E5", "16n"); }} style={{ background: "none", border: "none", color: "#fff", opacity: 0.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>
-                    <Lightbulb size={14} /> {t.guide.btnLabel}
-                  </button>
                 </div>
               </div>
             </div>
@@ -375,117 +373,95 @@ function AppShell() {
             </button>
             <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
-            <h2 style={{ fontWeight: 900, fontSize: 24, textTransform: "uppercase", margin: 0 }}>{t.menu.profile}</h2>
-            {signOutConfirm ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 12, opacity: 0.75, color: pal.ink }}>{t.auth.signOutConfirm}</span>
-                <button onClick={handleSignOut} style={{ background: "#C7382E", color: "#fff", border: "none", padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>{t.auth.signOutYes}</button>
-                <button onClick={() => setSignOutConfirm(false)} style={{ background: "none", border: `1px solid ${pal.ink}40`, color: pal.ink, padding: "6px 12px", fontSize: 11, cursor: "pointer" }}>{t.auth.signOutNo}</button>
-              </div>
-            ) : (
-              <button onClick={() => setSignOutConfirm(true)} style={{ background: "none", border: `1px solid ${pal.ink}40`, color: pal.ink, padding: "6px 12px", fontSize: 11, cursor: "pointer" }}>
-                {t.auth.signOut}
-              </button>
-            )}
-          </div>
-          <FriendsPanel
-            pal={pal}
-            t={t}
-            play={play}
-            myId={myId}
-            myCode={myCode}
-            onViewFriend={(friend) => { navigateTo("friendList", { friend }); play("C5", "16n"); }}
-          />
+          {/* 2-column: Profile | User Guide */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 1fr", gap: "0 28px", alignItems: "start" }}>
 
-          {/* Delete account */}
-          <div style={{ marginTop: 40, paddingTop: 24, borderTop: `1px solid ${pal.ink}18` }}>
-            {deleteConfirm === "reason" ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <p style={{ fontSize: 12, color: pal.ink, margin: 0, opacity: 0.65, lineHeight: 1.6 }}>
-                  {t.auth.deleteAccountReasonTitle}
-                </p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                  {t.auth.deleteAccountReasons.map((reason) => (
-                    <button
-                      key={reason}
-                      onClick={() => setDeleteReason(reason)}
-                      style={{
-                        background: deleteReason === reason ? "#C7382E" : "none",
-                        border: `1px solid ${deleteReason === reason ? "#C7382E" : pal.ink + "40"}`,
-                        color: deleteReason === reason ? "#fff" : pal.ink,
-                        padding: "5px 12px", fontSize: 11, cursor: "pointer",
-                        opacity: deleteReason === reason ? 1 : 0.7,
-                        transition: "all 0.15s ease",
-                      }}
-                    >
-                      {reason}
-                    </button>
-                  ))}
-                </div>
-                <textarea
-                  value={deleteFeedback}
-                  onChange={(e) => setDeleteFeedback(e.target.value)}
-                  placeholder={t.auth.deleteAccountFeedbackPlaceholder}
-                  rows={3}
-                  style={{
-                    background: pal.bg, color: pal.ink, border: `1px solid ${pal.ink}30`,
-                    padding: "8px 10px", fontSize: 12, resize: "vertical", fontFamily: "inherit",
-                    outline: "none", width: "100%", boxSizing: "border-box",
-                  }}
-                />
-                <div style={{ display: "flex", gap: 10 }}>
-                  <button
-                    onClick={() => setDeleteConfirm("final")}
-                    disabled={!deleteReason}
-                    style={{
-                      background: deleteReason ? "#C7382E" : pal.ink + "20",
-                      color: deleteReason ? "#fff" : pal.ink,
-                      border: "none", padding: "7px 14px", fontSize: 11, fontWeight: 700,
-                      cursor: deleteReason ? "pointer" : "not-allowed", opacity: deleteReason ? 1 : 0.5,
-                      transition: "all 0.15s ease",
-                    }}
-                  >
-                    {t.auth.deleteAccountNext}
+            {/* LEFT: Profile */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
+                <h2 style={{ fontWeight: 900, fontSize: 24, textTransform: "uppercase", margin: 0 }}>{t.menu.profile}</h2>
+                {signOutConfirm ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 12, opacity: 0.75, color: pal.ink }}>{t.auth.signOutConfirm}</span>
+                    <button onClick={handleSignOut} style={{ background: "#C7382E", color: "#fff", border: "none", padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>{t.auth.signOutYes}</button>
+                    <button onClick={() => setSignOutConfirm(false)} style={{ background: "none", border: `1px solid ${pal.ink}40`, color: pal.ink, padding: "6px 12px", fontSize: 11, cursor: "pointer" }}>{t.auth.signOutNo}</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setSignOutConfirm(true)} style={{ background: "none", border: `1px solid ${pal.ink}40`, color: pal.ink, padding: "6px 12px", fontSize: 11, cursor: "pointer" }}>
+                    {t.auth.signOut}
                   </button>
-                  <button
-                    onClick={() => { setDeleteConfirm(false); setDeleteReason(""); setDeleteFeedback(""); }}
-                    style={{ background: "none", border: `1px solid ${pal.ink}40`, color: pal.ink, padding: "7px 14px", fontSize: 11, cursor: "pointer" }}
-                  >
-                    {t.auth.deleteAccountNo}
-                  </button>
-                </div>
+                )}
               </div>
-            ) : deleteConfirm === "final" ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <p style={{ fontSize: 13, color: "#C7382E", margin: 0, lineHeight: 1.6 }}>
-                  {t.auth.deleteAccountConfirm}
-                </p>
-                <div style={{ display: "flex", gap: 10 }}>
-                  <button
-                    onClick={handleDeleteAccount}
-                    disabled={deletebusy}
-                    style={{ background: "#C7382E", color: "#fff", border: "none", padding: "7px 14px", fontSize: 11, fontWeight: 700, cursor: deletebusy ? "not-allowed" : "pointer", opacity: deletebusy ? 0.6 : 1 }}
-                  >
-                    {deletebusy ? t.auth.deleteAccountDeleting : t.auth.deleteAccountYes}
+              <FriendsPanel
+                pal={pal}
+                t={t}
+                play={play}
+                myId={myId}
+                myCode={myCode}
+                onViewFriend={(friend) => { navigateTo("friendList", { friend }); play("C5", "16n"); }}
+              />
+              {/* Delete account */}
+              <div style={{ marginTop: 40, paddingTop: 24, borderTop: `1px solid ${pal.ink}18` }}>
+                {deleteConfirm === "reason" ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                    <p style={{ fontSize: 12, color: pal.ink, margin: 0, opacity: 0.65, lineHeight: 1.6 }}>
+                      {t.auth.deleteAccountReasonTitle}
+                    </p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {t.auth.deleteAccountReasons.map((reason) => (
+                        <button key={reason} onClick={() => setDeleteReason(reason)} style={{
+                          background: deleteReason === reason ? "#C7382E" : "none",
+                          border: `1px solid ${deleteReason === reason ? "#C7382E" : pal.ink + "40"}`,
+                          color: deleteReason === reason ? "#fff" : pal.ink,
+                          padding: "5px 12px", fontSize: 11, cursor: "pointer",
+                          opacity: deleteReason === reason ? 1 : 0.7, transition: "all 0.15s ease",
+                        }}>{reason}</button>
+                      ))}
+                    </div>
+                    <textarea
+                      value={deleteFeedback}
+                      onChange={(e) => setDeleteFeedback(e.target.value)}
+                      placeholder={t.auth.deleteAccountFeedbackPlaceholder}
+                      rows={3}
+                      style={{ background: pal.bg, color: pal.ink, border: `1px solid ${pal.ink}30`, padding: "8px 10px", fontSize: 12, resize: "vertical", fontFamily: "inherit", outline: "none", width: "100%", boxSizing: "border-box" }}
+                    />
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <button onClick={() => setDeleteConfirm("final")} disabled={!deleteReason} style={{ background: deleteReason ? "#C7382E" : pal.ink + "20", color: deleteReason ? "#fff" : pal.ink, border: "none", padding: "7px 14px", fontSize: 11, fontWeight: 700, cursor: deleteReason ? "pointer" : "not-allowed", opacity: deleteReason ? 1 : 0.5, transition: "all 0.15s ease" }}>
+                        {t.auth.deleteAccountNext}
+                      </button>
+                      <button onClick={() => { setDeleteConfirm(false); setDeleteReason(""); setDeleteFeedback(""); }} style={{ background: "none", border: `1px solid ${pal.ink}40`, color: pal.ink, padding: "7px 14px", fontSize: 11, cursor: "pointer" }}>
+                        {t.auth.deleteAccountNo}
+                      </button>
+                    </div>
+                  </div>
+                ) : deleteConfirm === "final" ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <p style={{ fontSize: 13, color: "#C7382E", margin: 0, lineHeight: 1.6 }}>{t.auth.deleteAccountConfirm}</p>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <button onClick={handleDeleteAccount} disabled={deletebusy} style={{ background: "#C7382E", color: "#fff", border: "none", padding: "7px 14px", fontSize: 11, fontWeight: 700, cursor: deletebusy ? "not-allowed" : "pointer", opacity: deletebusy ? 0.6 : 1 }}>
+                        {deletebusy ? t.auth.deleteAccountDeleting : t.auth.deleteAccountYes}
+                      </button>
+                      <button onClick={() => { setDeleteConfirm(false); setDeleteReason(""); setDeleteFeedback(""); }} disabled={deletebusy} style={{ background: "none", border: `1px solid ${pal.ink}40`, color: pal.ink, padding: "7px 14px", fontSize: 11, cursor: "pointer" }}>
+                        {t.auth.deleteAccountNo}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button onClick={() => { setSignOutConfirm(false); setDeleteConfirm("reason"); }} style={{ background: "none", border: "none", color: "#C7382E", opacity: 0.5, fontSize: 11, cursor: "pointer", padding: 0 }}>
+                    {t.auth.deleteAccount}
                   </button>
-                  <button
-                    onClick={() => { setDeleteConfirm(false); setDeleteReason(""); setDeleteFeedback(""); }}
-                    disabled={deletebusy}
-                    style={{ background: "none", border: `1px solid ${pal.ink}40`, color: pal.ink, padding: "7px 14px", fontSize: 11, cursor: "pointer" }}
-                  >
-                    {t.auth.deleteAccountNo}
-                  </button>
-                </div>
+                )}
               </div>
-            ) : (
-              <button
-                onClick={() => { setSignOutConfirm(false); setDeleteConfirm("reason"); }}
-                style={{ background: "none", border: "none", color: "#C7382E", opacity: 0.5, fontSize: 11, cursor: "pointer", padding: 0 }}
-              >
-                {t.auth.deleteAccount}
-              </button>
-            )}
+            </div>
+
+            {/* Vertical divider */}
+            <div style={{ background: `${pal.ink}18`, alignSelf: "stretch" }} />
+
+            {/* RIGHT: User Guide */}
+            <div>
+              <h2 style={{ fontWeight: 900, fontSize: 24, textTransform: "uppercase", margin: "0 0 20px" }}>{t.guide.tabGuide}</h2>
+              <UserGuide pal={pal} t={t} />
+            </div>
           </div>
         </div>
       )}
