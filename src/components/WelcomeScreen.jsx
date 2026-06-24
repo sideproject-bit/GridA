@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Globe, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import { useViewport } from "../hooks/useViewport";
 
 const SLIDE_ACCENT = ["#2B3DCB", "#C7382E", "#E3B22E", "#2B3DCB", "#C7382E"];
 
@@ -164,6 +165,8 @@ export default function WelcomeScreen({ play, onFinish }) {
   const [lang, setLang] = useState("en");
   const [slide, setSlide] = useState(0);
   const [visible, setVisible] = useState(true);
+  const { isMobile } = useViewport();
+  const touchX = useRef(null);
 
   const slides = SLIDES[lang];
   const cur = slides[slide];
@@ -190,6 +193,15 @@ export default function WelcomeScreen({ play, onFinish }) {
   };
 
   const skip = () => { setVisible(false); setTimeout(onFinish, FADE_MS); };
+
+  const onTouchStart = (e) => { touchX.current = e.touches[0].clientX; };
+  const onTouchEnd = (e) => {
+    if (touchX.current == null) return;
+    const dx = e.changedTouches[0].clientX - touchX.current;
+    if (dx < -50) goNext();
+    else if (dx > 50) goPrev();
+    touchX.current = null;
+  };
 
   const toggleLang = () => {
     transition(() => setLang(l => l === "en" ? "ko" : "en"));
@@ -244,20 +256,26 @@ export default function WelcomeScreen({ play, onFinish }) {
         </div>
       </div>
 
-      {/* Main content */}
-      <div style={{
-        flex: 1, display: "grid",
-        gridTemplateColumns: "minmax(220px, 38%) 1fr",
-        minHeight: 0,
-      }}>
+      {/* Main content — vertical split (visual | text) on desktop, horizontal (visual / text) on mobile */}
+      <div
+        onTouchStart={isMobile ? onTouchStart : undefined}
+        onTouchEnd={isMobile ? onTouchEnd : undefined}
+        style={{
+          flex: 1, display: "grid", minHeight: 0,
+          ...(isMobile
+            ? { gridTemplateRows: "38vh 1fr", gridTemplateColumns: "1fr" }
+            : { gridTemplateColumns: "minmax(220px, 38%) 1fr" }),
+        }}
+      >
         {/* Left: Mondrian visual panel */}
         <div style={{
           background: accent,
           display: "flex", alignItems: "center", justifyContent: "center",
-          padding: 32, position: "relative",
+          padding: isMobile ? 20 : 32, position: "relative", minHeight: 0,
           transition: "background 0.5s ease",
-          borderRight: "4px solid #000",
-          ...A(0.12, "wsSlideLeft"),
+          borderRight: isMobile ? "none" : "4px solid #000",
+          borderBottom: isMobile ? "4px solid #000" : "none",
+          ...A(0.12, isMobile ? "wsSlideUp" : "wsSlideLeft"),
         }}>
           <div style={{ position: "absolute", top: 0, right: 0, width: 48, height: 48, background: "#000", ...A(0.38, "wsPopIn") }} />
           <div style={{
@@ -278,13 +296,13 @@ export default function WelcomeScreen({ play, onFinish }) {
         {/* Right: Text content */}
         <div style={{
           display: "flex", flexDirection: "column", justifyContent: "center",
-          padding: "clamp(28px, 5vw, 64px)",
-          background: "#111", position: "relative",
-          ...A(0.28, "wsSlideRight"),
+          padding: isMobile ? "24px 22px" : "clamp(28px, 5vw, 64px)",
+          background: "#111", position: "relative", minHeight: 0, overflowY: "auto",
+          ...A(0.28, isMobile ? "wsSlideUp" : "wsSlideRight"),
         }}>
           <div style={{
-            position: "absolute", top: 24, right: 28,
-            fontWeight: 900, fontSize: 48, color: accent + "18",
+            position: "absolute", top: isMobile ? 12 : 24, right: isMobile ? 16 : 28,
+            fontWeight: 900, fontSize: isMobile ? 28 : 48, color: accent + "18",
             letterSpacing: "-0.05em", lineHeight: 1,
             transition: "color 0.4s ease", userSelect: "none",
           }}>

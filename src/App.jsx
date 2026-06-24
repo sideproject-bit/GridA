@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { User, HelpCircle, ArrowLeft, BookOpen, Grid3x3, CalendarDays } from "lucide-react";
+import { User, HelpCircle, ArrowLeft, BookOpen, Grid3x3, CalendarDays, Menu, X } from "lucide-react";
 import TomatoIcon from "./components/TomatoIcon";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { paletteFor, THEMES } from "./theme";
@@ -37,6 +37,7 @@ function AppShell() {
   const [view, setView] = useState("home");
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [currentMandalartId, setCurrentMandalartId] = useState(null);
   const [viewingFriend, setViewingFriend] = useState(null);
   const [viewingMandalart, setViewingMandalart] = useState(null);
@@ -249,15 +250,99 @@ function AppShell() {
           { key: "mandalart", label: t.menu.mandalart, Icon: Grid3x3,      bg: feat.mandalart[0], fg: feat.mandalart[1], go: () => { navigateTo("manage"); if (!localStorage.getItem(`mandalartGuideSkip_${myId}`)) setMandalartGuideOpen(true); }, note: "B5" },
           { key: "pomodoro",  label: t.menu.pomodoro,  Icon: TomatoIcon,   bg: feat.pomodoro[0],  fg: feat.pomodoro[1],  go: () => { navigateTo("pomodoro"); if (!localStorage.getItem(`pomodoroGuideSkip_${myId}`)) setPomodoroGuideOpen(true); }, note: "E6" },
         ];
+
+        // Mobile drawer menu — About / Profile / Planner / Mandalart / Pomodoro
+        const menuItems = [
+          { key: "about",   label: t.menu.about,   Icon: BookOpen, bg: pal.bg,    fg: pal.ink,   go: () => navigateTo("about"),   note: "B5" },
+          { key: "profile", label: t.menu.setting, Icon: User,     bg: profileBg, fg: profileFg, go: () => navigateTo("profile"), note: "A5" },
+          ...featTiles,
+        ];
+
+        if (isMobile) {
+          const openMenu = () => { setMenuOpen(true); play("C5", "16n"); };
+          const closeMenu = () => setMenuOpen(false);
+          return (
+            <div className="home-enter" style={{
+              margin: -14, height: "100dvh", position: "relative", overflow: "hidden",
+              background: pal.homeTitleBg, display: "flex", flexDirection: "column",
+            }}>
+              <FloatingBlocks pal={pal} theme={theme} />
+
+              {/* Hamburger */}
+              <button onClick={openMenu} aria-label="Menu" style={{
+                position: "absolute", top: 16, right: 16, zIndex: 3,
+                width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
+                background: "rgba(0,0,0,0.28)", border: "none", color: "#fff", cursor: "pointer",
+              }}>
+                <Menu size={22} />
+              </button>
+
+              {/* Hero content */}
+              <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "clamp(20px,5vw,40px)" }}>
+                <div className="home-logo">
+                  <img src="/logo.png" alt="GridA" style={{ height: 38, objectFit: "contain", display: "block" }} />
+                </div>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+                  <h1 className="home-title" style={{
+                    fontWeight: 900, fontSize: "clamp(64px, 22vw, 120px)", letterSpacing: "-0.03em",
+                    lineHeight: 0.88, margin: 0, color: "#fff", textTransform: "uppercase", textAlign: "center",
+                    fontFamily: "Helvetica, Arial, sans-serif",
+                  }}>
+                    GRIDA
+                  </h1>
+                  <p className="home-tagline" style={{ fontSize: 11, letterSpacing: isKo ? "0.04em" : "0.1em", opacity: 0.6, margin: "14px 0 0", color: "#fff", textTransform: "uppercase", textAlign: "center" }}>
+                    {t.tagline}
+                  </p>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 12 }}>
+                  <TopControls pal={{ ...pal, ink: "#fff" }} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={true} />
+                  <button onClick={() => { setShowWelcome(true); play("G4", "16n"); }} style={{ background: "none", border: "none", color: "#fff", opacity: 0.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>
+                    <HelpCircle size={14} /> {t.replay}
+                  </button>
+                </div>
+              </div>
+
+              {/* Backdrop */}
+              <div onClick={closeMenu} style={{
+                position: "absolute", inset: 0, zIndex: 4, background: "rgba(0,0,0,0.5)",
+                opacity: menuOpen ? 1 : 0, pointerEvents: menuOpen ? "auto" : "none",
+                transition: "opacity 0.25s ease",
+              }} />
+
+              {/* Side drawer */}
+              <div style={{
+                position: "absolute", top: 0, right: 0, bottom: 0, zIndex: 5,
+                width: "min(78%, 300px)", background: "#000",
+                display: "flex", flexDirection: "column", gap: 4,
+                transform: menuOpen ? "translateX(0)" : "translateX(100%)",
+                transition: "transform 0.3s cubic-bezier(0.22,1,0.36,1)",
+                boxShadow: menuOpen ? "-12px 0 32px rgba(0,0,0,0.4)" : "none",
+              }}>
+                <button onClick={closeMenu} aria-label="Close menu" style={{
+                  alignSelf: "flex-end", margin: 12, width: 40, height: 40,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: "none", border: "none", color: "#fff", cursor: "pointer",
+                }}>
+                  <X size={22} />
+                </button>
+                {menuItems.map(({ key, label, Icon, bg, fg, go, note }) => (
+                  <button key={key} onClick={() => { closeMenu(); go(); play(note, "16n"); }}
+                    className="home-tile"
+                    style={{ flex: 1, minHeight: 0, background: bg, border: "none", padding: "0 24px", cursor: "pointer", color: fg, textAlign: "left", display: "flex", alignItems: "center", gap: 14 }}>
+                    <Icon size={22} color={fg} />
+                    <span style={{ fontWeight: 800, fontSize: 16, textTransform: "uppercase", letterSpacing: "0.02em" }}>{label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        }
+
         return (
-          <div className="home-enter" style={{
-            margin: isMobile ? -14 : -28,
-            minHeight: isMobile ? "calc(100dvh - 28px)" : "100vh",
-            height: isMobile ? "auto" : "100vh",
-            overflow: isMobile ? "visible" : "hidden",
+          <div className="home-enter" style={{ margin: -28, height: "100vh", overflow: "hidden",
             background: "#000", display: "grid", gap: 4, padding: 4,
-            gridTemplateColumns: isMobile ? "1fr" : "1fr 220px",
-            gridTemplateRows: isMobile ? "auto auto auto" : "1fr 72px",
+            gridTemplateColumns: "1fr 220px",
+            gridTemplateRows: "1fr 72px",
           }}>
             {/* Hero title block */}
             <div
@@ -265,7 +350,6 @@ function AppShell() {
               onMouseEnter={() => play("C6", "64n")}
               style={{
                 gridRow: "1", gridColumn: "1",
-                minHeight: isMobile ? "60dvh" : undefined,
                 background: pal.homeTitleBg,
                 padding: "clamp(20px, 3.5vw, 52px)",
                 display: "flex", flexDirection: "column", justifyContent: "space-between",
@@ -306,15 +390,11 @@ function AppShell() {
             </div>
 
             {/* Feature column — Planner / Mandalart / Pomodoro */}
-            <div style={{
-              gridRow: isMobile ? "2" : "1 / 3",
-              gridColumn: isMobile ? "1" : "2",
-              display: "flex", flexDirection: "column", gap: 4, background: "#000", minHeight: 0,
-            }}>
+            <div style={{ gridRow: "1 / 3", gridColumn: "2", display: "flex", flexDirection: "column", gap: 4, background: "#000", minHeight: 0 }}>
               {featTiles.map(({ key, label, Icon, bg, fg, go, note }) => (
                 <button key={key} onClick={() => { go(); play("C5", "16n"); }} onMouseEnter={() => play(note, "64n")}
                   className="home-tile"
-                  style={{ flex: 1, minHeight: isMobile ? 88 : 0, background: bg, border: "none", padding: "clamp(14px,2vw,26px) 20px", cursor: "pointer", color: fg, textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: 10 }}>
+                  style={{ flex: 1, minHeight: 0, background: bg, border: "none", padding: "clamp(14px,2vw,26px) 20px", cursor: "pointer", color: fg, textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: 10 }}>
                   <Icon size={20} color={fg} />
                   <span style={{ fontWeight: 800, fontSize: 14, textTransform: "uppercase", letterSpacing: "0.02em" }}>{label}</span>
                 </button>
@@ -322,7 +402,7 @@ function AppShell() {
             </div>
 
             {/* Bottom bar — Profile / About */}
-            <div style={{ gridRow: isMobile ? "3" : "2", gridColumn: "1", display: "grid", gap: 4, background: "#000", gridTemplateColumns: "1fr 1fr", minHeight: isMobile ? 64 : 0 }}>
+            <div style={{ gridRow: "2", gridColumn: "1", display: "grid", gap: 4, background: "#000", gridTemplateColumns: "1fr 1fr", minHeight: 0 }}>
               <button onClick={() => { navigateTo("profile"); play("C5", "16n"); }} onMouseEnter={() => play("A5", "64n")}
                 className="home-tile"
                 style={{ background: profileBg, border: "none", padding: "16px 22px", cursor: "pointer", color: profileFg, textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
