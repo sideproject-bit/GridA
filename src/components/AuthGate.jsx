@@ -66,7 +66,7 @@ function MondrianBg({ play, ready }) {
                 : SLIDE_FROM[anim.dir],
               filter: hovered === b.id ? "brightness(1.22)" : "brightness(1)",
               transition: isIn
-                ? `transform 0.65s cubic-bezier(0.22,1,0.36,1) ${anim.delay}ms, filter 0.2s ease`
+                ? `transform 1.1s cubic-bezier(0.22,1,0.36,1) ${anim.delay}ms, filter 0.2s ease`
                 : "none",
               cursor: "default",
             }}
@@ -129,12 +129,12 @@ function InsertPage({ onDone }) {
         transition: "transform 1s cubic-bezier(0.22,1,0.36,1)",
       }}>
         <div style={{ animation: "ipLogoIn 1.4s cubic-bezier(0.16,1,0.3,1) both" }}>
-          <img src="/logo.png" alt="GridA" style={{ width: 210, height: 210, objectFit: "contain", display: "block" }} />
+          <img src="/logo.png" alt="GridA" style={{ width: 240, height: 240, objectFit: "contain", display: "block" }} />
         </div>
 
         {/* Title + tagline — conditionally rendered at phase 1 */}
         <div style={{
-          textAlign: "center", marginTop: 20,
+          textAlign: "center", marginTop: 10,
           visibility: phase >= 1 ? "visible" : "hidden",
         }}>
           <div style={{
