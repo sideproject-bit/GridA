@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import * as Tone from "tone";
+import { useViewport } from "./hooks/useViewport";
 
 export function useSound(soundOn) {
   const synth = useRef(null);
@@ -16,11 +17,13 @@ export function useSound(soundOn) {
     const unlock = () => Tone.start();
     window.addEventListener("click", unlock, { once: true });
     window.addEventListener("keydown", unlock, { once: true });
+    window.addEventListener("touchstart", unlock, { once: true });
 
     return () => {
       synth.current?.dispose();
       window.removeEventListener("click", unlock);
       window.removeEventListener("keydown", unlock);
+      window.removeEventListener("touchstart", unlock);
     };
   }, []);
 
@@ -32,20 +35,8 @@ export function useSound(soundOn) {
   }, [soundOn]);
 }
 
+// Backward-compatible alias — true when viewport is mobile-width (≤640px).
+// Prefer useViewport() directly for new code.
 export function useCompactDetect() {
-  const [matches, setMatches] = useState(() =>
-    typeof window !== "undefined" && window.matchMedia ? window.matchMedia("(max-width: 640px)").matches : false
-  );
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return;
-    const mq = window.matchMedia("(max-width: 640px)");
-    const handler = (e) => setMatches(e.matches);
-    if (mq.addEventListener) mq.addEventListener("change", handler);
-    else mq.addListener(handler);
-    return () => {
-      if (mq.removeEventListener) mq.removeEventListener("change", handler);
-      else mq.removeListener(handler);
-    };
-  }, []);
-  return matches;
+  return useViewport().isMobile;
 }

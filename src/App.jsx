@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { paletteFor, THEMES } from "./theme";
 import { T } from "./copy";
 import { useSound } from "./useSound";
+import { useViewport } from "./hooks/useViewport";
 import { useMusicPlayer } from "./useMusic";
 import AuthGate from "./components/AuthGate";
 import Onboarding from "./components/Onboarding";
@@ -54,6 +55,7 @@ function AppShell() {
   const t = T[lang];
   const play = useSound(soundOn);
   const music = useMusicPlayer();
+  const { isMobile } = useViewport();
 
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
 
@@ -179,8 +181,10 @@ function AppShell() {
   const titleFontFamily = isKo ? "'Black Han Sans', sans-serif" : "Helvetica, Arial, sans-serif";
 
   return (
-    <div style={{ background: pal.bg, color: pal.ink, minHeight: "100vh", fontFamily: baseFontFamily, padding: 28, position: "relative" }}>
+    <div style={{ background: pal.bg, color: pal.ink, minHeight: "100dvh", fontFamily: baseFontFamily, padding: isMobile ? 14 : 28, position: "relative" }}>
       <style>{`
+        html, body { overscroll-behavior: none; }
+        * { -webkit-tap-highlight-color: transparent; }
         @keyframes pulseOutline { 0%,100% { box-shadow: 0 0 0 0 ${pal.accent}66; } 50% { box-shadow: 0 0 0 6px ${pal.accent}33; } }
         .cell-pulse { animation: pulseOutline 0.9s ease-in-out; }
         .fade-in { animation: fadeIn 0.5s cubic-bezier(0.22,1,0.36,1) both; }
@@ -192,6 +196,7 @@ function AppShell() {
         @media (prefers-reduced-motion: reduce) { .cell-pulse, .fade-in { animation: none !important; } }
         .home-tile { position: relative; z-index: 1; transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), filter 0.15s ease, z-index 0s; }
         .home-tile:hover { transform: scale(0.96); filter: brightness(1.07); z-index: 2; }
+        .home-tile:active { transform: scale(0.96); filter: brightness(1.07); z-index: 2; }
         .home-title-block { transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), filter 0.2s ease; }
         .home-title-block:hover { transform: scale(0.99); filter: brightness(1.04); }
         @keyframes slideUpIn { from { opacity: 0; transform: translateY(36px); } to { opacity: 1; transform: translateY(0); } }
@@ -245,10 +250,14 @@ function AppShell() {
           { key: "pomodoro",  label: t.menu.pomodoro,  Icon: TomatoIcon,   bg: feat.pomodoro[0],  fg: feat.pomodoro[1],  go: () => { navigateTo("pomodoro"); if (!localStorage.getItem(`pomodoroGuideSkip_${myId}`)) setPomodoroGuideOpen(true); }, note: "E6" },
         ];
         return (
-          <div className="home-enter" style={{ margin: -28, height: "100vh", overflow: "hidden",
+          <div className="home-enter" style={{
+            margin: isMobile ? -14 : -28,
+            minHeight: isMobile ? "calc(100dvh - 28px)" : "100vh",
+            height: isMobile ? "auto" : "100vh",
+            overflow: isMobile ? "visible" : "hidden",
             background: "#000", display: "grid", gap: 4, padding: 4,
-            gridTemplateColumns: "1fr 220px",
-            gridTemplateRows: "1fr 72px",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 220px",
+            gridTemplateRows: isMobile ? "auto auto auto" : "1fr 72px",
           }}>
             {/* Hero title block */}
             <div
@@ -256,6 +265,7 @@ function AppShell() {
               onMouseEnter={() => play("C6", "64n")}
               style={{
                 gridRow: "1", gridColumn: "1",
+                minHeight: isMobile ? "60dvh" : undefined,
                 background: pal.homeTitleBg,
                 padding: "clamp(20px, 3.5vw, 52px)",
                 display: "flex", flexDirection: "column", justifyContent: "space-between",
@@ -296,11 +306,15 @@ function AppShell() {
             </div>
 
             {/* Feature column — Planner / Mandalart / Pomodoro */}
-            <div style={{ gridRow: "1 / 3", gridColumn: "2", display: "flex", flexDirection: "column", gap: 4, background: "#000", minHeight: 0 }}>
+            <div style={{
+              gridRow: isMobile ? "2" : "1 / 3",
+              gridColumn: isMobile ? "1" : "2",
+              display: "flex", flexDirection: "column", gap: 4, background: "#000", minHeight: 0,
+            }}>
               {featTiles.map(({ key, label, Icon, bg, fg, go, note }) => (
                 <button key={key} onClick={() => { go(); play("C5", "16n"); }} onMouseEnter={() => play(note, "64n")}
                   className="home-tile"
-                  style={{ flex: 1, minHeight: 0, background: bg, border: "none", padding: "clamp(14px,2vw,26px) 20px", cursor: "pointer", color: fg, textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: 10 }}>
+                  style={{ flex: 1, minHeight: isMobile ? 88 : 0, background: bg, border: "none", padding: "clamp(14px,2vw,26px) 20px", cursor: "pointer", color: fg, textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: 10 }}>
                   <Icon size={20} color={fg} />
                   <span style={{ fontWeight: 800, fontSize: 14, textTransform: "uppercase", letterSpacing: "0.02em" }}>{label}</span>
                 </button>
@@ -308,7 +322,7 @@ function AppShell() {
             </div>
 
             {/* Bottom bar — Profile / About */}
-            <div style={{ gridRow: "2", gridColumn: "1", display: "grid", gap: 4, background: "#000", gridTemplateColumns: "1fr 1fr", minHeight: 0 }}>
+            <div style={{ gridRow: isMobile ? "3" : "2", gridColumn: "1", display: "grid", gap: 4, background: "#000", gridTemplateColumns: "1fr 1fr", minHeight: isMobile ? 64 : 0 }}>
               <button onClick={() => { navigateTo("profile"); play("C5", "16n"); }} onMouseEnter={() => play("A5", "64n")}
                 className="home-tile"
                 style={{ background: profileBg, border: "none", padding: "16px 22px", cursor: "pointer", color: profileFg, textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
