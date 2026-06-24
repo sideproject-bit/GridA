@@ -111,6 +111,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
   const border = dark ? "#2a2920" : "#e0ddd2";
   const isMon  = theme === "mondrian";
   const { isMobile } = useViewport();
+  const labelW = isMobile ? 24 : LABEL_W; // narrower hour-label column on mobile (push blocks left)
 
   const [currentCell, setCurrentCell] = useState(getCurrentCell);
   const [selRange,    setSelRange]    = useState(null); // { start, end }
@@ -137,10 +138,10 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
   function getCellAt(clientX, clientY) {
     if (!gridRef.current) return null;
     const rect = gridRef.current.getBoundingClientRect();
-    const relX = clientX - rect.left - LABEL_W;
+    const relX = clientX - rect.left - labelW;
     const relY = clientY - rect.top  - HEADER_H;
     if (relX < 0 || relY < 0) return null;
-    const colW = (rect.width - LABEL_W) / COLS;
+    const colW = (rect.width - labelW) / COLS;
     const col  = Math.min(COLS - 1, Math.floor(relX / colW));
     const row  = Math.min(ROWS - 1, Math.floor(relY / CELL_H));
     if (row < 0 || col < 0) return null;
@@ -153,17 +154,17 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
   }
 
   function handlePointerDown(e) {
-    if (!editMode || e.button !== 0) return;
+    if (e.button !== 0) return;
     const cell = getCellAt(e.clientX, e.clientY);
     if (cell === null) return;
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     dragRef.current = { active: true, start: cell, end: cell, dragging: false };
-    setSelRange({ start: cell, end: cell });
+    if (editMode) setSelRange({ start: cell, end: cell }); // selection only matters in edit mode
   }
 
   function handlePointerMove(e) {
-    if (!dragRef.current.active) return;
+    if (!dragRef.current.active || !editMode) return; // no range-select in view mode
     const cell = getCellAt(e.clientX, e.clientY);
     if (cell === null) return;
     if (cell !== dragRef.current.start) {
@@ -283,7 +284,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
       style={{ touchAction: "none", userSelect: "none", cursor: editMode ? "crosshair" : "default" }}
     >
       {/* Minute header */}
-      <div style={{ display: "grid", gridTemplateColumns: `${LABEL_W}px repeat(${COLS}, 1fr)`, height: HEADER_H }}>
+      <div style={{ display: "grid", gridTemplateColumns: `${labelW}px repeat(${COLS}, 1fr)`, height: HEADER_H }}>
         <div />
         {[":00", ":10", ":20", ":30", ":40", ":50"].map(m => (
           <div key={m} style={{ fontSize: 10, textAlign: "center", opacity: 0.35, lineHeight: `${HEADER_H}px`, fontVariantNumeric: "tabular-nums" }}>{m}</div>
@@ -292,9 +293,11 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
 
       {/* Hour rows */}
       {Array.from({ length: ROWS }, (_, h) => (
-        <div key={h} style={{ display: "grid", gridTemplateColumns: `${LABEL_W}px repeat(${COLS}, 1fr)` }}>
+        <div key={h} style={{ display: "grid", gridTemplateColumns: `${labelW}px repeat(${COLS}, 1fr)` }}>
           <div style={{
-            fontSize: 11, textAlign: "right", paddingRight: 8,
+            fontSize: 11,
+            textAlign: isMobile ? "left" : "right",
+            paddingRight: isMobile ? 4 : 8,
             opacity: 0.38, lineHeight: `${CELL_H}px`, fontVariantNumeric: "tabular-nums", fontWeight: 600,
           }}>
             {String(h).padStart(2, "0")}

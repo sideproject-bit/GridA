@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { ChevronDown, Lock, Users, Maximize2, Minimize2, Sparkles, Eye, Save } from "lucide-react";
+import { ChevronDown, Lock, Users, Maximize2, Minimize2, Sparkles, Eye, Save, ArrowLeft, ChevronRight } from "lucide-react";
 import FullGridView from "./FullGridView";
 import CompactBlockView from "./CompactBlockView";
+import Cell from "./Cell";
 import DescriptionEditor from "./DescriptionEditor";
 import { useMandalart } from "../hooks/useMandalart";
 import { useSound, useCompactDetect } from "../useSound";
-import { isHeaderCell, isOuterCenterCell, headerToBlock, blockToHeader } from "../gridUtils";
+import { useViewport } from "../hooks/useViewport";
+import { isHeaderCell, isOuterCenterCell, headerToBlock, blockToHeader, blockLabel, isBlockAllDone } from "../gridUtils";
 
 export default function MandalartGrid({ mandalartId, pal, t, soundOn, readOnly = false, ownerLabel }) {
   const { title, isPublic, grid, descriptions, completed, updateTitle, updateVisibility, updateCell, updateDescription, toggleCompleted, swapBlocks, saveState, saveNow } = useMandalart(mandalartId);
@@ -23,6 +25,17 @@ export default function MandalartGrid({ mandalartId, pal, t, soundOn, readOnly =
   const [compactOverride, setCompactOverride] = useState(null);
   const compact = compactOverride === null ? autoCompact : compactOverride;
   const play = useSound(soundOn);
+  const { isMobile } = useViewport();
+  const [mbFocus, setMbFocus] = useState(null); // mobile: null = main 9 cells, [br,bc] = sub-goal detail
+
+  // Mobile link-jump navigates to the linked sub-goal's detail page
+  const mobileLinkJump = useCallback((r, c) => {
+    const br = isHeaderCell(r, c) ? r - 3 : Math.floor(r / 3);
+    const bc = isHeaderCell(r, c) ? c - 3 : Math.floor(c / 3);
+    if (br === 1 && bc === 1) { setMbFocus(null); return; }
+    setMbFocus([br, bc]);
+    play("E5", "16n");
+  }, [play]);
 
   useEffect(() => {
     const i = setInterval(() => setTick((x) => x + 1), 1000);
@@ -154,7 +167,7 @@ export default function MandalartGrid({ mandalartId, pal, t, soundOn, readOnly =
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10, paddingRight: isMobile ? 44 : 0 }}>
         {readOnly ? (
           <h2 style={{ fontWeight: 900, fontSize: 24, letterSpacing: "-0.01em", textTransform: "uppercase", margin: 0, color: pal.ink }}>
             {title}
@@ -166,13 +179,15 @@ export default function MandalartGrid({ mandalartId, pal, t, soundOn, readOnly =
             style={{ background: "transparent", border: "none", outline: "none", color: pal.ink, fontWeight: 900, fontSize: 24, letterSpacing: "-0.01em", textTransform: "uppercase", flex: "1 1 220px", minWidth: 0 }}
           />
         )}
-        <button
-          onClick={() => { setCompactOverride(!compact); play("D5", "32n"); }}
-          style={{ background: "none", border: `1px solid ${pal.ink}40`, color: pal.ink, cursor: "pointer", padding: "6px 10px", display: "flex", alignItems: "center", gap: 6, fontSize: 11, whiteSpace: "nowrap" }}
-        >
-          {compact ? <Maximize2 size={13} /> : <Minimize2 size={13} />}
-          {compact ? t.fullView : t.compactView}
-        </button>
+        {!isMobile && (
+          <button
+            onClick={() => { setCompactOverride(!compact); play("D5", "32n"); }}
+            style={{ background: "none", border: `1px solid ${pal.ink}40`, color: pal.ink, cursor: "pointer", padding: "6px 10px", display: "flex", alignItems: "center", gap: 6, fontSize: 11, whiteSpace: "nowrap" }}
+          >
+            {compact ? <Maximize2 size={13} /> : <Minimize2 size={13} />}
+            {compact ? t.fullView : t.compactView}
+          </button>
+        )}
       </div>
 
       {readOnly ? (
@@ -219,6 +234,72 @@ export default function MandalartGrid({ mandalartId, pal, t, soundOn, readOnly =
         </>
       )}
 
+      {isMobile ? (
+        mbFocus === null ? (
+          /* Mobile main view: enlarged center 9 cells; tap a sub-goal to drill in */
+          <div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6 }}>
+              {Array.from({ length: 3 }).map((_, cr) =>
+                Array.from({ length: 3 }).map((_, cc) => {
+                  const r = 3 + cr, c = 3 + cc;
+                  if (cr === 1 && cc === 1) {
+                    return (
+                      <div key="main" style={{ aspectRatio: "1/1", background: pal.accent, color: "#fff", display: "flex", flexDirection: "column", padding: 8, overflow: "hidden" }}>
+                        <div style={{ fontSize: 8.5, fontWeight: 800, opacity: 0.85, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 2 }}>{t.grid.mainGoal}</div>
+                        <textarea
+                          value={grid[4][4]}
+                          onChange={(e) => handleCellChange(4, 4, e.target.value)}
+                          readOnly={readOnly}
+                          placeholder="…"
+                          style={{ flex: 1, width: "100%", boxSizing: "border-box", background: "transparent", border: "none", outline: "none", color: "#fff", resize: "none", fontWeight: 800, fontSize: 13, lineHeight: 1.25, fontFamily: "inherit" }}
+                        />
+                      </div>
+                    );
+                  }
+                  const br = cr, bc = cc;
+                  const label = grid[r][c];
+                  const done = isBlockAllDone(br, bc, completed);
+                  return (
+                    <button key={`${cr}-${cc}`} onClick={() => { setMbFocus([br, bc]); play("B4", "32n"); }}
+                      style={{ aspectRatio: "1/1", background: pal.accent + (label ? "22" : "0a"), border: `1px solid ${pal.ink}33`, color: pal.ink, padding: 8, cursor: "pointer", display: "flex", flexDirection: "column", justifyContent: "space-between", textAlign: "left" }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.25, wordBreak: "break-word", overflow: "hidden" }}>{label || t.grid.detail}</span>
+                      <span style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        {done ? <span style={{ fontSize: 11, fontWeight: 900, color: pal.accent2 }}>✓</span> : <span />}
+                        <ChevronRight size={13} style={{ opacity: 0.4 }} />
+                      </span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+            <p style={{ fontSize: 11, opacity: 0.55, marginTop: 14, color: pal.ink, lineHeight: 1.5 }}>{t.grid.mobileTapHint}</p>
+            <p style={{ fontSize: 11, opacity: 0.4, marginTop: 6, color: pal.ink, fontStyle: "italic" }}>{t.grid.mobileNoFullGrid}</p>
+          </div>
+        ) : (
+          /* Mobile detail view: one sub-goal block, with back navigation */
+          <div>
+            <button onClick={() => { setMbFocus(null); play("D5", "32n"); }} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: pal.ink, cursor: "pointer", fontSize: 13, marginBottom: 12, padding: 0 }}>
+              <ArrowLeft size={15} /> {t.back}
+            </button>
+            <div style={{ fontSize: 13, fontWeight: 800, textTransform: "uppercase", marginBottom: 10, color: pal.ink, wordBreak: "break-word" }}>
+              {blockLabel(grid, mbFocus[0], mbFocus[1], t)}
+            </div>
+            <CompactBlockView
+              grid={grid} descriptions={descriptions} completed={completed}
+              focusBlock={mbFocus} setFocusBlock={() => {}}
+              pal={pal} t={t}
+              onChange={handleCellChange} onLink={mobileLinkJump}
+              onOpenDesc={openDescription}
+              onToggleCompleted={readOnly ? null : toggleCompleted}
+              highlightBlock={highlightBlock} play={play} readOnly={readOnly}
+              dragSrc={dragSrc} dragTgt={dragTgt}
+              onDragStart={handleDragStart} onDragOver={handleDragOver} onDrop={handleDrop} onDragEnd={handleDragEnd}
+              hideMinimap
+            />
+          </div>
+        )
+      ) : (
+      <>
       <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
         <div style={{ flex: compact ? "1 1 100%" : "1 1 560px", minWidth: 0 }}>
           {compact ? (
@@ -299,6 +380,8 @@ export default function MandalartGrid({ mandalartId, pal, t, soundOn, readOnly =
             </div>
           )}
         </div>
+      )}
+      </>
       )}
 
       {descTarget && (

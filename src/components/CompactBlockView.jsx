@@ -4,12 +4,13 @@ import { isHeaderCell, isOuterCenterCell, blockLabel, isBlockAllDone } from "../
 
 export default function CompactBlockView({
   grid, descriptions, completed, focusBlock, setFocusBlock, pal, t, onChange, onLink, onOpenDesc, onToggleCompleted, highlightBlock, play, readOnly = false,
-  dragSrc, dragTgt, onDragStart, onDragOver, onDrop, onDragEnd,
+  dragSrc, dragTgt, onDragStart, onDragOver, onDrop, onDragEnd, hideMinimap = false,
 }) {
   const [fbr, fbc] = focusBlock;
   return (
     <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
       {/* Left: minimap + label */}
+      {!hideMinimap && (
       <div style={{ flexShrink: 0, width: 130 }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 5, marginBottom: 12 }}>
           {Array.from({ length: 3 }).map((_, br) =>
@@ -53,6 +54,7 @@ export default function CompactBlockView({
           {fbr === 1 && fbc === 1 ? t.grid.mainGoal : blockLabel(grid, fbr, fbc, t)}
         </div>
       </div>
+      )}
 
       {/* Right: 3×3 cell block — fills available width */}
       <div

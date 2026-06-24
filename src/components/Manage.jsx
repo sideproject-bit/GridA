@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { BookOpen } from "lucide-react";
+import { BookOpen, HelpCircle } from "lucide-react";
 import { listMyMandalarts, createMandalart, deleteMandalart } from "../api/mandalartsApi";
+import { useViewport } from "../hooks/useViewport";
 
 export default function Manage({ pal, t, myId, onOpen, onAbout }) {
+  const { isMobile } = useViewport();
   const [items, setItems] = useState(null);
   const [confirmId, setConfirmId] = useState(null);
 
@@ -25,7 +27,8 @@ export default function Manage({ pal, t, myId, onOpen, onAbout }) {
 
   return (
     <div>
-      {/* Mandalart about banner — top */}
+      {/* Mandalart about banner — desktop only (mobile gets a button next to New) */}
+      {!isMobile && (
       <button onClick={onAbout} style={{
         display: "flex", alignItems: "center", gap: 14,
         width: "100%", marginBottom: 20, padding: "16px 20px",
@@ -49,12 +52,20 @@ export default function Manage({ pal, t, myId, onOpen, onAbout }) {
           </div>
         </div>
       </button>
+      )}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
         <h2 style={{ fontWeight: 900, fontSize: 24, textTransform: "uppercase", margin: 0, color: pal.ink }}>{t.manage.title}</h2>
-        <button onClick={create} style={{ background: pal.accent3, color: "#1a1a1a", border: "none", padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-          {t.manage.create}
-        </button>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {isMobile && (
+            <button onClick={onAbout} style={{ background: "none", color: pal.ink, border: `1px solid ${pal.accent}55`, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
+              <HelpCircle size={13} /> {t.mandalartAbout.btn}
+            </button>
+          )}
+          <button onClick={create} style={{ background: pal.accent3, color: "#1a1a1a", border: "none", padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+            {t.manage.create}
+          </button>
+        </div>
       </div>
       {items === null ? (
         <p style={{ fontSize: 12, opacity: 0.6, color: pal.ink }}>{t.loading}</p>
