@@ -208,25 +208,15 @@ function AppShell() {
         return (
           <div className="home-enter" style={{ margin: -28, height: "100vh", overflow: "hidden",
             background: "#000", display: "grid", gap: 4, padding: 4,
-            gridTemplateColumns: "60px 1fr 220px",
-            gridTemplateRows: "60px 1fr 72px",
+            gridTemplateColumns: "1fr 220px",
+            gridTemplateRows: "1fr 72px",
           }}>
-            {/* Logo — top left, always white bg, image fills cell */}
-            <div style={{ gridRow: "1", gridColumn: "1", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: 4 }}>
-              <img src="/logo.png" alt="GridA" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
-            </div>
-            {/* Top breathing-room bands */}
-            <div style={{ gridRow: "1", gridColumn: "2", background: pal.bg }} />
-            <div style={{ gridRow: "1", gridColumn: "3", background: pal.bg }} />
-            {/* Left breathing-room band */}
-            <div style={{ gridRow: "2", gridColumn: "1", background: pal.bg }} />
-
             {/* Hero title block */}
             <div
               className="home-title-block"
               onMouseEnter={() => play("C6", "64n")}
               style={{
-                gridRow: "2", gridColumn: "2",
+                gridRow: "1", gridColumn: "1",
                 background: pal.homeTitleBg,
                 padding: "clamp(20px, 3.5vw, 52px)",
                 display: "flex", flexDirection: "column", justifyContent: "space-between",
@@ -234,6 +224,10 @@ function AppShell() {
               }}
             >
               <FloatingBlocks pal={pal} theme={theme} />
+              {/* Logo — top-left inside hero */}
+              <div style={{ position: "absolute", top: 16, left: 18, zIndex: 2, width: 36, height: 36 }}>
+                <img src="/logo.png" alt="GridA" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+              </div>
               <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
                 <h1 className="home-title" style={{
                   fontWeight: 900,
@@ -266,7 +260,7 @@ function AppShell() {
             </div>
 
             {/* Feature column — Planner / Mandalart / Pomodoro */}
-            <div style={{ gridRow: "2 / 4", gridColumn: "3", display: "flex", flexDirection: "column", gap: 4, background: "#000", minHeight: 0 }}>
+            <div style={{ gridRow: "1 / 3", gridColumn: "2", display: "flex", flexDirection: "column", gap: 4, background: "#000", minHeight: 0 }}>
               {featTiles.map(({ key, label, Icon, bg, fg, go, note }) => (
                 <button key={key} onClick={() => { go(); play("C5", "16n"); }} onMouseEnter={() => play(note, "64n")}
                   className="home-tile"
@@ -277,11 +271,8 @@ function AppShell() {
               ))}
             </div>
 
-            {/* Bottom-left margin tile */}
-            <div style={{ gridRow: "3", gridColumn: "1", background: "#fff" }} />
-
             {/* Bottom bar — Profile / About */}
-            <div style={{ gridRow: "3", gridColumn: "2", display: "grid", gap: 4, background: "#000", gridTemplateColumns: "1fr 1fr", minHeight: 0 }}>
+            <div style={{ gridRow: "2", gridColumn: "1", display: "grid", gap: 4, background: "#000", gridTemplateColumns: "1fr 1fr", minHeight: 0 }}>
               <button onClick={() => { navigateTo("profile"); play("C5", "16n"); }} onMouseEnter={() => play("A5", "64n")}
                 className="home-tile"
                 style={{ background: "#fff", border: "none", padding: "16px 22px", cursor: "pointer", color: "#1B1A17", textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
