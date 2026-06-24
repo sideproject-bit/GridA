@@ -27,12 +27,15 @@ function getCurrentCell() {
   return now.getHours() * COLS + Math.floor(now.getMinutes() / 10);
 }
 
-export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, todos, onTodosChange }) {
-  const pl  = t.planner;
-  const ink = pal.ink;
-  const acc = pal.accent;
-  const bg  = pal.bg;
+const MON = { red: "#C7382E", blue: "#2B3DCB", yellow: "#E3B22E" };
+
+export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, todos, onTodosChange, theme }) {
+  const pl    = t.planner;
+  const ink   = pal.ink;
+  const acc   = pal.accent;
+  const bg    = pal.bg;
   const border = dark ? "#2a2920" : "#e0ddd2";
+  const isMon  = theme === "mondrian";
 
   const [currentCell, setCurrentCell] = useState(getCurrentCell);
   const [selRange,    setSelRange]    = useState(null); // { start, end }
@@ -155,7 +158,15 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
     }
   }
 
-  const colLabel = { fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", opacity: 0.4, marginBottom: 8 };
+  // Mondrian column header style
+  function colHeader(monColor) {
+    if (!isMon) return { fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", opacity: 0.4, marginBottom: 8 };
+    return {
+      fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em",
+      marginBottom: 8, background: monColor, color: "#fff",
+      padding: "4px 8px", display: "inline-block",
+    };
+  }
 
   return (
     <div>
@@ -169,7 +180,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
 
         {/* ── Time Block Grid ── */}
         <div>
-          <div style={colLabel}>{pl.timeBlocks}</div>
+          <div style={colHeader(MON.red)}>{pl.timeBlocks}</div>
           <div
             ref={gridRef}
             onPointerDown={handlePointerDown}
@@ -220,7 +231,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
 
         {/* ── Events ── */}
         <div>
-          <div style={colLabel}>{pl.eventsCol}</div>
+          <div style={colHeader(MON.blue)}>{pl.eventsCol}</div>
           {events.length === 0
             ? <div style={{ fontSize: 12, opacity: 0.3, paddingTop: 4 }}>{pl.noEvents}</div>
             : [...events].sort((a, b) => a.startCell - b.startCell).map(evt => (
@@ -249,7 +260,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
 
         {/* ── To-do ── */}
         <div>
-          <div style={colLabel}>{pl.todoCol}</div>
+          <div style={{ ...colHeader(MON.yellow), color: isMon ? "#1a1a1a" : undefined }}>{pl.todoCol}</div>
           {editMode && (
             <form onSubmit={addTodo} style={{ display: "flex", gap: 6, marginBottom: 10 }}>
               <input
@@ -258,7 +269,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
                 placeholder={pl.todoPlaceholder}
                 style={{ flex: 1, padding: "7px 10px", fontSize: 12, border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, fontFamily: "inherit", outline: "none" }}
               />
-              <button type="submit" style={{ background: acc, color: "#fff", border: "none", borderRadius: 6, padding: "7px 11px", cursor: "pointer", fontSize: 14, fontWeight: 700 }}>+</button>
+              <button type="submit" style={{ background: isMon ? MON.yellow : acc, color: isMon ? "#1a1a1a" : "#fff", border: "none", borderRadius: 6, padding: "7px 11px", cursor: "pointer", fontSize: 14, fontWeight: 700 }}>+</button>
             </form>
           )}
           {todos.length === 0

@@ -511,7 +511,7 @@ function AppShell() {
             </div>
             <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} />
           </div>
-          <Planner t={t} pal={pal} dark={dark} userId={myId} />
+          <Planner t={t} pal={pal} dark={dark} userId={myId} theme={theme} />
         </div>
       )}
 
