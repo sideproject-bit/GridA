@@ -149,7 +149,7 @@ if (meta) {
       .update({ completed_cells: updatedMap })
       .eq("id", mandalartId)
       .then(({ error }) => {
-        if (error) console.error("[toggle] save error:", error);
+        if (error) console.error(error);
       });
   }, [mandalartId]);
 
@@ -212,7 +212,7 @@ if (meta) {
       supabase.from("mandalart_cells").upsert(rows, { onConflict: "mandalart_id,row,col" }),
       supabase.from("mandalarts").update({ completed_cells: updatedMap }).eq("id", mandalartId),
     ]).then(([{ error: e1 }, { error: e2 }]) => {
-      if (e1 || e2) { console.error("swap save error", e1, e2); setSaveState("unsaved"); }
+      if (e1 || e2) { console.error(e1, e2); setSaveState("unsaved"); }
       else setSaveState("saved");
     });
   }, [mandalartId]);

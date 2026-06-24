@@ -126,11 +126,11 @@ export const T = {
       viewerBadge: "Public · view only",
     },
     onboarding: [
-      { t: "What is a Mandalart?", b: "A 9×9 grid built around one goal. Each of its 8 neighbors becomes the seed of its own surrounding grid." },
-      { t: "The center converges", b: "The 8 cells around your main goal mirror the centers of the 8 outer blocks — edit either side and both update." },
-      { t: "Write as if it's done", b: "Phrase entries in the present tense, as already achieved. It changes how you act toward them." },
-      { t: "Make it yours", b: "Switch themes, toggle dark mode, play music while you write, and tag related cells to jump between them." },
-      { t: "Ready", b: "Open a blank grid and place your first goal in the center." },
+      { t: "Welcome to GridA", b: "One philosophy, three tools for living intentionally — turning goals, time, and focus into grids you fill in one cell at a time." },
+      { t: "Mandalart", b: "Map your life in 81 cells. One central goal, 8 sub-goals, 64 concrete actions — your whole vision visible at once." },
+      { t: "Planner", b: "Map your day in 144 ten-minute blocks. Mark time as you work, log events, and manage todos to see where your hours really go." },
+      { t: "Pomodoro", b: "Focus one cell at a time. Name your task, set a duration, and work in structured intervals with real rest between them." },
+      { t: "Ready to start", b: "Each tool has its own quick guide when you first open it. Pick one and place your first cell." },
     ],
     mandalartAbout: {
       title: "What is Mandalart?",
@@ -469,11 +469,11 @@ export const T = {
       viewerBadge: "공개 · 보기 전용",
     },
     onboarding: [
-      { t: "만다라트란?", b: "하나의 목표를 중심으로 펼쳐지는 9×9 그리드예요. 주변 8칸이 각각 새로운 블록의 씨앗이 되어 뻗어나가요." },
-      { t: "연결된 구조", b: "메인 목표 둘레 8칸은 바깥 블록들의 중심 칸과 자동으로 연결돼요. 한쪽을 고치면 다른 쪽도 같이 바뀌어요." },
-      { t: "이미 이룬 것처럼", b: "이미 이뤘다는 듯 현재형으로 적어보세요. 그렇게 쓴 문장이 생각과 행동을 함께 끌어당겨요." },
-      { t: "내 스타일로", b: "테마와 다크모드를 바꾸고, 음악을 틀고, 연결된 칸을 태그해서 바로 이동해보세요." },
-      { t: "시작할 준비 됐어요", b: "빈 그리드 중앙에 첫 번째 목표를 적어보세요." },
+      { t: "그리다에 오신 걸 환영해요", b: "하나의 철학, 세 가지 도구로 의도적으로 살아가요. 목표·시간·집중을 한 칸씩 채워가는 그리드로 바꿔요." },
+      { t: "만다라트", b: "81칸에 인생을 펼쳐요. 하나의 핵심 목표, 8개의 세부 목표, 64개의 구체적 행동을 한눈에 봐요." },
+      { t: "플래너", b: "하루를 144개의 10분 블록으로 그려요. 작업한 시간을 표시하고, 일정을 기록하고, 할 일을 관리하며 시간이 어디로 가는지 봐요." },
+      { t: "뽀모도로", b: "한 번에 한 칸씩 집중해요. 할 일을 적고, 시간을 정하고, 충분한 휴식이 있는 구조화된 집중 구간으로 일해요." },
+      { t: "시작할 준비 됐어요", b: "각 도구는 처음 열 때 간단한 가이드를 보여줘요. 하나를 골라 첫 칸을 채워보세요." },
     ],
     mandalartAbout: {
       title: "만다라트란?",
