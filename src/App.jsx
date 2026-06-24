@@ -325,14 +325,19 @@ function AppShell() {
                 }}>
                   <X size={22} />
                 </button>
-                {menuItems.map(({ key, label, Icon, bg, fg, go, note }) => (
-                  <button key={key} onClick={() => { closeMenu(); go(); play(note, "16n"); }}
-                    className="home-tile"
-                    style={{ flex: 1, minHeight: 0, background: bg, border: "none", padding: "0 24px", cursor: "pointer", color: fg, textAlign: "left", display: "flex", alignItems: "center", gap: 14 }}>
-                    <Icon size={22} color={fg} />
-                    <span style={{ fontWeight: 800, fontSize: 16, textTransform: "uppercase", letterSpacing: "0.02em" }}>{label}</span>
-                  </button>
-                ))}
+                {menuItems.map(({ key, label, Icon, bg, fg, go, note }) => {
+                  // Mobile-only: planner tile uses GridA blue
+                  const itemBg = key === "planner" ? "#2B3DCB" : bg;
+                  const itemFg = key === "planner" ? "#fff" : fg;
+                  return (
+                    <button key={key} onClick={() => { closeMenu(); go(); play(note, "16n"); }}
+                      className="home-tile"
+                      style={{ height: 64, flexShrink: 0, background: itemBg, border: "none", padding: "0 24px", cursor: "pointer", color: itemFg, textAlign: "left", display: "flex", alignItems: "center", gap: 14 }}>
+                      <Icon size={20} color={itemFg} />
+                      <span style={{ fontWeight: 800, fontSize: 15, textTransform: "uppercase", letterSpacing: "0.02em" }}>{label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           );
