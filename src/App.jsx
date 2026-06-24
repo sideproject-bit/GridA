@@ -333,14 +333,9 @@ function AppShell() {
       {view === "manage" && (
         <div className="fade-in">
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <button onClick={() => navigateTo("home")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-                <ArrowLeft size={14} /> {t.back}
-              </button>
-              <button onClick={() => navigateTo("mandalart-about")} style={{ background: "none", border: "none", color: pal.ink, opacity: 0.4, cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontSize: 11 }}>
-                <HelpCircle size={13} /> {t.mandalartAbout.btn}
-              </button>
-            </div>
+            <button onClick={() => navigateTo("home")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+              <ArrowLeft size={14} /> {t.back}
+            </button>
             <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} />
           </div>
           <Manage
@@ -348,6 +343,7 @@ function AppShell() {
             t={t}
             myId={myId}
             onOpen={(id) => { navigateTo("grid", { mandalartId: id }); play("C5", "16n"); }}
+            onAbout={() => navigateTo("mandalart-about")}
           />
         </div>
       )}

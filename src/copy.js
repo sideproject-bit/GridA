@@ -4,7 +4,7 @@ export const T = {
     tagline: "COMPOSITION WITH YOUR DAY, YEAR, AND LIFE",
     loading: "Loading…",
     comingSoon: "Coming soon — this feature is on the way.",
-    menu: { profile: "Profile", create: "New Mandalart", manage: "Manage", about: "About GridA", mandalart: "Mandalart", planner: "Planner", pomodoro: "Pomodoro timer", setting: "Profile · Settings" },
+    menu: { profile: "Profile", create: "New Mandalart", manage: "Manage", about: "About 'GridA'", mandalart: "Mandalart", planner: "Planner", pomodoro: "Pomodoro timer", setting: "Profile · Settings" },
     back: "Back",
     replay: "Replay guide",
     categories: "Suggested categories",
@@ -155,11 +155,11 @@ export const T = {
       btn: "What is Mandalart?",
     },
     about: {
-      title: "About GridA",
+      title: "About 'GridA'",
       intro: "One philosophy. Three tools. A complete system for living intentionally.",
       philosophy: {
         title: "The Grid Philosophy",
-        body: "Inspired by Piet Mondrian's De Stijl — which reduced all of painting to grids, primary colors, and black lines — GridA reduces the complexity of life to its essential structure. Goals, time, and focus: each expressed as a grid, each designed to be filled in one cell at a time.",
+        body: "Inspired by Piet Mondrian's De Stijl — which reduced all of painting to grids, primary colors, and black lines — 'GridA' reduces the complexity of life to its essential structure. Goals, time, and focus: each expressed as a grid, each designed to be filled in one cell at a time.",
       },
       features: [
         {
@@ -276,7 +276,7 @@ export const T = {
       reset: "Reset",
       done: "Time's up!",
       minutesLeft: (n) => `${n} min left`,
-      notifTitle: "GridA — Time's up!",
+      notifTitle: "'GridA' — Time's up!",
       notifBody: (goal) => goal ? `Focus session complete: "${goal}"` : "Your Pomodoro session is complete.",
       notifPermission: "Enable notifications to get alerted when time is up.",
       about: {
@@ -303,7 +303,7 @@ export const T = {
     tagline: "하루와 일 년, 그리고 인생을 그리다",
     loading: "불러오는 중…",
     comingSoon: "곧 만나요 — 준비 중인 기능이에요.",
-    menu: { profile: "프로필", create: "새 만다라트", manage: "만다라트 관리", about: "그리다 소개", mandalart: "만다라트", planner: "플래너", pomodoro: "뽀모도로 타이머", setting: "프로필 · 설정" },
+    menu: { profile: "프로필", create: "새 만다라트", manage: "만다라트 관리", about: "'그리다'(GridA) 소개", mandalart: "만다라트", planner: "플래너", pomodoro: "뽀모도로 타이머", setting: "프로필 · 설정" },
     back: "뒤로",
     replay: "가이드 다시 보기",
     categories: "추천 카테고리",
@@ -454,11 +454,11 @@ export const T = {
       btn: "만다라트란?",
     },
     about: {
-      title: "그리다 소개",
+      title: "'그리다'(GridA) 소개",
       intro: "하나의 철학. 세 가지 도구. 의도적으로 살기 위한 완전한 시스템.",
       philosophy: {
         title: "격자의 철학",
-        body: "몬드리안의 신조형주의(De Stijl)는 회화의 모든 것을 격자와 원색, 검은 선으로 환원했어요. 그리다는 같은 방식으로 삶의 복잡함을 그 본질적인 구조로 환원합니다. 목표, 시간, 집중 — 각각을 격자로 표현하고, 한 칸씩 채워나가도록 설계했어요.",
+        body: "몬드리안의 신조형주의(De Stijl)는 회화의 모든 것을 격자와 원색, 검은 선으로 환원했어요. '그리다'(GridA)는 같은 방식으로 삶의 복잡함을 그 본질적인 구조로 환원합니다. 목표, 시간, 집중 — 각각을 격자로 표현하고, 한 칸씩 채워나가도록 설계했어요.",
       },
       features: [
         {
@@ -575,7 +575,7 @@ export const T = {
       reset: "초기화",
       done: "시간 종료!",
       minutesLeft: (n) => `${n}분 남음`,
-      notifTitle: "GridA — 시간 종료!",
+      notifTitle: "'GridA' — 시간 종료!",
       notifBody: (goal) => goal ? `집중 세션 완료: "${goal}"` : "뽀모도로 세션이 종료됐어요.",
       notifPermission: "시간 종료 알림을 받으려면 알림 권한을 허용해주세요.",
       about: {

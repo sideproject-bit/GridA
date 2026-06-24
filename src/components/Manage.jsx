@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { BookOpen } from "lucide-react";
 import { listMyMandalarts, createMandalart, deleteMandalart } from "../api/mandalartsApi";
 
-export default function Manage({ pal, t, myId, onOpen }) {
+export default function Manage({ pal, t, myId, onOpen, onAbout }) {
   const [items, setItems] = useState(null);
   const [confirmId, setConfirmId] = useState(null);
 
@@ -67,6 +68,31 @@ export default function Manage({ pal, t, myId, onOpen }) {
           ))}
         </div>
       )}
+
+      {/* Mandalart about banner */}
+      <button onClick={onAbout} style={{
+        display: "flex", alignItems: "center", gap: 14,
+        width: "100%", marginTop: 28, padding: "16px 20px",
+        background: pal.accent + "10", border: `2px solid ${pal.accent}30`,
+        cursor: "pointer", textAlign: "left", color: pal.ink,
+        fontFamily: "inherit",
+      }}>
+        <div style={{
+          flexShrink: 0, width: 36, height: 36,
+          background: pal.accent, display: "flex", alignItems: "center", justifyContent: "center",
+          borderRadius: 3,
+        }}>
+          <BookOpen size={16} color="#fff" />
+        </div>
+        <div>
+          <div style={{ fontWeight: 800, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            {t.mandalartAbout.btn}
+          </div>
+          <div style={{ fontSize: 11, opacity: 0.5, marginTop: 2 }}>
+            {t.mandalartAbout.body[0].slice(0, 60)}…
+          </div>
+        </div>
+      </button>
     </div>
   );
 }
