@@ -416,10 +416,10 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
           </div>
           {section === "time" && (
             <div style={{ display: "flex", alignItems: "stretch" }}>
-              <div style={{ flex: 1, minWidth: 0 }}>{timeBody}</div>
+              <div style={{ flex: 1, minWidth: 0, paddingRight: 18 }}>{timeBody}</div>
               {/* Scroll rail — drag here to scroll (grid itself captures drag for selection) */}
               <div style={{
-                width: 26, marginLeft: 6, alignSelf: "stretch",
+                width: 26, alignSelf: "stretch",
                 touchAction: "pan-y",
                 display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
                 background: dark ? "#ffffff0a" : "#0000000a",

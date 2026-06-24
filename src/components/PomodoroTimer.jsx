@@ -7,7 +7,7 @@ const COLS = 9;
 const ROWS = 5;
 const TOTAL = COLS * ROWS; // 45 minutes max
 
-export default function PomodoroTimer({ t, pal, dark, theme }) {
+export default function PomodoroTimer({ t, pal, dark, theme, notifOn }) {
   const p = t.pomodoro;
 
   const [duration, setDuration] = useState(0);       // minutes
@@ -81,7 +81,7 @@ export default function PomodoroTimer({ t, pal, dark, theme }) {
       setTimeout(() => s.triggerAttackRelease("G5", "4n"), 600);
     } catch (_) {}
 
-    if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+    if (notifOn && typeof Notification !== "undefined" && Notification.permission === "granted") {
       new Notification(p.notifTitle, { body: p.notifBody(goal) });
     }
   }
@@ -275,7 +275,7 @@ export default function PomodoroTimer({ t, pal, dark, theme }) {
         </div>
 
         {/* Notification prompt */}
-        {!notifGranted && (
+        {!notifOn && !notifGranted && (
           <div style={{
             fontSize: 12, color: dark ? "#aaa" : "#888",
             textAlign: "center", marginBottom: 16,

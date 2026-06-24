@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { X, ChevronRight, ChevronLeft } from "lucide-react";
+import { useViewport } from "../hooks/useViewport";
 
 const STEP_VISUALS = [
   // Step 1: drag on grid
@@ -86,13 +87,49 @@ const STEP_VISUALS = [
   ),
 ];
 
+// Mobile-only extra steps: scroll rail + procrastinate/delete swipe
+const MOBILE_VISUALS = [
+  // Scroll rail
+  ({ accent }) => (
+    <svg width={180} height={90} viewBox="0 0 180 90">
+      {Array.from({ length: 18 }).map((_, i) => {
+        const col = i % 6, row = Math.floor(i / 6);
+        return (
+          <rect key={i} x={14 + col * 22} y={12 + row * 24} width={20} height={22}
+            fill="#ffffff08" stroke="#ffffff18" strokeWidth={1} rx={2} />
+        );
+      })}
+      {/* rail */}
+      <rect x={150} y={12} width={18} height={70} rx={3} fill={accent + "22"} stroke={accent} strokeWidth={1.2} />
+      <text x={159} y={50} textAnchor="middle" fill={accent} fontSize={7} fontWeight={700} writingMode="tb" opacity={0.9}>SCROLL</text>
+      <path d="M159,20 l-3,4 h6 z" fill={accent} />
+      <path d="M159,74 l-3,-4 h6 z" fill={accent} />
+    </svg>
+  ),
+  // Procrastinate / delete swipe
+  ({ accent }) => (
+    <svg width={180} height={90} viewBox="0 0 180 90">
+      <rect x={30} y={20} width={120} height={22} rx={4} fill="#ffffff0d" stroke="#2B3DCB" strokeWidth={1.2} />
+      <path d="M44,31 l64,0" stroke="#2B3DCB" strokeWidth={1.5} strokeDasharray="3 2" opacity={0.7} />
+      <polygon points="108,27 114,31 108,35" fill="#2B3DCB" opacity={0.8} />
+      <text x={120} y={34} fill="#2B3DCB" fontSize={7} fontWeight={700}>TMRW</text>
+      <rect x={30} y={50} width={120} height={22} rx={4} fill="#ffffff0d" stroke="#C7382E" strokeWidth={1.2} />
+      <path d="M136,61 l-64,0" stroke="#C7382E" strokeWidth={1.5} strokeDasharray="3 2" opacity={0.7} />
+      <polygon points="72,57 66,61 72,65" fill="#C7382E" opacity={0.8} />
+      <text x={44} y={64} fill="#C7382E" fontSize={7} fontWeight={700}>DELETE</text>
+    </svg>
+  ),
+];
+
 export default function PlannerGuide({ t, pal, onClose, onDontShow }) {
   const [step,     setStep]     = useState(0);
   const [dontShow, setDontShow] = useState(false);
+  const { isMobile } = useViewport();
   const pg    = t.plannerGuide;
-  const steps = pg.steps;
+  const steps   = isMobile ? [...pg.steps, ...(pg.mobileSteps ?? [])] : pg.steps;
+  const visuals = isMobile ? [...STEP_VISUALS, ...MOBILE_VISUALS] : STEP_VISUALS;
   const isLast = step === steps.length - 1;
-  const Visual = STEP_VISUALS[step];
+  const Visual = visuals[step];
 
   const handleClose = () => {
     if (dontShow) onDontShow();

@@ -6,6 +6,7 @@ import { paletteFor, THEMES } from "./theme";
 import { T } from "./copy";
 import { useSound } from "./useSound";
 import { useViewport } from "./hooks/useViewport";
+import { useEventNotifications } from "./hooks/useEventNotifications";
 import { useMusicPlayer } from "./useMusic";
 import AuthGate from "./components/AuthGate";
 import Onboarding from "./components/Onboarding";
@@ -40,6 +41,7 @@ function AppShell() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
+  const [notifOn, setNotifOn] = useState(() => typeof localStorage !== "undefined" && localStorage.getItem("grida_notif") === "1");
   const [currentMandalartId, setCurrentMandalartId] = useState(null);
   const [viewingFriend, setViewingFriend] = useState(null);
   const [viewingMandalart, setViewingMandalart] = useState(null);
@@ -59,6 +61,21 @@ function AppShell() {
   const play = useSound(soundOn);
   const music = useMusicPlayer();
   const { isMobile } = useViewport();
+  useEventNotifications(notifOn, session?.user?.id, t);
+
+  // Persist notification preference
+  useEffect(() => { localStorage.setItem("grida_notif", notifOn ? "1" : "0"); }, [notifOn]);
+
+  // Toggle notifications — requests browser permission when turning on
+  const toggleNotif = async () => {
+    if (notifOn) { setNotifOn(false); return; }
+    if (typeof Notification !== "undefined" && Notification.permission !== "granted") {
+      const r = await Notification.requestPermission();
+      if (r !== "granted") return; // permission denied → stay off
+    }
+    setNotifOn(true);
+    play("E5", "16n");
+  };
 
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
 
@@ -214,6 +231,7 @@ function AppShell() {
         <MobileSettings
           pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang}
           theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn}
+          notifOn={notifOn} toggleNotif={toggleNotif}
           t={t} play={play} music={music} onClose={() => setMobileSettingsOpen(false)}
         />
       )}
@@ -400,7 +418,7 @@ function AppShell() {
                 </p>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12, position: "relative", zIndex: 1 }}>
-                <TopControls pal={{ ...pal, ink: "#fff" }} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={true} />
+                <TopControls pal={{ ...pal, ink: "#fff" }} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={true} />
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5 }}>
                   <button onClick={() => { setShowWelcome(true); play("G4", "16n"); }} style={{ background: "none", border: "none", color: "#fff", opacity: 0.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>
                     <HelpCircle size={14} /> {t.replay}
@@ -451,7 +469,7 @@ function AppShell() {
                 <HelpCircle size={13} /> {t.gridTutorial.showAgain}
               </button>
             </div>
-            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <MandalartGrid key={currentMandalartId} mandalartId={currentMandalartId} pal={pal} t={t} soundOn={soundOn} />
         </div>
@@ -468,7 +486,7 @@ function AppShell() {
                 <HelpCircle size={13} /> {t.mandalartGuide.showAgain}
               </button>
             </div>
-            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <Manage
             pal={pal}
@@ -486,7 +504,7 @@ function AppShell() {
             <button onClick={() => navigateTo("home", { resetConfirm: true })} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
               <ArrowLeft size={14} /> {t.back}
             </button>
-            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           {/* 2-column: Profile | User Guide */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 1fr", gap: "0 28px", alignItems: "start" }}>
@@ -587,7 +605,7 @@ function AppShell() {
             <button onClick={() => navigateTo("profile")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
               <ArrowLeft size={14} /> {t.back}
             </button>
-            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <FriendMandalartList
             friend={viewingFriend}
@@ -604,7 +622,7 @@ function AppShell() {
             <button onClick={() => navigateTo("home")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
               <ArrowLeft size={14} /> {t.back}
             </button>
-            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <AboutPage pal={pal} t={t} dark={dark} />
         </div>
@@ -616,7 +634,7 @@ function AppShell() {
             <button onClick={() => navigateTo("manage")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
               <ArrowLeft size={14} /> {t.back}
             </button>
-            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <MandalartAboutPage pal={pal} t={t} />
         </div>
@@ -633,7 +651,7 @@ function AppShell() {
                 <HelpCircle size={13} /> {t.plannerGuide.showAgain}
               </button>
             </div>
-            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <Planner t={t} pal={pal} dark={dark} userId={myId} theme={theme} lang={lang} />
         </div>
@@ -650,9 +668,9 @@ function AppShell() {
                 <HelpCircle size={13} /> {t.pomodoroGuide.showAgain}
               </button>
             </div>
-            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
-          <PomodoroTimer t={t} pal={pal} dark={dark} theme={theme} />
+          <PomodoroTimer t={t} pal={pal} dark={dark} theme={theme} notifOn={notifOn} />
         </div>
       )}
 
@@ -662,7 +680,7 @@ function AppShell() {
             <button onClick={() => navigateTo("friendList")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
               <ArrowLeft size={14} /> {t.back}
             </button>
-            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <MandalartGrid
             key={`viewer-${viewingMandalart.id}`}

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Volume2, VolumeX, Moon, Sun, Globe, Music2 } from "lucide-react";
+import { Volume2, VolumeX, Moon, Sun, Globe, Music2, Bell, BellOff } from "lucide-react";
 import { THEMES } from "../theme";
 
 const hex6 = (c) => (c && c.length === 4 ? "#" + c[1] + c[1] + c[2] + c[2] + c[3] + c[3] : c);
@@ -17,7 +17,7 @@ const BOX = (color, active = false, bare = false) => {
   };
 };
 
-export default function TopControls({ pal, dark, setDark, lang, setLang, theme, setTheme, soundOn, setSoundOn, t, play, music, dropdownUp = false, onHome }) {
+export default function TopControls({ pal, dark, setDark, lang, setLang, theme, setTheme, soundOn, setSoundOn, notifOn, toggleNotif, t, play, music, dropdownUp = false, onHome }) {
   const [themeOpen, setThemeOpen] = useState(false);
   const [musicOpen, setMusicOpen] = useState(false);
   const dropdownInk = pal.bg === "#F4F0E4" ? "#1B1A17" : "#F2EDE1";
@@ -33,6 +33,13 @@ export default function TopControls({ pal, dark, setDark, lang, setLang, theme, 
       <button onClick={() => { setSoundOn((s) => !s); play("A4", "32n"); }} title={t.sound} style={BOX(ink, !soundOn, bare)}>
         {soundOn ? <Volume2 size={18} /> : <VolumeX size={18} />}
       </button>
+
+      {/* Notifications */}
+      {toggleNotif && (
+        <button onClick={toggleNotif} title={t.notifications} style={BOX(ink, notifOn, bare)}>
+          {notifOn ? <Bell size={18} /> : <BellOff size={18} />}
+        </button>
+      )}
 
       {/* Music */}
       {music && (

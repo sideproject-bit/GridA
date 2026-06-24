@@ -1,9 +1,9 @@
 import React from "react";
-import { X, Volume2, VolumeX, Moon, Sun, Globe, Music2 } from "lucide-react";
+import { X, Volume2, VolumeX, Moon, Sun, Globe, Music2, Bell, BellOff } from "lucide-react";
 import { THEMES } from "../theme";
 
 // Full-screen settings sheet for mobile — replaces the desktop TopControls bar.
-export default function MobileSettings({ pal, dark, setDark, lang, setLang, theme, setTheme, soundOn, setSoundOn, t, play, music, onClose }) {
+export default function MobileSettings({ pal, dark, setDark, lang, setLang, theme, setTheme, soundOn, setSoundOn, notifOn, toggleNotif, t, play, music, onClose }) {
   const ink = pal.ink;
   const acc = pal.accent;
   const border = `1px solid ${ink}22`;
@@ -34,7 +34,7 @@ export default function MobileSettings({ pal, dark, setDark, lang, setLang, them
     }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 18px 14px", borderBottom: border }}>
-        <span style={{ fontWeight: 900, fontSize: 18, textTransform: "uppercase", letterSpacing: "-0.01em" }}>{t.menu?.setting || "Settings"}</span>
+        <span style={{ fontWeight: 900, fontSize: 18, textTransform: "uppercase", letterSpacing: "-0.01em" }}>{t.settings || "Settings"}</span>
         <button onClick={onClose} aria-label="Close" style={{ background: "none", border: "none", color: ink, cursor: "pointer", padding: 4, display: "flex" }}>
           <X size={22} />
         </button>
@@ -90,6 +90,11 @@ export default function MobileSettings({ pal, dark, setDark, lang, setLang, them
             {soundOn ? <Volume2 size={18} /> : <VolumeX size={18} />}
             {t.sound || (lang === "ko" ? "효과음" : "Sound")}
             <span style={{ marginLeft: "auto", fontSize: 12, fontWeight: 700, opacity: 0.6 }}>{soundOn ? "ON" : "OFF"}</span>
+          </Row>
+          <Row onClick={() => toggleNotif?.()} active={notifOn}>
+            {notifOn ? <Bell size={18} /> : <BellOff size={18} />}
+            {t.notifications || (lang === "ko" ? "알림" : "Notifications")}
+            <span style={{ marginLeft: "auto", fontSize: 12, fontWeight: 700, opacity: 0.6 }}>{notifOn ? "ON" : "OFF"}</span>
           </Row>
         </Section>
 
