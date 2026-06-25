@@ -43,26 +43,27 @@ export default function PomodoroTimer({ t, pal, dark, theme, notifOn, userId }) 
   const liGoalMs = Math.min((liGoalH * 60 + liGoalM) * 60000, LI_MAX_MS);
   const liGoalReached = liGoalMs > 0 && liElapsedMs >= liGoalMs;
 
-  // Stopwatch runs only while the tab is open AND visible/active
+  // Stopwatch: wall-clock based so screen-off / hidden tab doesn't lose time
+  const liStartWallRef = useRef(null); // Date.now() when last started/resumed
+  const liBaseElapsedRef = useRef(0);  // ms accumulated before last start
+
   useEffect(() => {
     if (mode !== "lockin" || !liRunning) return;
-    let last = Date.now();
+    liStartWallRef.current = Date.now();
+    liBaseElapsedRef.current = liElapsedMs;
     const tick = () => {
-      const now = Date.now();
-      if (!document.hidden) setLiElapsedMs((ms) => Math.min(ms + (now - last), LI_MAX_MS));
-      last = now;
+      const elapsed = liBaseElapsedRef.current + (Date.now() - liStartWallRef.current);
+      setLiElapsedMs(Math.min(elapsed, LI_MAX_MS));
     };
     const id = setInterval(tick, 1000);
-    const resync = () => { last = Date.now(); };
+    // Resync display when page becomes visible again after being hidden
+    const resync = () => { tick(); };
     document.addEventListener("visibilitychange", resync);
-    window.addEventListener("focus", resync);
-    window.addEventListener("blur", resync);
     return () => {
       clearInterval(id);
       document.removeEventListener("visibilitychange", resync);
-      window.removeEventListener("focus", resync);
-      window.removeEventListener("blur", resync);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, liRunning]);
 
   // Stop at the 24h cap
@@ -323,7 +324,7 @@ export default function PomodoroTimer({ t, pal, dark, theme, notifOn, userId }) 
                   <button onClick={() => setLiRunning(true)} disabled={liElapsedMs >= LI_MAX_MS} style={btnStyle(dark ? "#444" : "#ccc", ink, liElapsedMs >= LI_MAX_MS ? 0.4 : 1)}>{li.resume}</button>
                 )}
                 <button onClick={liSave} style={btnStyle(liSavedFlash ? "#3CA45C" : pal.accent3, "#1a1a1a", 1)}>{liSavedFlash ? li.saved : li.save}</button>
-                <button onClick={liReset} style={btnStyle(liAccent, "#fff", 1)}>{li.reset}</button>
+                <button onClick={liReset} style={btnStyle("#C7382E", "#fff", 1)}>{li.reset}</button>
               </div>
               <div style={{ fontSize: 11, opacity: 0.45, textAlign: "center" }}>{li.hint}</div>
             </div>

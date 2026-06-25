@@ -50,6 +50,7 @@ function AppShell() {
   const [deleteReason, setDeleteReason] = useState("");
   const [deleteFeedback, setDeleteFeedback] = useState("");
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [profileTab, setProfileTab] = useState("profile"); // "profile" | "guide"
   const [gridTutorialOpen, setGridTutorialOpen] = useState(false);
   const [pomodoroGuideOpen,  setPomodoroGuideOpen]  = useState(false);
   const [plannerGuideOpen,   setPlannerGuideOpen]   = useState(false);
@@ -518,11 +519,27 @@ function AppShell() {
             </button>
             {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
-          {/* 2-column: Profile | User Guide (stacks on mobile) */}
+          {/* Mobile: segmented tabs; Desktop: 2-column */}
+          {isMobile && (
+            <div style={{ display: "flex", marginBottom: 24, border: `2px solid ${pal.ink}`, overflow: "hidden" }}>
+              {[["profile", t.menu.profile], ["guide", t.guide.tabGuide]].map(([key, label]) => (
+                <button key={key} onClick={() => setProfileTab(key)} style={{
+                  flex: 1, padding: "10px 0", fontSize: 12, fontWeight: 800,
+                  textTransform: "uppercase", letterSpacing: "0.05em",
+                  border: "none", cursor: "pointer",
+                  background: profileTab === key ? pal.ink : "transparent",
+                  color: profileTab === key ? pal.bg : pal.ink,
+                  transition: "background 0.15s",
+                }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1px 1fr", gap: isMobile ? "28px 0" : "0 28px", alignItems: "start" }}>
 
             {/* LEFT: Profile */}
-            <div>
+            <div style={{ display: isMobile && profileTab !== "profile" ? "none" : undefined }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
                 <h2 style={{ fontWeight: 900, fontSize: 24, textTransform: "uppercase", margin: 0 }}>{t.menu.profile}</h2>
                 {signOutConfirm ? (
@@ -599,11 +616,11 @@ function AppShell() {
               </div>
             </div>
 
-            {/* Divider — vertical on desktop, horizontal on mobile */}
-            <div style={{ background: `${pal.ink}18`, alignSelf: "stretch", height: isMobile ? 1 : "auto" }} />
+            {/* Divider — vertical on desktop, hidden on mobile */}
+            {!isMobile && <div style={{ background: `${pal.ink}18`, alignSelf: "stretch" }} />}
 
             {/* RIGHT: User Guide */}
-            <div>
+            <div style={{ display: isMobile && profileTab !== "guide" ? "none" : undefined }}>
               <h2 style={{ fontWeight: 900, fontSize: 24, textTransform: "uppercase", margin: "0 0 20px" }}>{t.guide.tabGuide}</h2>
               <UserGuide pal={pal} t={t} />
             </div>
