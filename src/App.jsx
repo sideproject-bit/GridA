@@ -229,18 +229,6 @@ function AppShell() {
 
       {onboardingOpen && <Onboarding t={t} pal={pal} play={play} onClose={closeOnboarding} />}
       {showWelcome && <WelcomeScreen play={play} onFinish={() => setShowWelcome(false)} />}
-      {/* Mobile: floating settings access on every screen except home (& while settings open) */}
-      {isMobile && view !== "home" && !mobileSettingsOpen && (
-        <button onClick={() => { setMobileSettingsOpen(true); play("F5", "16n"); }} aria-label="Settings"
-          style={{
-            position: "fixed", top: 14, right: 14, zIndex: 40,
-            width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center",
-            background: pal.bg, color: pal.ink, border: `1px solid ${pal.ink}33`,
-            cursor: "pointer",
-          }}>
-          <Settings size={20} />
-        </button>
-      )}
       {mobileSettingsOpen && isMobile && (
         <MobileSettings
           pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang}
@@ -492,7 +480,12 @@ function AppShell() {
                 <HelpCircle size={13} /> {t.gridTutorial.showAgain}
               </button>
             </div>
-            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            {isMobile ? (
+              <button onClick={() => { setMobileSettingsOpen(true); play("F5", "16n"); }} aria-label="Settings"
+                style={{ background: "none", border: `1px solid ${pal.ink}33`, color: pal.ink, cursor: "pointer", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Settings size={18} />
+              </button>
+            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <MandalartGrid key={currentMandalartId} mandalartId={currentMandalartId} pal={pal} t={t} soundOn={soundOn} />
         </div>
@@ -509,7 +502,12 @@ function AppShell() {
                 <HelpCircle size={13} /> {t.mandalartGuide.showAgain}
               </button>
             </div>
-            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            {isMobile ? (
+              <button onClick={() => { setMobileSettingsOpen(true); play("F5", "16n"); }} aria-label="Settings"
+                style={{ background: "none", border: `1px solid ${pal.ink}33`, color: pal.ink, cursor: "pointer", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Settings size={18} />
+              </button>
+            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <Manage
             pal={pal}
@@ -527,7 +525,12 @@ function AppShell() {
             <button onClick={() => navigateTo("home", { resetConfirm: true })} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
               <ArrowLeft size={14} /> {t.back}
             </button>
-            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            {isMobile ? (
+              <button onClick={() => { setMobileSettingsOpen(true); play("F5", "16n"); }} aria-label="Settings"
+                style={{ background: "none", border: `1px solid ${pal.ink}33`, color: pal.ink, cursor: "pointer", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Settings size={18} />
+              </button>
+            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           {/* Mobile: segmented tabs; Desktop: 2-column */}
           {isMobile && (
@@ -644,7 +647,12 @@ function AppShell() {
             <button onClick={() => navigateTo("profile")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
               <ArrowLeft size={14} /> {t.back}
             </button>
-            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            {isMobile ? (
+              <button onClick={() => { setMobileSettingsOpen(true); play("F5", "16n"); }} aria-label="Settings"
+                style={{ background: "none", border: `1px solid ${pal.ink}33`, color: pal.ink, cursor: "pointer", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Settings size={18} />
+              </button>
+            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <FriendMandalartList
             friend={viewingFriend}
@@ -661,7 +669,12 @@ function AppShell() {
             <button onClick={() => navigateTo("home")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
               <ArrowLeft size={14} /> {t.back}
             </button>
-            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            {isMobile ? (
+              <button onClick={() => { setMobileSettingsOpen(true); play("F5", "16n"); }} aria-label="Settings"
+                style={{ background: "none", border: `1px solid ${pal.ink}33`, color: pal.ink, cursor: "pointer", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Settings size={18} />
+              </button>
+            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <AboutPage pal={pal} t={t} dark={dark} />
         </div>
@@ -673,7 +686,12 @@ function AppShell() {
             <button onClick={() => navigateTo("manage")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
               <ArrowLeft size={14} /> {t.back}
             </button>
-            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            {isMobile ? (
+              <button onClick={() => { setMobileSettingsOpen(true); play("F5", "16n"); }} aria-label="Settings"
+                style={{ background: "none", border: `1px solid ${pal.ink}33`, color: pal.ink, cursor: "pointer", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Settings size={18} />
+              </button>
+            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <MandalartAboutPage pal={pal} t={t} />
         </div>
@@ -690,7 +708,12 @@ function AppShell() {
                 <HelpCircle size={13} /> {t.plannerGuide.showAgain}
               </button>
             </div>
-            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            {isMobile ? (
+              <button onClick={() => { setMobileSettingsOpen(true); play("F5", "16n"); }} aria-label="Settings"
+                style={{ background: "none", border: `1px solid ${pal.ink}33`, color: pal.ink, cursor: "pointer", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Settings size={18} />
+              </button>
+            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <Planner t={t} pal={pal} dark={dark} userId={myId} theme={theme} lang={lang} />
         </div>
@@ -707,7 +730,12 @@ function AppShell() {
                 <HelpCircle size={13} /> {t.pomodoroGuide.showAgain}
               </button>
             </div>
-            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            {isMobile ? (
+              <button onClick={() => { setMobileSettingsOpen(true); play("F5", "16n"); }} aria-label="Settings"
+                style={{ background: "none", border: `1px solid ${pal.ink}33`, color: pal.ink, cursor: "pointer", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Settings size={18} />
+              </button>
+            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <PomodoroTimer t={t} pal={pal} dark={dark} theme={theme} notifOn={notifOn} userId={myId} />
         </div>
@@ -719,7 +747,12 @@ function AppShell() {
             <button onClick={() => navigateTo("friendList")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
               <ArrowLeft size={14} /> {t.back}
             </button>
-            {!isMobile && <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            {isMobile ? (
+              <button onClick={() => { setMobileSettingsOpen(true); play("F5", "16n"); }} aria-label="Settings"
+                style={{ background: "none", border: `1px solid ${pal.ink}33`, color: pal.ink, cursor: "pointer", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Settings size={18} />
+              </button>
+            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <MandalartGrid
             key={`viewer-${viewingMandalart.id}`}

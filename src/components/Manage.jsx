@@ -58,11 +58,11 @@ export default function Manage({ pal, t, myId, onOpen, onAbout }) {
         <h2 style={{ fontWeight: 900, fontSize: 24, textTransform: "uppercase", margin: 0, color: pal.ink }}>{t.manage.title}</h2>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           {isMobile && (
-            <button onClick={onAbout} style={{ background: "none", color: pal.ink, border: `1px solid ${pal.accent}55`, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
+            <button onClick={onAbout} style={{ background: "none", color: pal.ink, border: `1px solid ${pal.accent}55`, padding: "0 12px", height: 34, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 5, boxSizing: "border-box" }}>
               <HelpCircle size={13} /> {t.mandalartAbout.btn}
             </button>
           )}
-          <button onClick={create} style={{ background: pal.accent3, color: "#1a1a1a", border: "none", padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+          <button onClick={create} style={{ background: pal.accent3, color: "#1a1a1a", border: "none", padding: "0 14px", height: 34, fontSize: 12, fontWeight: 700, cursor: "pointer", boxSizing: "border-box" }}>
             {t.manage.create}
           </button>
         </div>

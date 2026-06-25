@@ -171,6 +171,7 @@ export default function PomodoroTimer({ t, pal, dark, theme, notifOn, userId }) 
   }
 
   function handleCellPointerDown(idx) {
+    if (running) return; // lock grid while timer is active
     dragStart.current = idx;
     setDragging(true);
     setDuration(idx + 1);
