@@ -309,14 +309,22 @@ function AppShell() {
             }}>
               <FloatingBlocks pal={pal} theme={theme} />
 
-              {/* Hamburger */}
-              <button onClick={openMenu} aria-label="Menu" style={{
-                position: "absolute", top: 16, right: 16, zIndex: 3,
-                width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
-                background: "rgba(0,0,0,0.28)", border: "none", color: "#fff", cursor: "pointer",
-              }}>
-                <Menu size={22} />
-              </button>
+              {/* Top-right: Lang toggle + Hamburger */}
+              <div style={{ position: "absolute", top: 16, right: 16, zIndex: 3, display: "flex", gap: 8 }}>
+                <button onClick={() => setLang(lang === "en" ? "ko" : "en")} style={{
+                  width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
+                  background: "rgba(0,0,0,0.28)", border: "none", color: "#fff", cursor: "pointer",
+                  fontWeight: 800, fontSize: 12, letterSpacing: "0.04em",
+                }}>
+                  {lang === "en" ? "KO" : "EN"}
+                </button>
+                <button onClick={openMenu} aria-label="Menu" style={{
+                  width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
+                  background: "rgba(0,0,0,0.28)", border: "none", color: "#fff", cursor: "pointer",
+                }}>
+                  <Menu size={22} />
+                </button>
+              </div>
 
               {/* Hero content */}
               <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "clamp(20px,5vw,40px)" }}>
