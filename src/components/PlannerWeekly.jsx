@@ -9,7 +9,6 @@ const CELL_H    = 22;   // px per hour row
 const LABEL_W   = 32;   // px for time-label column
 const DAY_MIN_W = 56;   // min px per day column (mobile horizontal scroll)
 
-const EVENT_COLORS = ["#FFAAAA", "#FFE599", "#AAD4FF", "#C7382E", "#C8960A", "#1A2A9E"];
 const MON = { red: "#C7382E", blue: "#2B3DCB", yellow: "#E3B22E" };
 
 function localKey(d) {
@@ -49,7 +48,7 @@ function cellToTimeEnd(cell) {
   return `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
 
-export default function PlannerWeekly({ t, pal, dark, calEvents, onCalEventsChange, recurring, theme, lang }) {
+export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, theme, lang }) {
   const pl  = t.planner;
   const wk  = pl.weekly ?? {};
   const { isMobile } = useViewport();
@@ -60,10 +59,6 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, onCalEventsChan
   const border = dark ? "#2a2920" : "#e0ddd2";
 
   const [weekStart, setWeekStart] = useState(() => getWeekMonday(new Date()));
-  const [popup,    setPopup]    = useState(null); // { dateKey, startCell, endCell }
-  const [popTitle, setPopTitle] = useState("");
-  const [popColor, setPopColor] = useState(EVENT_COLORS[0]);
-  const [popMemo,  setPopMemo]  = useState("");
   const [viewEvt,  setViewEvt]  = useState(null); // { event, dateKey }
 
   const days    = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -80,35 +75,9 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, onCalEventsChan
     return [...cal, ...recur];
   }
 
-  function openPopup(dateKey, hour) {
-    setPopup({ dateKey, startCell: hour * COLS_DAY, endCell: hour * COLS_DAY + COLS_DAY - 1 });
-    setPopTitle(""); setPopColor(EVENT_COLORS[0]); setPopMemo("");
-  }
-
-  function saveEvent() {
-    if (!popup || !popTitle.trim()) return;
-    const evt = {
-      id: `${Date.now()}_${Math.random().toString(36).slice(2)}`,
-      title: popTitle.trim(), color: popColor, memo: popMemo,
-      startCell: popup.startCell, endCell: popup.endCell,
-    };
-    onCalEventsChange(prev => ({
-      ...prev,
-      [popup.dateKey]: [...(prev[popup.dateKey] ?? []), evt],
-    }));
-    setPopup(null);
-  }
-
-  function deleteEvent(dateKey, eventId) {
-    onCalEventsChange(prev => ({
-      ...prev,
-      [dateKey]: (prev[dateKey] ?? []).filter(e => e.id !== eventId),
-    }));
-    setViewEvt(null);
-  }
 
   const weekLabel = `${fmtShort(weekStart, lang)} – ${fmtShort(addDays(weekStart, 6), lang)}`;
-  const headerAccent = isMon ? MON.blue : acc;
+  const todayAccent = MON.yellow; // today column always yellow
 
   return (
     <div style={{ color: ink, fontFamily: "inherit" }}>
@@ -142,13 +111,13 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, onCalEventsChan
                   flex: 1, minWidth: DAY_MIN_W,
                   padding: "5px 2px 4px",
                   textAlign: "center",
-                  background: isToday ? headerAccent : "transparent",
+                  background: isToday ? todayAccent : "transparent",
                   borderLeft: i > 0 ? `1px solid ${border}` : "none",
                 }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", color: isToday ? "#fff" : ink, opacity: isToday ? 1 : 0.45, letterSpacing: "0.06em" }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", color: isToday ? "#1a1a1a" : ink, opacity: isToday ? 1 : 0.45, letterSpacing: "0.06em" }}>
                     {fmtDow(day, lang)}
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 900, color: isToday ? "#fff" : ink, lineHeight: 1.2 }}>
+                  <div style={{ fontSize: 14, fontWeight: 900, color: isToday ? "#1a1a1a" : ink, lineHeight: 1.2 }}>
                     {day.getDate()}
                   </div>
                 </div>
@@ -184,15 +153,15 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, onCalEventsChan
                 <div key={di} style={{
                   flex: 1, minWidth: DAY_MIN_W, height: totalH, position: "relative",
                   borderLeft: `1px solid ${border}`,
-                  background: isToday ? (dark ? `${headerAccent}08` : `${headerAccent}05`) : "transparent",
+                  background: isToday ? (dark ? `${todayAccent}10` : `${todayAccent}08`) : "transparent",
                 }}>
-                  {/* Hour grid lines (clickable) */}
+                  {/* Hour grid lines */}
                   {Array.from({ length: HOURS }, (_, h) => (
-                    <div key={h} onClick={() => openPopup(dateKey, h)}
+                    <div key={h}
                       style={{
                         position: "absolute", top: h * CELL_H, left: 0, right: 0, height: CELL_H,
                         borderBottom: `1px solid ${h % 2 === 1 ? border : border + "88"}`,
-                        cursor: "pointer", zIndex: 0,
+                        zIndex: 0,
                       }}
                     />
                   ))}
@@ -233,56 +202,6 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, onCalEventsChan
         </div>
       </div>
 
-      {/* Event creation popup */}
-      {popup && createPortal((
-        <>
-          <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.45)" }} onClick={() => setPopup(null)} />
-          <div style={{
-            position: "fixed",
-            left: isMobile ? 14 : "50%", right: isMobile ? 14 : "auto",
-            top: isMobile ? 16 : "50%",
-            transform: isMobile ? "none" : "translate(-50%, -50%)",
-            zIndex: 51, width: isMobile ? "auto" : 300,
-            background: bg, color: ink,
-            border: `2px solid ${acc}`, borderRadius: 10, padding: 20,
-            boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
-          }}>
-            <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.45, marginBottom: 10, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-              {popup.dateKey} · {cellToTime(popup.startCell)} – {cellToTimeEnd(popup.endCell)}
-            </div>
-            <input
-              autoFocus value={popTitle}
-              onChange={e => setPopTitle(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && saveEvent()}
-              placeholder={pl.eventTitlePlaceholder}
-              autoComplete="off" autoCorrect="off" spellCheck={false} data-form-type="other"
-              style={{ width: "100%", boxSizing: "border-box", padding: "8px 10px", fontSize: 13, fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none", marginBottom: 10 }}
-            />
-            <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-              {EVENT_COLORS.map(c => (
-                <div key={c} onClick={() => setPopColor(c)} style={{
-                  width: 22, height: 22, borderRadius: 4, background: c, cursor: "pointer", flexShrink: 0,
-                  outline: popColor === c ? `2.5px solid ${ink}` : "none", outlineOffset: 2,
-                }} />
-              ))}
-            </div>
-            <textarea
-              value={popMemo} onChange={e => setPopMemo(e.target.value)}
-              placeholder={pl.eventMemoPlaceholder} rows={2}
-              style={{ width: "100%", boxSizing: "border-box", padding: "7px 10px", fontSize: 12, fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none", resize: "none", marginBottom: 12 }}
-            />
-            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button onClick={() => setPopup(null)} style={{ background: "none", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", color: ink, fontFamily: "inherit" }}>
-                {pl.cancel}
-              </button>
-              <button onClick={saveEvent} disabled={!popTitle.trim()} style={{ background: acc, color: "#fff", border: "none", borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: popTitle.trim() ? "pointer" : "not-allowed", fontWeight: 700, fontFamily: "inherit", opacity: popTitle.trim() ? 1 : 0.4 }}>
-                {pl.save}
-              </button>
-            </div>
-          </div>
-        </>
-      ), document.body)}
-
       {/* Event detail popup */}
       {viewEvt && createPortal((
         <>
@@ -312,18 +231,12 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, onCalEventsChan
             {viewEvt.event.fromCalendar && (
               <div style={{ fontSize: 10, opacity: 0.35, marginBottom: 8 }}>📅 {pl.fromCalendar}</div>
             )}
-            {!viewEvt.event.fromCalendar && (
-              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
-                <button onClick={() => deleteEvent(viewEvt.dateKey, viewEvt.event.id)}
-                  style={{ background: "none", border: `1px solid ${MON.red}`, color: MON.red, borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
-                  {pl.delete || (lang === "ko" ? "삭제" : "Delete")}
-                </button>
-                <button onClick={() => setViewEvt(null)}
-                  style={{ background: acc, color: "#fff", border: "none", borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
-                  {pl.cancel}
-                </button>
-              </div>
-            )}
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
+              <button onClick={() => setViewEvt(null)}
+                style={{ background: acc, color: "#fff", border: "none", borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
+                {pl.cancel}
+              </button>
+            </div>
           </div>
         </>
       ), document.body)}

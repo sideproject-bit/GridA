@@ -477,7 +477,6 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
               {cellToTime(popup.startCell)} – {cellToTimeEnd(popup.endCell)}
             </div>
             <input
-              autoFocus
               value={popTitle}
               onChange={e => setPopTitle(e.target.value)}
               onKeyDown={e => e.key === "Enter" && saveEvent()}

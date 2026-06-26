@@ -65,6 +65,16 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
       .map(r => ({ ...r, id: `recur_${r.id}_${today}`, fromCalendar: true })),
   ];
 
+  // Merge today's daily time-block events into calEvents so Weekly/Monthly can show them.
+  // Marked fromCalendar: true so they're read-only in those views.
+  const mergedCalEvents = {
+    ...calEvents,
+    [today]: [
+      ...(calEvents[today] ?? []),
+      ...events.map(e => ({ ...e, fromCalendar: true })),
+    ],
+  };
+
   const ink    = pal.ink;
   const accent = pal.accent;
   const border = dark ? "#333" : "#ddd";
@@ -126,8 +136,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
       {tab === "weekly" && (
         <PlannerWeekly
           t={t} pal={pal} dark={dark}
-          calEvents={calEvents}
-          onCalEventsChange={setCalEvents}
+          calEvents={mergedCalEvents}
           recurring={recurring}
           theme={theme}
           lang={lang}
@@ -136,7 +145,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
       {tab === "monthly" && (
         <PlannerMonthly
           t={t} pal={pal} dark={dark}
-          calEvents={calEvents}
+          calEvents={mergedCalEvents}
           onCalEventsChange={setCalEvents}
           recurring={recurring}
           onRecurringChange={setRecurring}
