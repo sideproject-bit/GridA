@@ -1,21 +1,42 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Copy, Search, UserPlus, Check, X, Eye } from "lucide-react";
 import { sendFriendRequest, acceptFriendRequest, declineFriendRequest, listIncomingRequests, listFriends } from "../api/friendsApi";
 
-export default function FriendsPanel({ pal, t, play, myId, myCode, onViewFriend }) {
+export default function FriendsPanel({ pal, t, play, myId, myCode, onViewFriend, notifOn }) {
   const [code, setCode] = useState("");
   const [feedback, setFeedback] = useState(null); // { type: "error" | "success", text }
   const [friends, setFriends] = useState([]);
   const [incoming, setIncoming] = useState([]);
   const [copied, setCopied] = useState(false);
+  const prevIncomingIds = useRef(null);
 
   const refresh = useCallback(async () => {
     const [f, inc] = await Promise.all([listFriends(myId), listIncomingRequests(myId)]);
     setFriends(f.map((p) => ({ id: p.id, code: `${p.username}#${p.tag}` })));
-    setIncoming(inc.map((r) => ({ id: r.requesterId, code: `${r.username}#${r.tag}` })));
-  }, [myId]);
+    const newIncoming = inc.map((r) => ({ id: r.requesterId, code: `${r.username}#${r.tag}` }));
+    setIncoming(newIncoming);
+
+    // Fire notification for new requests (skip on first load)
+    if (prevIncomingIds.current !== null && notifOn && Notification.permission === "granted") {
+      const prev = prevIncomingIds.current;
+      newIncoming.forEach((r) => {
+        if (!prev.includes(r.id)) {
+          new Notification(t.friends.notifTitle || "New friend request", {
+            body: t.friends.notifBody ? t.friends.notifBody(r.code) : `${r.code} sent you a friend request.`,
+          });
+        }
+      });
+    }
+    prevIncomingIds.current = newIncoming.map((r) => r.id);
+  }, [myId, notifOn, t]);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  // Poll for new friend requests every 60s
+  useEffect(() => {
+    const id = setInterval(refresh, 60000);
+    return () => clearInterval(id);
+  }, [refresh]);
 
   const submit = async () => {
     const trimmed = code.trim();

@@ -33,9 +33,9 @@ import MobileSettings from "./components/MobileSettings";
 
 function AppShell() {
   const { session, profile, loading, signOut } = useAuth();
-  const [dark, setDark] = useState(true);
+  const [dark, setDark] = useState(() => localStorage.getItem("grida_dark") !== "0");
   const [theme, setTheme] = useState("mondrian");
-  const [lang, setLang] = useState("en");
+  const [lang, setLang] = useState(() => localStorage.getItem("grida_lang") || "en");
   const [soundOn, setSoundOn] = useState(true);
   const [view, setView] = useState("home");
   const [onboardingOpen, setOnboardingOpen] = useState(false);
@@ -66,7 +66,9 @@ function AppShell() {
   const { isMobile } = useViewport();
   useEventNotifications(notifOn, session?.user?.id, t);
 
-  // Persist notification preference
+  // Persist dark/lang/notification preferences
+  useEffect(() => { localStorage.setItem("grida_dark", dark ? "1" : "0"); }, [dark]);
+  useEffect(() => { localStorage.setItem("grida_lang", lang); }, [lang]);
   useEffect(() => { localStorage.setItem("grida_notif", notifOn ? "1" : "0"); }, [notifOn]);
 
   // Toggle notifications — requests browser permission when turning on
@@ -580,6 +582,7 @@ function AppShell() {
                 play={play}
                 myId={myId}
                 myCode={myCode}
+                notifOn={notifOn}
                 onViewFriend={(friend) => { navigateTo("friendList", { friend }); play("C5", "16n"); }}
               />
               {/* Delete account */}
