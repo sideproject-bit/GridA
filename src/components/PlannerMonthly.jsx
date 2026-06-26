@@ -8,7 +8,7 @@ function timeToCell(timeStr) {
   return h * 6 + Math.floor(m / 10);
 }
 
-export default function PlannerMonthly({ t, pal, dark, calEvents, onCalEventsChange, recurring, onRecurringChange }) {
+export default function PlannerMonthly({ t, pal, dark, calEvents, onCalEventsChange, onDeleteDailyEvent, recurring, onRecurringChange }) {
   const pl  = t.planner;
   const ink = pal.ink;
   const acc = pal.accent;
@@ -75,9 +75,13 @@ export default function PlannerMonthly({ t, pal, dark, calEvents, onCalEventsCha
     setEvTitle(""); setEvStart("09:00"); setEvEnd("10:00");
   }
 
-  function deleteCalEvent(day, id) {
-    const key = dateKey(day);
-    onCalEventsChange(prev => ({ ...prev, [key]: (prev[key] ?? []).filter(e => e.id !== id) }));
+  function deleteCalEvent(day, evt) {
+    if (evt._daily && onDeleteDailyEvent) {
+      onDeleteDailyEvent(evt.id);
+    } else {
+      const key = dateKey(day);
+      onCalEventsChange(prev => ({ ...prev, [key]: (prev[key] ?? []).filter(e => e.id !== evt.id) }));
+    }
   }
 
   function addRecurring() {
@@ -201,7 +205,7 @@ export default function PlannerMonthly({ t, pal, dark, calEvents, onCalEventsCha
                     <div style={{ fontWeight: 700, fontSize: 12, wordBreak: "keep-all" }}>{evt.title}</div>
                     <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>{evt.startTime} – {evt.endTime}</div>
                   </div>
-                  <button onClick={() => deleteCalEvent(selectedDay, evt.id)} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.3, fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
+                  <button onClick={() => deleteCalEvent(selectedDay, evt)} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.3, fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
                 </div>
               ))}
 

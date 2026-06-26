@@ -9,10 +9,10 @@ export default function MandalartAboutPage({ pal, t }) {
   const about = t.mandalartAbout;
   const { isMobile } = useViewport();
   return (
-    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 340px", gap: isMobile ? 24 : 32, alignItems: "start", maxWidth: 960, margin: "0 auto" }}>
+    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 340px", gap: isMobile ? 20 : 32, alignItems: "start", maxWidth: 960, margin: "0 auto", width: "100%", boxSizing: "border-box", overflowX: "hidden" }}>
       {/* Left: main text */}
-      <div>
-        <h2 style={{ fontWeight: 900, fontSize: 28, textTransform: "uppercase", margin: "0 0 20px", color: pal.ink, letterSpacing: "-0.01em" }}>
+      <div style={{ minWidth: 0 }}>
+        <h2 style={{ fontWeight: 900, fontSize: isMobile ? 20 : 28, textTransform: "uppercase", margin: "0 0 16px", color: pal.ink, letterSpacing: "-0.01em", wordBreak: "break-word" }}>
           {about.title}
         </h2>
         <div style={{ borderTop: `3px solid ${pal.ink}`, marginBottom: 28 }} />
@@ -23,7 +23,7 @@ export default function MandalartAboutPage({ pal, t }) {
               <div style={{ flexShrink: 0, width: 32, height: 32, background: pal.accent2 + "22", border: `1px solid ${pal.accent2}44`, display: "flex", alignItems: "center", justifyContent: "center", marginTop: 2 }}>
                 <Icon size={15} color={pal.accent2} />
               </div>
-              <p style={{ fontSize: 14, lineHeight: 1.75, color: pal.ink, margin: 0, opacity: 0.88 }}>
+              <p style={{ fontSize: isMobile ? 13 : 14, lineHeight: 1.7, color: pal.ink, margin: 0, opacity: 0.88, wordBreak: "keep-all" }}>
                 {para}
               </p>
             </div>
@@ -32,7 +32,7 @@ export default function MandalartAboutPage({ pal, t }) {
       </div>
 
       {/* Right: quick-start tips */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, minWidth: 0 }}>
         <div style={{ border: `2px solid ${pal.ink}22`, padding: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
             <Lightbulb size={16} color={pal.accent3} />
@@ -50,9 +50,11 @@ export default function MandalartAboutPage({ pal, t }) {
           <p style={{ fontSize: 12, lineHeight: 1.65, color: pal.ink, margin: 0, opacity: 0.75 }}>{about.ohtani}</p>
         </div>
       </div>
-      <div style={{ gridColumn: "1 / -1" }}>
-        <OhtaniMandalart pal={pal} t={t} />
-      </div>
+      {!isMobile && (
+        <div style={{ gridColumn: "1 / -1" }}>
+          <OhtaniMandalart pal={pal} t={t} />
+        </div>
+      )}
     </div>
   );
 }

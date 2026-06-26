@@ -5,7 +5,7 @@ export default function Cell({
   r, c, value, isMain, isHeader, isOuterCenter, onChange, onLink,
   description, onOpenDesc, completed = false, onToggleCompleted,
   pal, t, highlighted, size = "normal", readOnly = false,
-  showIcons = false, subGoalDone = false,
+  showIcons = false, cellEditEnabled = true, subGoalDone = false,
   isDragSrc = false, isDragTgt = false,
   onCellDragStart, onCellDragOver, onCellDrop, onCellDragEnd,
 }) {
@@ -30,6 +30,7 @@ export default function Cell({
 
   const startEditing = () => {
     if (readOnly) return;
+    if (!cellEditEnabled) return;
     if (justDraggedRef.current) return;
     originalRef.current = value;
     setEditing(true);
@@ -281,13 +282,17 @@ export default function Cell({
           aria-label="note"
           onClick={(e) => {
             e.stopPropagation();
-            onOpenDesc(r, c);
+            if (!cellEditEnabled) onOpenDesc(r, c);
           }}
           style={{
             position: "absolute", bottom: 2,
             right: big ? 26 : 16,
             background: "none", border: "none",
-            color: pal.ink, opacity: description ? 0.6 : 0.3, cursor: "pointer", padding: big ? 4 : 2,
+            color: pal.ink,
+            opacity: cellEditEnabled ? 0 : (description ? 0.6 : 0.3),
+            pointerEvents: cellEditEnabled ? "none" : "auto",
+            cursor: "pointer", padding: big ? 4 : 2,
+            transition: "opacity 0.2s ease",
           }}
         >
           <StickyNote size={big ? 16 : 10} />
@@ -300,15 +305,18 @@ export default function Cell({
           aria-label={localCompleted ? "uncheck" : "check"}
           onClick={(e) => {
             e.stopPropagation();
-            setLocalCompleted((v) => !v);
-            onToggleCompleted?.(r, c);
+            if (!cellEditEnabled) {
+              setLocalCompleted((v) => !v);
+              onToggleCompleted?.(r, c);
+            }
           }}
           style={{
             position: "absolute", bottom: 2, right: 2, background: "none", border: "none",
             color: localCompleted ? (isMondrian ? pal.accent3 : pal.accent) : pal.ink,
-            opacity: localCompleted ? 0.9 : 0.25,
+            opacity: cellEditEnabled ? 0 : (localCompleted ? 0.9 : 0.25),
+            pointerEvents: cellEditEnabled ? "none" : "auto",
             cursor: "pointer", padding: big ? 4 : 2,
-            transition: "opacity 0.15s ease, color 0.15s ease",
+            transition: "opacity 0.2s ease, color 0.15s ease",
           }}
         >
           <CheckCircle2 size={big ? 16 : 11} />

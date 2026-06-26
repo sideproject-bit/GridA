@@ -39,22 +39,21 @@ function NotifItem({ n, pal, lang, onDelete, onRead }) {
   const bg = n.read
     ? (pal.ink === "#1B1A17" ? "#f0ece0" : "#1e1e1e")
     : pal.bg;
-  const opacity = n.read ? 0.55 : 1;
 
   return (
     <div style={{ position: "relative", overflow: "hidden" }}>
-      {/* Delete reveal */}
-      <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 64, background: "#C7382E", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Trash2 size={18} color="#fff" />
+      {/* Delete reveal — only visible when swiped */}
+      <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 72, background: "#C7382E", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Trash2 size={20} color="#fff" />
       </div>
-      {/* Notification row */}
+      {/* Notification row — background must be opaque to cover the red reveal */}
       <div
         onClick={() => !n.read && onRead(n.id)}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
         style={{
-          background: bg, opacity,
+          background: bg,
           padding: "12px 14px",
           borderBottom: `1px solid ${pal.ink}14`,
           transform: `translateX(${offsetX}px)`,
@@ -62,7 +61,7 @@ function NotifItem({ n, pal, lang, onDelete, onRead }) {
           cursor: n.read ? "default" : "pointer",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+        <div style={{ opacity: n.read ? 0.55 : 1, display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: 700, fontSize: 13, color: pal.ink, marginBottom: 3 }}>{n.title}</div>
             <div style={{ fontSize: 12, color: pal.ink, opacity: 0.7, lineHeight: 1.5 }}>{n.body}</div>

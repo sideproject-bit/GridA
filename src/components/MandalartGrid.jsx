@@ -27,6 +27,7 @@ export default function MandalartGrid({ mandalartId, pal, t, soundOn, readOnly =
   const play = useSound(soundOn);
   const { isMobile } = useViewport();
   const [mbFocus, setMbFocus] = useState(null); // mobile: null = main 9 cells, [br,bc] = sub-goal detail
+  const [mbEditMode, setMbEditMode] = useState(false); // mobile detail: false=view mode, true=edit mode
 
   // Mobile link-jump navigates to the linked sub-goal's detail page
   const mobileLinkJump = useCallback((r, c) => {
@@ -278,9 +279,26 @@ export default function MandalartGrid({ mandalartId, pal, t, soundOn, readOnly =
         ) : (
           /* Mobile detail view: one sub-goal block, with back navigation */
           <div>
-            <button onClick={() => { setMbFocus(null); play("D5", "32n"); }} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: pal.ink, cursor: "pointer", fontSize: 13, marginBottom: 12, padding: 0 }}>
-              <ArrowLeft size={15} /> {t.back}
-            </button>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <button onClick={() => { setMbFocus(null); setMbEditMode(false); play("D5", "32n"); }} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: pal.ink, cursor: "pointer", fontSize: 13, padding: 0 }}>
+                <ArrowLeft size={15} /> {t.back}
+              </button>
+              {!readOnly && (
+                <button
+                  onClick={() => setMbEditMode(v => !v)}
+                  style={{
+                    background: mbEditMode ? pal.accent : "none",
+                    border: `1px solid ${pal.ink}33`,
+                    color: mbEditMode ? "#fff" : pal.ink,
+                    cursor: "pointer", fontSize: 11, fontWeight: 700,
+                    padding: "5px 11px", fontFamily: "inherit",
+                    transition: "background 0.15s, color 0.15s",
+                  }}
+                >
+                  {mbEditMode ? t.grid.mbViewBtn : t.grid.mbEditBtn}
+                </button>
+              )}
+            </div>
             <div style={{ fontSize: 13, fontWeight: 800, textTransform: "uppercase", marginBottom: 10, color: pal.ink, wordBreak: "break-word" }}>
               {blockLabel(grid, mbFocus[0], mbFocus[1], t)}
             </div>
@@ -295,6 +313,7 @@ export default function MandalartGrid({ mandalartId, pal, t, soundOn, readOnly =
               dragSrc={dragSrc} dragTgt={dragTgt}
               onDragStart={handleDragStart} onDragOver={handleDragOver} onDrop={handleDrop} onDragEnd={handleDragEnd}
               hideMinimap
+              cellEditEnabled={mbEditMode}
             />
           </div>
         )

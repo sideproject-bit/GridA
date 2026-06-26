@@ -40,6 +40,8 @@ export const T = {
       detail: "Detail",
       mobileTapHint: "Tap a sub-goal to open and edit its 8 action items.",
       mobileNoFullGrid: "The full 9×9 grid view isn't available on mobile.",
+      mbEditBtn: "Edit text",
+      mbViewBtn: "Done editing",
       saving: "Saving…",
       savedJustNow: "Saved just now",
       savedAgo: (s) => `Saved ${s}s ago`,
@@ -222,7 +224,7 @@ export const T = {
       close: "Got it, let's go",
     },
     planner: {
-      resetNote: "Time blocks and events reset at midnight each day.",
+      resetNote: "Time blocks reset at midnight. Daily events move to Monthly view (kept 60 days).",
       tabDaily: "Daily", tabWeekly: "Weekly", tabMonthly: "Monthly",
       weekly: { today: "This week" },
       viewModeBtn: "View mode", editModeBtn: "Edit mode",
@@ -251,6 +253,7 @@ export const T = {
         { t: "Set time blocks", b: "Drag across the grid to select multiple cells, or double-click for a single cell. The event popup appears as soon as you release." },
         { t: "Add an event", b: "Enter a title, pick a color, and add optional notes. Hit Add and the blocks are colored and your event appears in the list." },
         { t: "Manage to-dos", b: "To-dos are global — they persist across dates. Check to complete, × to delete. Add as many as you need." },
+        { t: "Weekly view", b: "Switch to the Weekly tab to see all 7 days side by side on a time grid. Events from daily and monthly views appear here automatically — scroll horizontally on mobile." },
         { t: "Monthly view & recurring", b: "In the Monthly tab, add events to future dates or set recurring events by day of week. They'll appear automatically in the daily view on the right day." },
       ],
       mobileSteps: [
@@ -306,8 +309,9 @@ export const T = {
           items: [
             { t: "Time Blocks", b: "Drag across the grid to mark time slots — each cell is 30 minutes. Double-click a single cell to add a quick event. Release to open the event form." },
             { t: "Events & To-dos", b: "Events are tied to specific dates. To-dos are global and persist across dates. Check to complete, × to delete." },
-            { t: "Monthly View & Recurring", b: "In the Monthly tab, add events to future dates or set events that repeat by day of week. They appear automatically in the daily view on the right day." },
-            { t: "Midnight Reset", b: "Time blocks and events in the daily view reset at midnight each day. To-dos and monthly calendar events are not affected." },
+            { t: "Weekly View", b: "The Weekly tab shows all 7 days side-by-side on a time grid. Events from daily and monthly views appear here automatically. Scroll horizontally on mobile. Tap an event to see its details." },
+            { t: "Monthly View & Recurring", b: "In the Monthly tab, add events to future dates or set events that repeat by day of week. They appear automatically in the daily view on the right day. You can also edit or delete daily events from here." },
+            { t: "Midnight Reset", b: "Time blocks reset at midnight each day. Daily events are automatically moved to Monthly view and kept for up to 60 days. To-dos and monthly events are not affected." },
           ],
         },
         {
@@ -436,6 +440,8 @@ export const T = {
       detail: "세부 항목",
       mobileTapHint: "하위 목표를 누르면 8개의 실천 항목을 열어 편집할 수 있어요.",
       mobileNoFullGrid: "전체 9×9 그리드 보기는 모바일에서 지원하지 않아요.",
+      mbEditBtn: "텍스트 편집",
+      mbViewBtn: "편집 완료",
       saving: "저장 중…",
       savedJustNow: "방금 저장됨",
       savedAgo: (s) => `${s}초 전 저장됨`,
@@ -618,7 +624,7 @@ export const T = {
       close: "시작하기",
     },
     planner: {
-      resetNote: "타임 블록과 일정은 매 자정에 초기화돼요.",
+      resetNote: "타임 블록은 자정에 초기화돼요. 일일 일정은 월간 뷰로 이동 (60일 보관).",
       tabDaily: "일일", tabWeekly: "주간", tabMonthly: "월간",
       weekly: { today: "이번 주" },
       viewModeBtn: "보기 모드", editModeBtn: "편집 모드",
@@ -647,6 +653,7 @@ export const T = {
         { t: "타임 블록 설정", b: "격자 위를 드래그하면 여러 칸을, 더블클릭하면 한 칸을 선택할 수 있어요. 선택이 끝나면 일정 추가 팝업이 바로 떠요." },
         { t: "일정 등록", b: "제목과 색상, 메모를 입력하고 추가 버튼을 누르면 일정이 생성돼요. 타임 블록에 색상이 칠해지고 일정 목록에도 표시돼요." },
         { t: "할 일 관리", b: "할 일은 날짜와 무관하게 전역으로 유지돼요. 체크로 완료 표시하고, × 버튼으로 삭제할 수 있어요." },
+        { t: "주간 뷰", b: "주간 탭으로 이동하면 7일 일정을 타임 그리드 위에서 한눈에 볼 수 있어요. 일일·월간에서 등록한 일정이 자동으로 표시돼요. 모바일에서는 가로로 스크롤하면 돼요." },
         { t: "월간 뷰 & 반복 일정", b: "월간 탭에서 미래 날짜의 일정을 미리 등록하거나 요일 기반 반복 일정을 설정할 수 있어요. 해당 날짜가 되면 일일 뷰에 자동으로 표시돼요." },
       ],
       mobileSteps: [
@@ -702,8 +709,9 @@ export const T = {
           items: [
             { t: "타임 블럭", b: "그리드를 드래그해 시간대를 선택하세요 — 한 칸이 30분이에요. 한 칸만 더블클릭해도 일정 추가가 가능해요." },
             { t: "일정 & 할 일", b: "일정은 특정 날짜에 연결돼요. 할 일은 날짜에 관계없이 전역으로 유지돼요. 체크하면 완료, ×로 삭제할 수 있어요." },
-            { t: "월간 보기 & 반복 일정", b: "월간 탭에서 미래 날짜에 일정을 추가하거나 요일별 반복 일정을 설정할 수 있어요. 해당 요일이 되면 일간 보기에 자동으로 표시돼요." },
-            { t: "자정 초기화", b: "일간 보기의 타임 블럭과 일정은 매일 자정에 초기화돼요. 할 일과 월간 캘린더 일정은 유지돼요." },
+            { t: "주간 보기", b: "주간 탭은 7일을 타임 그리드 위에 나란히 보여줘요. 일일·월간에서 등록한 일정이 자동으로 표시돼요. 모바일에서는 가로로 스크롤하면 돼요. 일정을 탭하면 상세 정보를 볼 수 있어요." },
+            { t: "월간 보기 & 반복 일정", b: "월간 탭에서 미래 날짜에 일정을 추가하거나 요일별 반복 일정을 설정할 수 있어요. 일일에서 등록한 일정도 여기서 편집하거나 삭제할 수 있어요." },
+            { t: "자정 초기화", b: "타임 블럭은 매일 자정에 초기화돼요. 일일 일정은 자동으로 월간 뷰로 이동되어 최대 60일간 보관돼요. 할 일과 월간 캘린더 일정은 영향 없어요." },
           ],
         },
         {

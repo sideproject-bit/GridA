@@ -49,11 +49,54 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
   useEffect(() => { localStorage.setItem(CAL_KEY,   JSON.stringify(calEvents)); }, [calEvents]);
   useEffect(() => { localStorage.setItem(RECUR_KEY, JSON.stringify(recurring)); }, [recurring]);
 
+  // On mount: migrate past daily keys into calEvents, delete keys older than 60 days.
+  useEffect(() => {
+    const prefix = `grida_daily_${userId}_`;
+    const today  = todayKey();
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 60);
+    const cutoffStr = localKey(cutoff);
+
+    const toMigrate = [];
+    const toDelete  = [];
+    // Snapshot keys (length changes if we delete during iteration)
+    const allKeys = Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i));
+    for (const k of allKeys) {
+      if (!k || !k.startsWith(prefix)) continue;
+      const dateStr = k.slice(prefix.length);
+      if (dateStr === today) continue;
+      if (dateStr < cutoffStr) toDelete.push(k);
+      else toMigrate.push({ k, dateStr });
+    }
+
+    if (toMigrate.length > 0) {
+      setCalEvents(prev => {
+        const next = { ...prev };
+        for (const { k, dateStr } of toMigrate) {
+          try {
+            const data = JSON.parse(localStorage.getItem(k) ?? "null");
+            const evts = data?.events ?? [];
+            if (evts.length > 0) {
+              const existingIds = new Set((next[dateStr] ?? []).map(e => e.id));
+              const fresh = evts.filter(e => !existingIds.has(e.id));
+              if (fresh.length > 0) next[dateStr] = [...(next[dateStr] ?? []), ...fresh];
+            }
+          } catch {}
+        }
+        return next;
+      });
+    }
+    [...toMigrate.map(x => x.k), ...toDelete].forEach(k => localStorage.removeItem(k));
+  }, [userId]);
+
   // Move an event to tomorrow (same time) by adding it to the calendar
   const moveEventToTomorrow = (calEvt) => {
     const key = tomorrowKey();
     setCalEvents(prev => ({ ...prev, [key]: [...(prev[key] ?? []), calEvt] }));
   };
+
+  // Delete a daily (today's) event — called from Monthly view
+  const deleteDailyEvent = (id) => setEvents(prev => prev.filter(e => e.id !== id));
 
   const today    = todayKey();
   const todayDow = new Date().getDay();
@@ -65,13 +108,13 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
       .map(r => ({ ...r, id: `recur_${r.id}_${today}`, fromCalendar: true })),
   ];
 
-  // Merge today's daily time-block events into calEvents so Weekly/Monthly can show them.
-  // Marked fromCalendar: true so they're read-only in those views.
+  // Merge today's daily events into calEvents for Weekly/Monthly.
+  // Tag with _daily so Monthly can route deletes back to setEvents.
   const mergedCalEvents = {
     ...calEvents,
     [today]: [
       ...(calEvents[today] ?? []),
-      ...events.map(e => ({ ...e, fromCalendar: true })),
+      ...events.map(e => ({ ...e, _daily: true, fromCalendar: true })),
     ],
   };
 
@@ -147,6 +190,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
           t={t} pal={pal} dark={dark}
           calEvents={mergedCalEvents}
           onCalEventsChange={setCalEvents}
+          onDeleteDailyEvent={deleteDailyEvent}
           recurring={recurring}
           onRecurringChange={setRecurring}
         />
