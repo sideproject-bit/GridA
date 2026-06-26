@@ -207,6 +207,7 @@ export default function AuthGate({ play }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [resetDone, setResetDone] = useState(false);
+  const [signUpDone, setSignUpDone] = useState(false);
 
   if (screen === "welcome") {
     return <WelcomeScreen play={play} onFinish={() => setScreen("insert")} />;
@@ -222,8 +223,6 @@ export default function AuthGate({ play }) {
 
   const INK = "#F2EDE1";
   const ACCENT = "#C7382E";
-
-  const [signUpDone, setSignUpDone] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
