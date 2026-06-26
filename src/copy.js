@@ -223,7 +223,8 @@ export const T = {
     },
     planner: {
       resetNote: "Time blocks and events reset at midnight each day.",
-      tabDaily: "Daily", tabMonthly: "Monthly",
+      tabDaily: "Daily", tabWeekly: "Weekly", tabMonthly: "Monthly",
+      weekly: { today: "This week" },
       viewModeBtn: "View mode", editModeBtn: "Edit mode",
       timeBlocks: "Time blocks", eventsCol: "Events", todoCol: "To-do",
       noEvents: "No events — drag on the grid to add one",
@@ -618,7 +619,8 @@ export const T = {
     },
     planner: {
       resetNote: "타임 블록과 일정은 매 자정에 초기화돼요.",
-      tabDaily: "일일", tabMonthly: "월간",
+      tabDaily: "일일", tabWeekly: "주간", tabMonthly: "월간",
+      weekly: { today: "이번 주" },
       viewModeBtn: "보기 모드", editModeBtn: "편집 모드",
       timeBlocks: "타임 블록", eventsCol: "일정", todoCol: "할 일",
       noEvents: "일정 없음 — 격자 위를 드래그해서 추가하세요",

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import PlannerDaily from "./PlannerDaily";
 import PlannerMonthly from "./PlannerMonthly";
+import PlannerWeekly from "./PlannerWeekly";
 
 // Local-timezone date key (toISOString would use UTC and roll over early)
 function localKey(d) {
@@ -68,8 +69,8 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
   const accent = pal.accent;
   const border = dark ? "#333" : "#ddd";
 
-  // Mondrian tab colors: Daily=red, Monthly=blue
-  const tabColor = { daily: isMon ? MON_RED : accent, monthly: isMon ? MON_BLUE : accent };
+  // Mondrian tab colors: Daily=red, Weekly=yellow, Monthly=blue
+  const tabColor = { daily: isMon ? MON_RED : accent, weekly: isMon ? "#E3B22E" : accent, monthly: isMon ? MON_BLUE : accent };
 
   return (
     <div style={{ color: ink, fontFamily: "inherit" }}>
@@ -82,12 +83,12 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
           padding: isMon ? 0 : 3,
           border: isMon ? `2px solid #1B1A17` : "none",
         }}>
-          {[["daily", pl.tabDaily], ["monthly", pl.tabMonthly]].map(([key, label]) => (
+          {[["daily", pl.tabDaily], ["weekly", pl.tabWeekly], ["monthly", pl.tabMonthly]].map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)} style={{
               background: tab === key ? tabColor[key] : isMon ? (dark ? "#1e1d16" : "#f4f0e4") : "transparent",
               color: tab === key ? "#fff" : isMon ? ink : ink,
               border: isMon ? "none" : "none",
-              borderRight: isMon && key === "daily" ? "2px solid #1B1A17" : "none",
+              borderRight: isMon && key !== "monthly" ? "2px solid #1B1A17" : "none",
               padding: "7px 20px", fontWeight: 700, fontSize: 12,
               cursor: "pointer", fontFamily: "inherit",
               textTransform: "uppercase", letterSpacing: "0.04em",
@@ -118,6 +119,16 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
           todos={todos}
           onTodosChange={setTodos}
           onMoveToTomorrow={moveEventToTomorrow}
+          theme={theme}
+          lang={lang}
+        />
+      )}
+      {tab === "weekly" && (
+        <PlannerWeekly
+          t={t} pal={pal} dark={dark}
+          calEvents={calEvents}
+          onCalEventsChange={setCalEvents}
+          recurring={recurring}
           theme={theme}
           lang={lang}
         />
