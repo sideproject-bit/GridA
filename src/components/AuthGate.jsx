@@ -320,11 +320,7 @@ export default function AuthGate({ play }) {
             </div>
           )}
 
-          {signUpDone && (
-            <div style={{ background: "#1a3a1a", border: "1px solid #3CA45C", borderRadius: 4, padding: "12px 14px", marginBottom: 14, fontSize: 12.5, lineHeight: 1.6, color: "#7ed99a" }}>
-              {t.auth.signUpDone}
-            </div>
-          )}
+          {/* signUpDone banner disabled — email verification is off in Supabase */}
           {resetDone && (
             <div style={{ background: "#1a3a1a", border: "1px solid #3CA45C", borderRadius: 4, padding: "12px 14px", marginBottom: 14, fontSize: 12.5, lineHeight: 1.6, color: "#7ed99a" }}>
               {t.auth.resetDone || (lang === "ko" ? "비밀번호 재설정 링크를 이메일로 보냈어요." : "Password reset email sent — check your inbox.")}

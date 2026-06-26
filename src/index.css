@@ -3,9 +3,17 @@
 /* Prevent mid-word breaks in Korean (keep-all = normal for non-CJK) */
 * { word-break: keep-all; }
 
-/* Prevent text selection on UI elements; allow on inputs/textareas */
-body { -webkit-user-select: none; user-select: none; }
-input, textarea, [contenteditable] { -webkit-user-select: text; user-select: text; }
+/* Prevent text selection and iOS long-press callout on UI elements */
+*, *::before, *::after {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
 
 /* Prevent iOS auto-zoom on input focus (font-size must be >= 16px) */
 input, textarea, select { font-size: max(16px, 1em); }
