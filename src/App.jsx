@@ -864,6 +864,20 @@ function AppShell() {
           />
         </div>
       )}
+
+      {/* Copyright footer */}
+      <footer style={{
+        marginTop: 48,
+        paddingTop: 16,
+        borderTop: `1px solid ${pal.ink}18`,
+        textAlign: "center",
+        fontSize: 11,
+        color: pal.ink,
+        opacity: 0.3,
+        userSelect: "none",
+      }}>
+        © {new Date().getFullYear()} Miley N. All rights reserved.
+      </footer>
     </div>
   );
 }
