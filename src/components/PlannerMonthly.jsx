@@ -27,7 +27,7 @@ function evtTime(evt) {
   return start && end ? `${start} – ${end}` : null;
 }
 
-export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEventsChange, onDeleteDailyEvent, onEditDailyEvent, onEditCalEvent, recurring, onRecurringChange }) {
+export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEventsChange, onDeleteDailyEvent, onEditDailyEvent, onEditCalEvent, recurring, onRecurringChange, spans, onSpansChange }) {
   const pl  = t.planner;
   const ink = pal.ink;
   const acc = pal.accent;
@@ -53,6 +53,12 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
   const [rcStart, setRcStart] = useState("09:00");
   const [rcEnd,   setRcEnd]   = useState("10:00");
   const [rcColor, setRcColor] = useState(EVENT_COLORS[0]);
+
+  // Spans (date labels) form
+  const [spTitle,  setSpTitle]  = useState("");
+  const [spFrom,   setSpFrom]   = useState("");
+  const [spTo,     setSpTo]     = useState("");
+  const [spColor,  setSpColor]  = useState(EVENT_COLORS[2]); // default light blue
 
   // Edit event
   const [editEvt,    setEditEvt]    = useState(null); // { evt, dateKey }
@@ -132,6 +138,16 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
     setRcDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
   }
 
+  function addSpan() {
+    if (!spTitle.trim() || !spFrom || !spTo || spFrom > spTo) return;
+    onSpansChange(prev => [...prev, { id: Date.now().toString(), title: spTitle.trim(), color: spColor, startDate: spFrom, endDate: spTo }]);
+    setSpTitle(""); setSpFrom(""); setSpTo("");
+  }
+
+  function deleteSpan(id) {
+    onSpansChange(prev => prev.filter(s => s.id !== id));
+  }
+
   function openEditEvt(evt, dateKey) {
     setEditTitle(evt.title);
     setEditColor(evt.color);
@@ -188,6 +204,7 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
             const isToday    = key === todayStr;
             const isSelected = d === selectedDay;
             const hasEvents  = (calEvents[key] ?? []).length > 0;
+            const cellSpans  = (spans ?? []).filter(s => s.startDate <= key && key <= s.endDate);
             return (
               <div key={i}
                 onClick={() => setSelectedDay(d === selectedDay ? null : d)}
@@ -196,15 +213,24 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
                   display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                   background: isSelected ? acc : isToday ? acc + "22" : "transparent",
                   border: `1px solid ${isSelected ? acc : border}`,
-                  transition: "background 0.1s",
+                  transition: "background 0.1s", padding: "2px 2px 3px", boxSizing: "border-box",
                 }}
               >
                 <span style={{ fontSize: 13, fontWeight: isToday ? 900 : 400, color: isSelected ? "#fff" : ink }}>
                   {d}
                 </span>
                 {hasEvents && (
-                  <div style={{ width: 4, height: 4, borderRadius: 2, background: isSelected ? "#fff" : acc, marginTop: 3 }} />
+                  <div style={{ width: 4, height: 4, borderRadius: 2, background: isSelected ? "#fff" : acc, marginTop: 2 }} />
                 )}
+                {cellSpans.slice(0, 2).map(s => (
+                  <div key={s.id} style={{
+                    fontSize: 7, fontWeight: 700, padding: "0 3px", marginTop: 2,
+                    background: isSelected ? "#ffffff44" : s.color + "cc",
+                    color: isSelected ? "#fff" : "#fff",
+                    borderRadius: 2, width: "90%", textAlign: "center",
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  }}>{s.title}</div>
+                ))}
               </div>
             );
           })}
@@ -215,7 +241,7 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
       <div>
         {/* Sub-tabs */}
         <div style={{ display: "flex", borderBottom: `1px solid ${border}`, marginBottom: 16 }}>
-          {[["events", pl.tabEvents], ["recurring", pl.tabRecurring]].map(([key, label]) => (
+          {[["events", pl.tabEvents], ["recurring", pl.tabRecurring], ["labels", pl.tabLabels]].map(([key, label]) => (
             <button key={key} onClick={() => setSubTab(key)} style={{
               background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
               fontWeight: subTab === key ? 800 : 400, fontSize: 12, padding: "6px 12px",
@@ -339,6 +365,58 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
                 cursor: (rcTitle.trim() && rcDays.length > 0) ? "pointer" : "not-allowed",
                 opacity: (rcTitle.trim() && rcDays.length > 0) ? 1 : 0.4, fontFamily: "inherit",
               }}>{pl.addRecurring}</button>
+            </div>
+          </div>
+        )}
+
+        {/* Labels sub-tab */}
+        {subTab === "labels" && (
+          <div>
+            {(spans ?? []).length === 0
+              ? <div style={{ fontSize: 12, opacity: 0.35, marginBottom: 14 }}>{pl.noLabels}</div>
+              : (spans ?? []).map(s => (
+                <div key={s.id} style={{
+                  display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", marginBottom: 6,
+                  borderLeft: `3px solid ${s.color}`, borderRadius: 4,
+                  background: dark ? "#1e1d16" : "#f0ede2",
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 12 }}>{s.title}</div>
+                    <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>{s.startDate} – {s.endDate}</div>
+                  </div>
+                  <button onClick={() => deleteSpan(s.id)} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.3, fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
+                </div>
+              ))
+            }
+            <div style={{ paddingTop: (spans ?? []).length > 0 ? 14 : 0, borderTop: (spans ?? []).length > 0 ? `1px solid ${border}` : "none" }}>
+              <input value={spTitle} onChange={e => setSpTitle(e.target.value)}
+                placeholder={pl.labelTitlePlaceholder} style={inputSt} />
+              <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 10, opacity: 0.55, marginBottom: 3 }}>{pl.labelFrom}</div>
+                  <input type="date" value={spFrom} onChange={e => setSpFrom(e.target.value)}
+                    style={{ ...inputSt, marginBottom: 0, padding: "6px 8px" }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 10, opacity: 0.55, marginBottom: 3 }}>{pl.labelTo}</div>
+                  <input type="date" value={spTo} onChange={e => setSpTo(e.target.value)}
+                    style={{ ...inputSt, marginBottom: 0, padding: "6px 8px" }} />
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                {EVENT_COLORS.map(c => (
+                  <div key={c} onClick={() => setSpColor(c)} style={{
+                    width: 20, height: 20, borderRadius: 3, background: c, cursor: "pointer",
+                    outline: spColor === c ? `2.5px solid ${ink}` : "none", outlineOffset: 2,
+                  }} />
+                ))}
+              </div>
+              <button onClick={addSpan} disabled={!spTitle.trim() || !spFrom || !spTo || spFrom > spTo} style={{
+                width: "100%", background: acc, color: "#fff", border: "none",
+                borderRadius: 6, padding: "8px", fontSize: 12, fontWeight: 700,
+                cursor: (spTitle.trim() && spFrom && spTo && spFrom <= spTo) ? "pointer" : "not-allowed",
+                opacity: (spTitle.trim() && spFrom && spTo && spFrom <= spTo) ? 1 : 0.4, fontFamily: "inherit",
+              }}>{pl.addLabel}</button>
             </div>
           </div>
         )}

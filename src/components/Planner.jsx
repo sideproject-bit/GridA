@@ -31,6 +31,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
   const TODO_KEY  = `grida_todos_${userId}`;
   const CAL_KEY   = `grida_calendar_${userId}`;
   const RECUR_KEY = `grida_recurring_${userId}`;
+  const SPANS_KEY = `grida_spans_${userId}`;
 
   const load = (key, fallback) => {
     try { return JSON.parse(localStorage.getItem(key) ?? "null") ?? fallback; } catch { return fallback; }
@@ -40,6 +41,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
   const [todos,     setTodos]     = useState(() => load(TODO_KEY, []));
   const [calEvents, setCalEvents] = useState(() => load(CAL_KEY, {}));
   const [recurring, setRecurring] = useState(() => load(RECUR_KEY, []));
+  const [spans,     setSpans]     = useState(() => load(SPANS_KEY, []));
 
   useEffect(() => {
     const prev = load(DAILY_KEY, {});
@@ -48,6 +50,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
   useEffect(() => { localStorage.setItem(TODO_KEY,  JSON.stringify(todos));     }, [todos]);
   useEffect(() => { localStorage.setItem(CAL_KEY,   JSON.stringify(calEvents)); }, [calEvents]);
   useEffect(() => { localStorage.setItem(RECUR_KEY, JSON.stringify(recurring)); }, [recurring]);
+  useEffect(() => { localStorage.setItem(SPANS_KEY, JSON.stringify(spans));    }, [spans]);
 
   // On mount: migrate past daily keys into calEvents, delete keys older than 60 days.
   useEffect(() => {
@@ -183,6 +186,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
           todos={todos}
           onTodosChange={setTodos}
           onMoveToTomorrow={moveEventToTomorrow}
+          spans={spans}
           theme={theme}
           lang={lang}
         />
@@ -194,6 +198,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
           recurring={recurring}
           onEditDailyEvent={editDailyEvent}
           onEditCalEvent={editCalEvent}
+          spans={spans}
           theme={theme}
           lang={lang}
         />
@@ -209,6 +214,8 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
           onEditCalEvent={editCalEvent}
           recurring={recurring}
           onRecurringChange={setRecurring}
+          spans={spans}
+          onSpansChange={setSpans}
         />
       )}
     </div>

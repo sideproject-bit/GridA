@@ -104,7 +104,7 @@ function EventRow({ evt, isMobile, editMode, dark, ink, pl, onDelete, onMove, on
   );
 }
 
-export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, onEditEvent, todos, onTodosChange, onMoveToTomorrow, theme, lang }) {
+export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, onEditEvent, todos, onTodosChange, onMoveToTomorrow, spans, theme, lang }) {
   const pl    = t.planner;
   const ink   = pal.ink;
   const acc   = pal.accent;
@@ -405,7 +405,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
   return (
     <div>
       {/* Date — larger and color-accented on mobile (dark→yellow, light→blue) */}
-      <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 18, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
         <div style={{
           fontSize: isMobile ? 22 : 13,
           fontWeight: isMobile ? 900 : 700,
@@ -417,6 +417,24 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
         </div>
         <div style={{ fontSize: 11, opacity: 0.3, fontStyle: "italic" }}>{pl.resetNote}</div>
       </div>
+
+      {/* Active date labels (spans) for today */}
+      {(() => {
+        const todayStr = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`; })();
+        const active = (spans ?? []).filter(s => s.startDate <= todayStr && todayStr <= s.endDate);
+        if (!active.length) return null;
+        return (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
+            {active.map(s => (
+              <div key={s.id} style={{
+                fontSize: 11, fontWeight: 700, padding: "3px 10px",
+                background: s.color + "28", border: `1px solid ${s.color}77`,
+                color: ink, borderRadius: 3,
+              }}>{s.title}</div>
+            ))}
+          </div>
+        );
+      })()}
 
       {isMobile ? (
         /* ── Mobile: Mondrian segmented control, one section at a time ── */

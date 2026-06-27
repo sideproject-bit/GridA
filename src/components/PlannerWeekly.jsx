@@ -50,7 +50,7 @@ function cellToTimeEnd(cell) {
 
 const EVENT_COLORS = ["#FFAAAA", "#FFE599", "#AAD4FF", "#C7382E", "#C8960A", "#1A2A9E"];
 
-export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEditDailyEvent, onEditCalEvent, theme, lang }) {
+export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEditDailyEvent, onEditCalEvent, spans, theme, lang }) {
   const pl  = t.planner;
   const wk  = pl.weekly ?? {};
   const { isMobile } = useViewport();
@@ -131,6 +131,7 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
           <div style={{ display: "flex", borderBottom: `2px solid ${ink}22`, marginLeft: LABEL_W, paddingLeft: 0 }}>
             {days.map((day, i) => {
               const isToday = dayKeys[i] === today;
+              const daySpans = (spans ?? []).filter(s => s.startDate <= dayKeys[i] && dayKeys[i] <= s.endDate);
               return (
                 <div key={i} style={{
                   flex: 1, minWidth: DAY_MIN_W,
@@ -145,6 +146,13 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
                   <div style={{ fontSize: 14, fontWeight: 900, color: isToday ? "#1a1a1a" : ink, lineHeight: 1.2 }}>
                     {day.getDate()}
                   </div>
+                  {daySpans.map(s => (
+                    <div key={s.id} style={{
+                      fontSize: 7, fontWeight: 700, padding: "1px 3px", marginTop: 2,
+                      background: s.color, color: "#fff", borderRadius: 2,
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                    }}>{s.title}</div>
+                  ))}
                 </div>
               );
             })}

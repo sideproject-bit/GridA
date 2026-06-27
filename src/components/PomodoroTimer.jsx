@@ -55,10 +55,54 @@ export default function PomodoroTimer({ t, pal, dark, theme, notifOn, userId, on
   const [liSavedFlash, setLiSavedFlash] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
   const liGoalFiredRef = useRef(false);
-  const recKey = `grida_lockin_${userId ?? "anon"}`;
+  const recKey    = `grida_lockin_${userId ?? "anon"}`;
+  const pomRunKey = `grida_pom_run_${userId ?? "anon"}`;
+  const liRunKey  = `grida_lockin_run_${userId ?? "anon"}`;
   const [records, setRecords] = useState(() => {
     try { return JSON.parse(localStorage.getItem(recKey) ?? "[]"); } catch { return []; }
   });
+
+  // Restore persisted timer state on mount
+  useEffect(() => {
+    // Pomodoro countdown
+    try {
+      const saved = JSON.parse(localStorage.getItem(pomRunKey));
+      if (saved?.durationMs > 0) {
+        const elapsed = saved.wallStartMs
+          ? Math.min(saved.baseMs + (Date.now() - saved.wallStartMs), saved.durationMs)
+          : (saved.baseMs ?? 0);
+        setDuration(saved.durationMs / 60000);
+        setGoal(saved.goal ?? "");
+        baseMsRef.current = elapsed;
+        setElapsedMs(elapsed);
+        if (elapsed >= saved.durationMs) {
+          finishedRef.current = true; setFinished(true);
+          localStorage.removeItem(pomRunKey);
+        } else if (saved.wallStartMs) {
+          setRunning(true); // was running when navigated away — auto-resume
+        }
+      }
+    } catch (_) {}
+
+    // Locking-in: always restore as paused
+    try {
+      const saved = JSON.parse(localStorage.getItem(liRunKey));
+      if (saved) {
+        const elapsed = saved.wallStartMs
+          ? Math.min(saved.baseMs + (Date.now() - saved.wallStartMs), LI_MAX_MS)
+          : (saved.baseMs ?? 0);
+        if (elapsed > 0) {
+          setLiElapsedMs(elapsed);
+          liBaseElapsedRef.current = elapsed;
+          setLiGoalH(saved.liGoalH ?? 1);
+          setLiGoalM(saved.liGoalM ?? 0);
+          setMode("lockin");
+          // Save as paused so next remount doesn't re-add wall time
+          localStorage.setItem(liRunKey, JSON.stringify({ baseMs: elapsed, liGoalH: saved.liGoalH ?? 1, liGoalM: saved.liGoalM ?? 0 }));
+        }
+      }
+    } catch (_) {}
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const liGoalMs = Math.min((liGoalH * 60 + liGoalM) * 60000, LI_MAX_MS);
   const liGoalReached = liGoalMs > 0 && liElapsedMs >= liGoalMs;
@@ -68,15 +112,27 @@ export default function PomodoroTimer({ t, pal, dark, theme, notifOn, userId, on
   const liBaseElapsedRef = useRef(0);  // ms accumulated before last start
 
   useEffect(() => {
-    if (mode !== "lockin" || !liRunning) return;
+    if (mode !== "lockin" || !liRunning) {
+      // Save paused state when stopping
+      if (mode === "lockin") {
+        const curElapsed = liStartWallRef.current != null
+          ? Math.min(liBaseElapsedRef.current + (Date.now() - liStartWallRef.current), LI_MAX_MS)
+          : liBaseElapsedRef.current;
+        liStartWallRef.current = null;
+        if (curElapsed > 0) {
+          try { localStorage.setItem(liRunKey, JSON.stringify({ baseMs: curElapsed, liGoalH, liGoalM })); } catch (_) {}
+        }
+      }
+      return;
+    }
     liStartWallRef.current = Date.now();
     liBaseElapsedRef.current = liElapsedMs;
+    try { localStorage.setItem(liRunKey, JSON.stringify({ wallStartMs: Date.now(), baseMs: liElapsedMs, liGoalH, liGoalM })); } catch (_) {}
     const tick = () => {
       const elapsed = liBaseElapsedRef.current + (Date.now() - liStartWallRef.current);
       setLiElapsedMs(Math.min(elapsed, LI_MAX_MS));
     };
     const id = setInterval(tick, 1000);
-    // Resync display when page becomes visible again after being hidden
     const resync = () => { tick(); };
     document.addEventListener("visibilitychange", resync);
     return () => {
@@ -84,7 +140,7 @@ export default function PomodoroTimer({ t, pal, dark, theme, notifOn, userId, on
       document.removeEventListener("visibilitychange", resync);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, liRunning]);
+  }, [mode, liRunning, liGoalH, liGoalM]);
 
   // Stop at the 24h cap
   useEffect(() => { if (liElapsedMs >= LI_MAX_MS) setLiRunning(false); }, [liElapsedMs]);
@@ -100,7 +156,10 @@ export default function PomodoroTimer({ t, pal, dark, theme, notifOn, userId, on
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liGoalReached]);
 
-  function liReset() { setLiRunning(false); setLiElapsedMs(0); liGoalFiredRef.current = false; }
+  function liReset() {
+    setLiRunning(false); setLiElapsedMs(0); liGoalFiredRef.current = false;
+    try { localStorage.removeItem(liRunKey); } catch (_) {}
+  }
   function liSave() {
     if (liElapsedMs < 1000) return;
     const rec = { ts: Date.now(), date: new Date().toISOString().slice(0, 10), durationMs: liElapsedMs };
@@ -181,6 +240,7 @@ export default function PomodoroTimer({ t, pal, dark, theme, notifOn, userId, on
       new Notification(p.notifTitle, { body: p.notifBody(goal) });
     }
     onNotif?.({ type: "success", title: p.notifTitle, body: p.notifBody(goal) });
+    try { localStorage.removeItem(pomRunKey); } catch (_) {}
   }
 
   function requestNotifPermission() {
@@ -236,15 +296,21 @@ export default function PomodoroTimer({ t, pal, dark, theme, notifOn, userId, on
     if (duration === 0) return;
     finishedRef.current = false;
     setFinished(false);
+    baseMsRef.current = 0;
     setRunning(true);
+    try { localStorage.setItem(pomRunKey, JSON.stringify({ wallStartMs: Date.now(), baseMs: 0, durationMs, goal })); } catch (_) {}
   }
   function handlePause() {
-    baseMsRef.current += performance.now() - (startTsRef.current ?? performance.now());
+    const now = performance.now();
+    const accumulated = baseMsRef.current + (now - (startTsRef.current ?? now));
+    baseMsRef.current = accumulated;
     setRunning(false);
+    try { localStorage.setItem(pomRunKey, JSON.stringify({ baseMs: accumulated, durationMs, goal })); } catch (_) {}
   }
   function handleResume() {
     finishedRef.current = false;
     setRunning(true);
+    try { localStorage.setItem(pomRunKey, JSON.stringify({ wallStartMs: Date.now(), baseMs: baseMsRef.current, durationMs, goal })); } catch (_) {}
   }
   function handleReset() {
     cancelAnimationFrame(rafRef.current);
@@ -253,6 +319,7 @@ export default function PomodoroTimer({ t, pal, dark, theme, notifOn, userId, on
     baseMsRef.current = 0;
     finishedRef.current = false;
     setFinished(false);
+    try { localStorage.removeItem(pomRunKey); } catch (_) {}
   }
 
   const dispMin = String(Math.floor(remainingSeconds / 60)).padStart(2, "0");
