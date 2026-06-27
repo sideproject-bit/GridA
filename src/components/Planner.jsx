@@ -95,8 +95,18 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
     setCalEvents(prev => ({ ...prev, [key]: [...(prev[key] ?? []), calEvt] }));
   };
 
-  // Delete a daily (today's) event — called from Monthly view
+  // Delete a daily (today's) event — called from Monthly/Weekly view
   const deleteDailyEvent = (id) => setEvents(prev => prev.filter(e => e.id !== id));
+
+  // Edit functions
+  const editDailyEvent = (id, changes) =>
+    setEvents(prev => prev.map(e => e.id === id ? { ...e, ...changes } : e));
+
+  const editCalEvent = (dateKey, id, changes) =>
+    setCalEvents(prev => ({
+      ...prev,
+      [dateKey]: (prev[dateKey] ?? []).map(e => e.id === id ? { ...e, ...changes } : e),
+    }));
 
   const today    = todayKey();
   const todayDow = new Date().getDay();
@@ -169,6 +179,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
           editMode={editMode}
           events={allDailyEvents}
           onEventsChange={setEvents}
+          onEditEvent={editDailyEvent}
           todos={todos}
           onTodosChange={setTodos}
           onMoveToTomorrow={moveEventToTomorrow}
@@ -181,6 +192,8 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
           t={t} pal={pal} dark={dark}
           calEvents={mergedCalEvents}
           recurring={recurring}
+          onEditDailyEvent={editDailyEvent}
+          onEditCalEvent={editCalEvent}
           theme={theme}
           lang={lang}
         />
@@ -188,9 +201,12 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
       {tab === "monthly" && (
         <PlannerMonthly
           t={t} pal={pal} dark={dark}
+          lang={lang}
           calEvents={mergedCalEvents}
           onCalEventsChange={setCalEvents}
           onDeleteDailyEvent={deleteDailyEvent}
+          onEditDailyEvent={editDailyEvent}
+          onEditCalEvent={editCalEvent}
           recurring={recurring}
           onRecurringChange={setRecurring}
         />

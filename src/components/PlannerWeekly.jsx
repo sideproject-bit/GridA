@@ -48,7 +48,9 @@ function cellToTimeEnd(cell) {
   return `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
 
-export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, theme, lang }) {
+const EVENT_COLORS = ["#FFAAAA", "#FFE599", "#AAD4FF", "#C7382E", "#C8960A", "#1A2A9E"];
+
+export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEditDailyEvent, onEditCalEvent, theme, lang }) {
   const pl  = t.planner;
   const wk  = pl.weekly ?? {};
   const { isMobile } = useViewport();
@@ -60,11 +62,34 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, them
 
   const [weekStart, setWeekStart] = useState(() => getWeekMonday(new Date()));
   const [viewEvt,  setViewEvt]  = useState(null); // { event, dateKey }
+  const [isEditingView, setIsEditingView] = useState(false);
+  const [editTitle,   setEditTitle]   = useState("");
+  const [editColor,   setEditColor]   = useState(EVENT_COLORS[0]);
+  const [editMemo,    setEditMemo]    = useState("");
 
   const days    = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const dayKeys = days.map(localKey);
   const today   = localKey(new Date());
   const totalH  = HOURS * CELL_H;
+
+  function openEditEvt(evt) {
+    setEditTitle(evt.title);
+    setEditColor(evt.color);
+    setEditMemo(evt.memo ?? "");
+    setIsEditingView(true);
+  }
+
+  function saveEditEvt() {
+    if (!viewEvt || !editTitle.trim()) return;
+    const changes = { title: editTitle.trim(), color: editColor, memo: editMemo };
+    if (viewEvt.event._daily) {
+      onEditDailyEvent?.(viewEvt.event.id, changes);
+    } else {
+      onEditCalEvent?.(viewEvt.dateKey, viewEvt.event.id, changes);
+    }
+    setViewEvt(null);
+    setIsEditingView(false);
+  }
 
   function getEventsForDay(day, dateKey) {
     const dow  = day.getDay();
@@ -205,7 +230,7 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, them
       {/* Event detail popup */}
       {viewEvt && createPortal((
         <>
-          <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.45)" }} onClick={() => setViewEvt(null)} />
+          <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.45)" }} onClick={() => { setViewEvt(null); setIsEditingView(false); }} />
           <div style={{
             position: "fixed",
             left: isMobile ? 14 : "50%", right: isMobile ? 14 : "auto",
@@ -213,30 +238,73 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, them
             transform: isMobile ? "none" : "translate(-50%, -50%)",
             zIndex: 51, width: isMobile ? "auto" : 300,
             background: bg, color: ink,
-            border: `2px solid ${viewEvt.event.color}`, borderRadius: 10, padding: 20,
+            border: `2px solid ${isEditingView ? editColor : viewEvt.event.color}`, borderRadius: 10, padding: 20,
             boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-              <span style={{ width: 12, height: 12, borderRadius: 3, background: viewEvt.event.color, flexShrink: 0 }} />
-              <div style={{ fontWeight: 800, fontSize: 15, wordBreak: "keep-all" }}>{viewEvt.event.title}</div>
-            </div>
-            <div style={{ fontSize: 11, opacity: 0.45, marginBottom: 6 }}>
-              {viewEvt.dateKey} · {cellToTime(viewEvt.event.startCell)} – {cellToTimeEnd(viewEvt.event.endCell)}
-            </div>
-            {viewEvt.event.memo && (
-              <div style={{ fontSize: 13, lineHeight: 1.6, opacity: 0.8, wordBreak: "keep-all", whiteSpace: "pre-wrap", marginBottom: 8 }}>
-                {viewEvt.event.memo}
-              </div>
+            {isEditingView ? (
+              <>
+                <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.45, marginBottom: 10, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                  {viewEvt.dateKey} · {cellToTime(viewEvt.event.startCell)} – {cellToTimeEnd(viewEvt.event.endCell)}
+                </div>
+                <input
+                  value={editTitle}
+                  onChange={e => setEditTitle(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && saveEditEvt()}
+                  autoFocus
+                  style={{ width: "100%", boxSizing: "border-box", padding: "8px 10px", fontSize: 13, fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none", marginBottom: 10 }}
+                />
+                <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                  {EVENT_COLORS.map(c => (
+                    <div key={c} onClick={() => setEditColor(c)} style={{ width: 22, height: 22, borderRadius: 4, background: c, cursor: "pointer", flexShrink: 0, outline: editColor === c ? `2.5px solid ${ink}` : "none", outlineOffset: 2 }} />
+                  ))}
+                </div>
+                <textarea
+                  value={editMemo}
+                  onChange={e => setEditMemo(e.target.value)}
+                  placeholder={pl.eventMemoPlaceholder}
+                  rows={2}
+                  style={{ width: "100%", boxSizing: "border-box", padding: "7px 10px", fontSize: 12, fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none", resize: "none", marginBottom: 12 }}
+                />
+                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                  <button onClick={() => setIsEditingView(false)} style={{ background: "none", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", color: ink, fontFamily: "inherit" }}>
+                    {pl.cancel}
+                  </button>
+                  <button onClick={saveEditEvt} disabled={!editTitle.trim()} style={{ background: acc, color: "#fff", border: "none", borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: editTitle.trim() ? "pointer" : "not-allowed", fontWeight: 700, fontFamily: "inherit", opacity: editTitle.trim() ? 1 : 0.4 }}>
+                    {pl.saveChanges || "Save"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <span style={{ width: 12, height: 12, borderRadius: 3, background: viewEvt.event.color, flexShrink: 0 }} />
+                  <div style={{ fontWeight: 800, fontSize: 15, wordBreak: "keep-all" }}>{viewEvt.event.title}</div>
+                </div>
+                <div style={{ fontSize: 11, opacity: 0.45, marginBottom: 6 }}>
+                  {viewEvt.dateKey} · {cellToTime(viewEvt.event.startCell)} – {cellToTimeEnd(viewEvt.event.endCell)}
+                </div>
+                {viewEvt.event.memo && (
+                  <div style={{ fontSize: 13, lineHeight: 1.6, opacity: 0.8, wordBreak: "keep-all", whiteSpace: "pre-wrap", marginBottom: 8 }}>
+                    {viewEvt.event.memo}
+                  </div>
+                )}
+                {viewEvt.event.fromCalendar && (
+                  <div style={{ fontSize: 10, opacity: 0.35, marginBottom: 8 }}>📅 {pl.fromCalendar}</div>
+                )}
+                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
+                  {!viewEvt.event.id.startsWith("recur_") && (
+                    <button onClick={() => openEditEvt(viewEvt.event)}
+                      style={{ background: acc, color: "#fff", border: "none", borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
+                      {pl.edit || "Edit"}
+                    </button>
+                  )}
+                  <button onClick={() => setViewEvt(null)}
+                    style={{ background: "none", border: `1px solid ${dark ? "#444" : "#ccc"}`, color: ink, borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
+                    {pl.cancel}
+                  </button>
+                </div>
+              </>
             )}
-            {viewEvt.event.fromCalendar && (
-              <div style={{ fontSize: 10, opacity: 0.35, marginBottom: 8 }}>📅 {pl.fromCalendar}</div>
-            )}
-            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
-              <button onClick={() => setViewEvt(null)}
-                style={{ background: acc, color: "#fff", border: "none", borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
-                {pl.cancel}
-              </button>
-            </div>
           </div>
         </>
       ), document.body)}

@@ -1,14 +1,33 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useViewport } from "../hooks/useViewport";
 
 const EVENT_COLORS = ["#FFAAAA", "#FFE599", "#AAD4FF", "#C7382E", "#C8960A", "#1A2A9E"];
+const COLS = 6;
 
 function timeToCell(timeStr) {
   const [h, m] = timeStr.split(":").map(Number);
   return h * 6 + Math.floor(m / 10);
 }
 
-export default function PlannerMonthly({ t, pal, dark, calEvents, onCalEventsChange, onDeleteDailyEvent, recurring, onRecurringChange }) {
+function cellToTime(cell) {
+  const h = Math.floor(cell / COLS);
+  const m = (cell % COLS) * 10;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function cellToTimeEnd(cell) {
+  const total = Math.floor(cell / COLS) * 60 + (cell % COLS) * 10 + 10;
+  return `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+function evtTime(evt) {
+  const start = evt.startTime ?? (evt.startCell != null ? cellToTime(evt.startCell) : null);
+  const end   = evt.endTime   ?? (evt.endCell   != null ? cellToTimeEnd(evt.endCell) : null);
+  return start && end ? `${start} – ${end}` : null;
+}
+
+export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEventsChange, onDeleteDailyEvent, onEditDailyEvent, onEditCalEvent, recurring, onRecurringChange }) {
   const pl  = t.planner;
   const ink = pal.ink;
   const acc = pal.accent;
@@ -34,6 +53,12 @@ export default function PlannerMonthly({ t, pal, dark, calEvents, onCalEventsCha
   const [rcStart, setRcStart] = useState("09:00");
   const [rcEnd,   setRcEnd]   = useState("10:00");
   const [rcColor, setRcColor] = useState(EVENT_COLORS[0]);
+
+  // Edit event
+  const [editEvt,    setEditEvt]    = useState(null); // { evt, dateKey }
+  const [editTitle,  setEditTitle]  = useState("");
+  const [editColor,  setEditColor]  = useState(EVENT_COLORS[0]);
+  const [editMemo,   setEditMemo]   = useState("");
 
   const firstDow     = new Date(year, month, 1).getDay();
   const daysInMonth  = new Date(year, month + 1, 0).getDate();
@@ -107,6 +132,24 @@ export default function PlannerMonthly({ t, pal, dark, calEvents, onCalEventsCha
     setRcDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
   }
 
+  function openEditEvt(evt, dateKey) {
+    setEditTitle(evt.title);
+    setEditColor(evt.color);
+    setEditMemo(evt.memo ?? "");
+    setEditEvt({ evt, dateKey });
+  }
+
+  function saveEditEvt() {
+    if (!editEvt || !editTitle.trim()) return;
+    const changes = { title: editTitle.trim(), color: editColor, memo: editMemo };
+    if (editEvt.evt._daily) {
+      onEditDailyEvent?.(editEvt.evt.id, changes);
+    } else {
+      onEditCalEvent?.(editEvt.dateKey, editEvt.evt.id, changes);
+    }
+    setEditEvt(null);
+  }
+
   const inputSt = {
     width: "100%", boxSizing: "border-box",
     padding: "7px 10px", fontSize: 12, fontFamily: "inherit",
@@ -116,6 +159,7 @@ export default function PlannerMonthly({ t, pal, dark, calEvents, onCalEventsCha
   };
 
   return (
+    <>
     <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 260px", gap: 28, alignItems: "start" }}>
 
       {/* ── Calendar ── */}
@@ -192,7 +236,7 @@ export default function PlannerMonthly({ t, pal, dark, calEvents, onCalEventsCha
           return (
             <div>
               <div style={{ fontWeight: 900, fontSize: 14, marginBottom: 12, textTransform: "uppercase" }}>
-                {pl.months[month]} {selectedDay}
+                {pl.months[month]} {selectedDay}{lang === "ko" ? "일" : ""}
               </div>
 
               {dayEvents.map(evt => (
@@ -203,8 +247,9 @@ export default function PlannerMonthly({ t, pal, dark, calEvents, onCalEventsCha
                 }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700, fontSize: 12, wordBreak: "keep-all" }}>{evt.title}</div>
-                    <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>{evt.startTime} – {evt.endTime}</div>
+                    {evtTime(evt) && <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>{evtTime(evt)}</div>}
                   </div>
+                  <button onClick={() => openEditEvt(evt, dateKey(selectedDay))} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.45, fontSize: 12, padding: "0 2px", lineHeight: 1 }}>✏</button>
                   <button onClick={() => deleteCalEvent(selectedDay, evt)} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.3, fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
                 </div>
               ))}
@@ -299,5 +344,50 @@ export default function PlannerMonthly({ t, pal, dark, calEvents, onCalEventsCha
         )}
       </div>
     </div>
+
+      {/* Edit event popup */}
+      {editEvt && createPortal((
+        <>
+          <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.45)" }} onClick={() => setEditEvt(null)} />
+          <div style={{
+            position: "fixed", left: "50%", top: "50%", transform: "translate(-50%, -50%)",
+            zIndex: 51, width: 300, maxWidth: "90vw",
+            background: bg, color: ink, border: `2px solid ${editColor}`,
+            borderRadius: 10, padding: 20, boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.45, marginBottom: 10, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+              {pl.months[month]} {editEvt.evt.title}
+            </div>
+            <input
+              value={editTitle}
+              onChange={e => setEditTitle(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && saveEditEvt()}
+              autoFocus
+              style={{ width: "100%", boxSizing: "border-box", padding: "8px 10px", fontSize: 13, fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none", marginBottom: 10 }}
+            />
+            <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+              {EVENT_COLORS.map(c => (
+                <div key={c} onClick={() => setEditColor(c)} style={{ width: 22, height: 22, borderRadius: 4, background: c, cursor: "pointer", flexShrink: 0, outline: editColor === c ? `2.5px solid ${ink}` : "none", outlineOffset: 2 }} />
+              ))}
+            </div>
+            <textarea
+              value={editMemo}
+              onChange={e => setEditMemo(e.target.value)}
+              placeholder={pl.eventMemoPlaceholder}
+              rows={2}
+              style={{ width: "100%", boxSizing: "border-box", padding: "7px 10px", fontSize: 12, fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none", resize: "none", marginBottom: 12 }}
+            />
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button onClick={() => setEditEvt(null)} style={{ background: "none", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", color: ink, fontFamily: "inherit" }}>
+                {pl.cancel}
+              </button>
+              <button onClick={saveEditEvt} disabled={!editTitle.trim()} style={{ background: acc, color: "#fff", border: "none", borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: editTitle.trim() ? "pointer" : "not-allowed", fontWeight: 700, fontFamily: "inherit", opacity: editTitle.trim() ? 1 : 0.4 }}>
+                {pl.saveChanges || "Save"}
+              </button>
+            </div>
+          </div>
+        </>
+      ), document.body)}
+    </>
   );
 }

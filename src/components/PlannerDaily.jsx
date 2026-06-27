@@ -104,7 +104,7 @@ function EventRow({ evt, isMobile, editMode, dark, ink, pl, onDelete, onMove, on
   );
 }
 
-export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, todos, onTodosChange, onMoveToTomorrow, theme, lang }) {
+export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, onEditEvent, todos, onTodosChange, onMoveToTomorrow, theme, lang }) {
   const pl    = t.planner;
   const ink   = pal.ink;
   const acc   = pal.accent;
@@ -123,6 +123,10 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
   const [todoInput,   setTodoInput]   = useState("");
   const [section,     setSection]     = useState("time"); // mobile segment: time | events | todo
   const [viewEvent,   setViewEvent]   = useState(null); // tapped a filled block → show its details
+  const [isEditingView, setIsEditingView] = useState(false); // editing mode inside viewEvent popup
+  const [editTitle,   setEditTitle]   = useState("");
+  const [editColor,   setEditColor]   = useState(EVENT_COLORS[0]);
+  const [editMemo,    setEditMemo]    = useState("");
   const [ctxMenu,     setCtxMenu]     = useState(null); // desktop right-click menu { evt, x, y }
 
   const dragRef = useRef({ active: false, start: null, end: null, dragging: false });
@@ -233,9 +237,25 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
       memo: popMemo,
       startCell: popup.startCell,
       endCell: popup.endCell,
+      startTime: cellToTime(popup.startCell),
+      endTime: cellToTimeEnd(popup.endCell),
     };
     onEventsChange(prev => [...prev, evt]);
     setPopup(null);
+  }
+
+  function openEditView(evt) {
+    setEditTitle(evt.title);
+    setEditColor(evt.color);
+    setEditMemo(evt.memo ?? "");
+    setIsEditingView(true);
+  }
+
+  function saveEditView() {
+    if (!viewEvent || !editTitle.trim()) return;
+    onEditEvent?.(viewEvent.id, { title: editTitle.trim(), color: editColor, memo: editMemo });
+    setViewEvent(null);
+    setIsEditingView(false);
   }
 
   function deleteEvent(id) {
@@ -515,7 +535,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
       {/* ── Event detail (tapped a filled block) ── */}
       {viewEvent && createPortal((
         <>
-          <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.45)" }} onClick={() => setViewEvent(null)} />
+          <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.45)" }} onClick={() => { setViewEvent(null); setIsEditingView(false); }} />
           <div style={{
             position: "fixed",
             left: isMobile ? 14 : "50%",
@@ -523,27 +543,67 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             top: isMobile ? 16 : "50%",
             transform: isMobile ? "none" : "translate(-50%, -50%)",
             zIndex: 51, width: isMobile ? "auto" : 300, maxWidth: isMobile ? "none" : "90vw",
-            background: bg, color: ink, border: `2px solid ${viewEvent.color}`,
+            background: bg, color: ink, border: `2px solid ${isEditingView ? editColor : viewEvent.color}`,
             borderRadius: 10, padding: 20, boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <span style={{ width: 12, height: 12, borderRadius: 3, background: viewEvent.color, flexShrink: 0 }} />
-              <div style={{ fontWeight: 800, fontSize: 15, wordBreak: "keep-all" }}>{viewEvent.title}</div>
-            </div>
-            <div style={{ fontSize: 12, opacity: 0.5, marginBottom: viewEvent.memo ? 10 : 0 }}>
-              {cellToTime(viewEvent.startCell)} – {cellToTimeEnd(viewEvent.endCell)}
-            </div>
-            {viewEvent.memo && <div style={{ fontSize: 13, lineHeight: 1.6, opacity: 0.8, wordBreak: "keep-all", whiteSpace: "pre-wrap" }}>{viewEvent.memo}</div>}
-            {viewEvent.fromCalendar && <div style={{ fontSize: 11, opacity: 0.4, marginTop: 8 }}>📅 {pl.fromCalendar}</div>}
-            {editMode && !viewEvent.fromCalendar && (
-              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 16 }}>
-                <button onClick={() => { deleteEvent(viewEvent.id); setViewEvent(null); }} style={{ background: "none", border: `1px solid ${MON.red}`, color: MON.red, borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
-                  {pl.delete || "Delete"}
-                </button>
-                <button onClick={() => moveToTomorrow(viewEvent)} style={{ background: MON.blue, color: "#fff", border: "none", borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
-                  → {pl.moveTomorrow || "Tomorrow"}
-                </button>
-              </div>
+            {isEditingView ? (
+              <>
+                <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.45, marginBottom: 10, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                  {cellToTime(viewEvent.startCell)} – {cellToTimeEnd(viewEvent.endCell)}
+                </div>
+                <input
+                  value={editTitle}
+                  onChange={e => setEditTitle(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && saveEditView()}
+                  autoFocus
+                  style={{ width: "100%", boxSizing: "border-box", padding: "8px 10px", fontSize: 13, fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none", marginBottom: 10 }}
+                />
+                <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                  {EVENT_COLORS.map(c => (
+                    <div key={c} onClick={() => setEditColor(c)} style={{ width: 22, height: 22, borderRadius: 4, background: c, cursor: "pointer", flexShrink: 0, outline: editColor === c ? `2.5px solid ${ink}` : "none", outlineOffset: 2 }} />
+                  ))}
+                </div>
+                <textarea
+                  value={editMemo}
+                  onChange={e => setEditMemo(e.target.value)}
+                  placeholder={pl.eventMemoPlaceholder}
+                  rows={2}
+                  style={{ width: "100%", boxSizing: "border-box", padding: "7px 10px", fontSize: 12, fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none", resize: "none", marginBottom: 12 }}
+                />
+                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                  <button onClick={() => setIsEditingView(false)} style={{ background: "none", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", color: ink, fontFamily: "inherit" }}>
+                    {pl.cancel}
+                  </button>
+                  <button onClick={saveEditView} disabled={!editTitle.trim()} style={{ background: acc, color: "#fff", border: "none", borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: editTitle.trim() ? "pointer" : "not-allowed", fontWeight: 700, fontFamily: "inherit", opacity: editTitle.trim() ? 1 : 0.4 }}>
+                    {pl.saveChanges || "Save"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span style={{ width: 12, height: 12, borderRadius: 3, background: viewEvent.color, flexShrink: 0 }} />
+                  <div style={{ fontWeight: 800, fontSize: 15, wordBreak: "keep-all" }}>{viewEvent.title}</div>
+                </div>
+                <div style={{ fontSize: 12, opacity: 0.5, marginBottom: viewEvent.memo ? 10 : 0 }}>
+                  {cellToTime(viewEvent.startCell)} – {cellToTimeEnd(viewEvent.endCell)}
+                </div>
+                {viewEvent.memo && <div style={{ fontSize: 13, lineHeight: 1.6, opacity: 0.8, wordBreak: "keep-all", whiteSpace: "pre-wrap" }}>{viewEvent.memo}</div>}
+                {viewEvent.fromCalendar && <div style={{ fontSize: 11, opacity: 0.4, marginTop: 8 }}>📅 {pl.fromCalendar}</div>}
+                {editMode && !viewEvent.fromCalendar && (
+                  <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 16 }}>
+                    <button onClick={() => { deleteEvent(viewEvent.id); setViewEvent(null); }} style={{ background: "none", border: `1px solid ${MON.red}`, color: MON.red, borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
+                      {pl.delete || "Delete"}
+                    </button>
+                    <button onClick={() => moveToTomorrow(viewEvent)} style={{ background: MON.blue, color: "#fff", border: "none", borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
+                      → {pl.moveTomorrow || "Tomorrow"}
+                    </button>
+                    <button onClick={() => openEditView(viewEvent)} style={{ background: acc, color: "#fff", border: "none", borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
+                      {pl.edit || "Edit"}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </>
