@@ -8,6 +8,7 @@ import { useSound } from "./useSound";
 import { useViewport } from "./hooks/useViewport";
 import { useEventNotifications } from "./hooks/useEventNotifications";
 import { useNotifications } from "./hooks/useNotifications";
+import { useChatNotifications } from "./hooks/useChatNotifications";
 import NotificationPanel from "./components/NotificationPanel";
 import NotificationBanner from "./components/NotificationBanner";
 import { useMusicPlayer } from "./useMusic";
@@ -73,6 +74,7 @@ function AppShell() {
   const { isMobile } = useViewport();
   useEventNotifications(notifOn, session?.user?.id, t);
   const { notifications, unreadCount, banner, setBanner, addNotification, markRead, markAllRead, deleteNotification, clearAll: clearAllNotifs } = useNotifications(session?.user?.id);
+  const { unreadDirect, unreadGroups, clearUnreadDirect, clearUnreadGroup, setActiveChat, refreshChatGroups } = useChatNotifications(session?.user?.id, addNotification, notifOn);
 
   // Persist dark/lang/notification preferences
   useEffect(() => { localStorage.setItem("grida_dark", dark ? "1" : "0"); }, [dark]);
@@ -91,6 +93,11 @@ function AppShell() {
   };
 
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
+
+  // When navigating away from profile page, clear active chat so notifications resume
+  useEffect(() => {
+    if (view !== "profile") setActiveChat(null, null);
+  }, [view]);
 
   // Browser history integration: push state on navigation, restore on popstate
   const navigateTo = useCallback((newView, { mandalartId, friend, mandalart, resetConfirm } = {}) => {
@@ -694,7 +701,16 @@ function AppShell() {
 
             {/* RIGHT: Social / Chat */}
             <div style={{ display: isMobile && profileTab !== "social" ? "none" : undefined }}>
-              <ChatPanel pal={pal} t={t} myId={myId} myUsername={profile?.username} addNotification={addNotification} onGroupEventsChange={() => setGroupEventsVersion(v => v + 1)} />
+              <ChatPanel
+                pal={pal} t={t} myId={myId} myUsername={profile?.username}
+                addNotification={addNotification}
+                onGroupEventsChange={() => { setGroupEventsVersion(v => v + 1); refreshChatGroups(); }}
+                unreadDirect={unreadDirect}
+                unreadGroups={unreadGroups}
+                onClearUnreadDirect={clearUnreadDirect}
+                onClearUnreadGroup={clearUnreadGroup}
+                onActiveChatChange={setActiveChat}
+              />
             </div>
           </div>
         </div>

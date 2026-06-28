@@ -4,8 +4,7 @@ import { fetchMessages, sendMessage, markAsRead, subscribeToMessages } from "../
 import { listFriends } from "../api/friendsApi";
 import { fetchMyGroups, createGroup, inviteMember, leaveGroup, deleteGroup, transferAdmin, getGroupMembers } from "../api/groupsApi";
 import { createEventAndInvites, fetchPendingInvites, respondToInvite } from "../api/groupEventsApi";
-import { fetchGroupMessages, sendGroupMessage, subscribeToGroupMessages, subscribeToAllGroupMessages } from "../api/groupMessagesApi";
-import { supabase } from "../lib/supabaseClient";
+import { fetchGroupMessages, sendGroupMessage, subscribeToGroupMessages } from "../api/groupMessagesApi";
 import SharedEventForm from "./SharedEventForm";
 
 function formatDate(iso, t) {
@@ -42,7 +41,9 @@ function groupByDate(messages, t) {
   return result;
 }
 
-export default function ChatPanel({ pal, t, myId, myUsername, addNotification, onGroupEventsChange }) {
+export default function ChatPanel({ pal, t, myId, myUsername, addNotification, onGroupEventsChange,
+  unreadDirect = new Set(), unreadGroups = new Set(),
+  onClearUnreadDirect, onClearUnreadGroup, onActiveChatChange }) {
   const [chatView, setChatView] = useState("list"); // "list"|"direct"|"group"|"newGroup"
   const [friends, setFriends] = useState([]);
   const [myGroups, setMyGroups] = useState([]);
@@ -75,23 +76,14 @@ export default function ChatPanel({ pal, t, myId, myUsername, addNotification, o
 
   const [guideOpen, setGuideOpen] = useState(false);
 
-  // Unread tracking
-  const [unreadDirect, setUnreadDirect] = useState(new Set());
-  const [unreadGroups, setUnreadGroups] = useState(new Set());
-
   const activeFriendRef = useRef(null);
   const friendsRef = useRef([]);
-  const chatViewRef = useRef(chatView);
-  const activeGroupRef = useRef(activeGroup);
   const bottomRef = useRef(null);
   const directChannelRef = useRef(null);
   const groupChannelRef = useRef(null);
-  const allGroupChannelRef = useRef(null);
 
   useEffect(() => { activeFriendRef.current = activeFriend; }, [activeFriend]);
   useEffect(() => { friendsRef.current = friends; }, [friends]);
-  useEffect(() => { chatViewRef.current = chatView; }, [chatView]);
-  useEffect(() => { activeGroupRef.current = activeGroup; }, [activeGroup]);
 
   // Load friends & groups
   useEffect(() => {
@@ -99,39 +91,6 @@ export default function ChatPanel({ pal, t, myId, myUsername, addNotification, o
     listFriends(myId).then(setFriends).catch(() => {});
     fetchMyGroups().then(setMyGroups).catch(() => {});
   }, [myId]);
-
-  // Fetch initial unread direct messages (read_at is null, receiver = me)
-  useEffect(() => {
-    if (!myId) return;
-    supabase
-      .from("messages")
-      .select("sender_id")
-      .eq("receiver_id", myId)
-      .is("read_at", null)
-      .then(({ data }) => {
-        if (data?.length) setUnreadDirect(new Set(data.map(m => m.sender_id)));
-      });
-  }, [myId]);
-
-  // Global group subscription — runs whenever myGroups list changes
-  useEffect(() => {
-    allGroupChannelRef.current?.unsubscribe();
-    const groupIds = myGroups.map(g => g.id);
-    if (!myId || !groupIds.length) return;
-    allGroupChannelRef.current = subscribeToAllGroupMessages(myId, groupIds, (msg) => {
-      const isViewing = chatViewRef.current === "group" && activeGroupRef.current?.id === msg.group_id;
-      if (!isViewing) {
-        setUnreadGroups(prev => new Set([...prev, msg.group_id]));
-        const group = myGroups.find(g => g.id === msg.group_id);
-        addNotification?.({
-          type: "chat",
-          title: group?.name ?? "Group",
-          body: msg.content.length > 60 ? msg.content.slice(0, 60) + "…" : msg.content,
-        });
-      }
-    });
-    return () => { allGroupChannelRef.current?.unsubscribe(); };
-  }, [myId, myGroups, addNotification]);
 
   // Load all pending invites for me
   const refreshPendingInvites = useCallback(() => {
@@ -153,14 +112,7 @@ export default function ChatPanel({ pal, t, myId, myUsername, addNotification, o
         setDirectMessages(prev => prev.map(m =>
           m.sender_id === msg.sender_id && !m.read_at ? { ...m, read_at: new Date().toISOString() } : m
         ));
-      } else {
-        setUnreadDirect(prev => new Set([...prev, msg.sender_id]));
-        const sender = friendsRef.current.find(f => f.id === msg.sender_id);
-        addNotification?.({
-          type: "chat",
-          title: sender?.username ?? "Someone",
-          body: msg.content.length > 60 ? msg.content.slice(0, 60) + "…" : msg.content,
-        });
+        // notification + unread tracking handled by useChatNotifications in App
       }
     });
     return () => { directChannelRef.current?.unsubscribe(); };
@@ -183,7 +135,8 @@ export default function ChatPanel({ pal, t, myId, myUsername, addNotification, o
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [directMessages, groupMessages]);
 
   const openDirectChat = useCallback(async (friend) => {
-    setUnreadDirect(prev => { const n = new Set(prev); n.delete(friend.id); return n; });
+    onClearUnreadDirect?.(friend.id);
+    onActiveChatChange?.("direct", friend.id);
     setActiveFriend(friend);
     setChatView("direct");
     setInput("");
@@ -200,7 +153,8 @@ export default function ChatPanel({ pal, t, myId, myUsername, addNotification, o
   }, [myId]);
 
   const openGroupChat = useCallback(async (group) => {
-    setUnreadGroups(prev => { const n = new Set(prev); n.delete(group.id); return n; });
+    onClearUnreadGroup?.(group.id);
+    onActiveChatChange?.("group", group.id);
     setActiveGroup(group);
     setChatView("group");
     setInput("");
@@ -216,6 +170,7 @@ export default function ChatPanel({ pal, t, myId, myUsername, addNotification, o
   }, []);
 
   const goBack = () => {
+    onActiveChatChange?.(null, null);
     setChatView("list");
     setActiveFriend(null);
     setActiveGroup(null);
