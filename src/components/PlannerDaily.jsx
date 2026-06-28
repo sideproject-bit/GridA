@@ -213,6 +213,8 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
   const [editTitle,   setEditTitle]   = useState("");
   const [editColor,   setEditColor]   = useState(EVENT_COLORS[0]);
   const [editMemo,    setEditMemo]    = useState("");
+  const [editStart,   setEditStart]   = useState("");
+  const [editEnd,     setEditEnd]     = useState("");
   const [ctxMenu,     setCtxMenu]     = useState(null); // desktop right-click menu { evt, x, y }
 
   const dragRef = useRef({ active: false, start: null, end: null, dragging: false });
@@ -340,12 +342,23 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
     setEditTitle(evt.title);
     setEditColor(evt.color);
     setEditMemo(evt.memo ?? "");
+    setEditStart(evt.startTime ?? cellToTime(evt.startCell));
+    setEditEnd(evt.endTime ?? cellToTimeEnd(evt.endCell));
     setIsEditingView(true);
   }
 
   function saveEditView() {
     if (!viewEvent || !editTitle.trim()) return;
-    const changes = { title: editTitle.trim(), color: editColor, memo: editMemo };
+    const newStartCell = editStart ? timeToCell(editStart) : viewEvent.startCell;
+    const rawEndCell   = editEnd   ? timeToCell(editEnd) - 1 : viewEvent.endCell;
+    const newEndCell   = Math.max(newStartCell, rawEndCell);
+    const changes = {
+      title: editTitle.trim(), color: editColor, memo: editMemo,
+      startTime: editStart || viewEvent.startTime,
+      endTime:   editEnd   || viewEvent.endTime,
+      startCell: newStartCell,
+      endCell:   newEndCell,
+    };
     if (viewEvent.fromCalendar) {
       onEditCalEvent?.(viewEvent._dateKey, viewEvent.id, changes);
     } else {
@@ -436,18 +449,6 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
     };
   }
 
-  // ── Pixel-precise event overlay helpers ──
-  function evtOverlayPos(startTime, endTime, startCell, endCell) {
-    const startMins = timeStrToMins(startTime) ?? (startCell != null ? startCell * 10 : null);
-    const endMins   = timeStrToMins(endTime)   ?? (endCell   != null ? (endCell + 1) * 10 : null);
-    if (startMins == null) return null;
-    const duration = Math.max(10, (endMins ?? startMins + 60) - startMins);
-    return {
-      top:    HEADER_H + (startMins / 60) * CELL_H,
-      height: Math.max(4, (duration / 60) * CELL_H - 1),
-    };
-  }
-
   // ── Section bodies (shared by desktop columns + mobile segments) ──
   const timeBody = (
     <div
@@ -466,7 +467,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
         ))}
       </div>
 
-      {/* Hour rows — grid lines + selection only, no event colors */}
+      {/* Hour rows — partial-fill cell rendering */}
       {Array.from({ length: ROWS }, (_, h) => (
         <div key={h} style={{ display: "grid", gridTemplateColumns: `${labelW}px repeat(${COLS}, 1fr)` }}>
           <div style={{
@@ -479,97 +480,45 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
           </div>
           {Array.from({ length: COLS }, (_, m) => {
             const idx    = h * COLS + m;
+            const evt    = cellEventMap[idx];
+            const cEvt   = calCellMap[idx];
+            const rEvt   = recurCellMap[idx];
+            const gEvt   = groupCellMap[idx];
             const inSel  = selRange && idx >= selRange.start && idx <= selRange.end;
             const isCurr = idx === currentCell;
+
+            // Compute partial fill fraction for an event within this 10-min cell
+            function fillFor(e) {
+              if (!e) return null;
+              const sM = timeStrToMins(e.startTime) ?? (e.startCell * 10);
+              const eM = timeStrToMins(e.endTime)   ?? ((e.endCell + 1) * 10);
+              const cs = idx * 10, ce = (idx + 1) * 10;
+              const top = (Math.max(sM, cs) - cs) / 10 * CELL_H;
+              const h   = (Math.min(eM, ce) - Math.max(sM, cs)) / 10 * CELL_H;
+              return h > 0 ? { top, height: h } : null;
+            }
+
+            const bFill = !inSel ? fillFor(evt)  : null;
+            const cFill = !inSel && !evt ? fillFor(cEvt)  : null;
+            const rFill = !inSel && !evt && !cEvt ? fillFor(rEvt) : null;
+            const groupColor = gEvt?.color ?? "#4A90D9";
+
             return (
               <div key={idx} style={{
-                height: CELL_H,
+                height: CELL_H, position: "relative",
                 background: inSel ? acc + "55" : "transparent",
                 border: isCurr ? `2px solid ${acc}` : `1px solid ${border}`,
-                boxSizing: "border-box",
-              }} />
+                boxSizing: "border-box", overflow: "hidden",
+              }}>
+                {bFill && <div style={{ position: "absolute", top: bFill.top, height: bFill.height, left: 0, right: 0, background: evt.color + "bb" }} />}
+                {cFill && <div style={{ position: "absolute", top: cFill.top, height: cFill.height, left: 0, right: 0, background: cEvt.color + "66", borderLeft: `2px solid ${cEvt.color}` }} />}
+                {rFill && <div style={{ position: "absolute", top: rFill.top, height: rFill.height, left: 0, right: 0, background: rEvt.color + "44", borderLeft: `2px dashed ${rEvt.color}` }} />}
+                {gEvt && !inSel && <div style={{ position: "absolute", top: 0, bottom: 0, right: 0, width: 3, background: groupColor, opacity: 0.7 }} />}
+              </div>
             );
           })}
         </div>
       ))}
-
-      {/* ── Pixel-precise event overlays ── */}
-      {blockEvents.map(evt => {
-        const pos = evtOverlayPos(evt.startTime, evt.endTime, evt.startCell, evt.endCell);
-        if (!pos) return null;
-        return (
-          <div key={evt.id} style={{
-            position: "absolute", ...pos,
-            left: labelW + 1, right: 1,
-            background: evt.color + "cc",
-            borderRadius: 2, overflow: "hidden",
-            pointerEvents: "none",
-          }}>
-            {pos.height > 14 && (
-              <div style={{ fontSize: 10, fontWeight: 700, padding: "1px 4px", color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", opacity: 0.9 }}>
-                {evt.title}
-              </div>
-            )}
-          </div>
-        );
-      })}
-      {calendarEvents.map(evt => {
-        const pos = evtOverlayPos(evt.startTime, evt.endTime, evt.startCell, evt.endCell);
-        if (!pos) return null;
-        return (
-          <div key={evt.id} style={{
-            position: "absolute", ...pos,
-            left: labelW + 1, right: 1,
-            background: evt.color + "55",
-            borderLeft: `2.5px solid ${evt.color}`,
-            borderRadius: 2, overflow: "hidden",
-            pointerEvents: "none",
-          }}>
-            {pos.height > 14 && (
-              <div style={{ fontSize: 10, fontWeight: 700, padding: "1px 4px", color: ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", opacity: 0.85 }}>
-                {evt.title}
-              </div>
-            )}
-          </div>
-        );
-      })}
-      {recurEvents.map(evt => {
-        const pos = evtOverlayPos(evt.startTime, evt.endTime, evt.startCell, evt.endCell);
-        if (!pos) return null;
-        return (
-          <div key={evt.id} style={{
-            position: "absolute", ...pos,
-            left: labelW + 1, right: 1,
-            background: evt.color + "44",
-            borderLeft: `2.5px dashed ${evt.color}`,
-            borderRadius: 2, overflow: "hidden",
-            pointerEvents: "none",
-          }}>
-            {pos.height > 14 && (
-              <div style={{ fontSize: 10, fontWeight: 700, padding: "1px 4px", color: ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", opacity: 0.85 }}>
-                {evt.title}
-              </div>
-            )}
-          </div>
-        );
-      })}
-      {groupEvents.map(ge => {
-        const startMins = ge._carryOver ? 0 : timeStrToMins(ge.start_time);
-        if (startMins == null) return null;
-        const crossMidnight = ge.start_time && ge.end_time && ge.start_time > ge.end_time && !ge._carryOver;
-        const endMins = crossMidnight ? 24 * 60 : (ge._carryOver ? timeStrToMins(ge.end_time) : timeStrToMins(ge.end_time)) ?? (startMins + 60);
-        const top    = HEADER_H + (startMins / 60) * CELL_H;
-        const height = Math.max(4, ((endMins - startMins) / 60) * CELL_H - 1);
-        return (
-          <div key={ge.id} style={{
-            position: "absolute", top, height,
-            right: 1, width: 5,
-            background: ge.color ?? "#4A90D9",
-            borderRadius: 2,
-            pointerEvents: "none", opacity: 0.75,
-          }} />
-        );
-      })}
     </div>
   );
 
@@ -847,8 +796,12 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
           }}>
             {isEditingView ? (
               <>
-                <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.45, marginBottom: 10, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                  {cellToTime(viewEvent.startCell)} – {cellToTimeEnd(viewEvent.endCell)}
+                <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                  <input type="time" value={editStart} onChange={e => setEditStart(e.target.value)}
+                    style={{ flex: 1, padding: "6px 8px", fontSize: 12, fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none" }} />
+                  <span style={{ lineHeight: "32px", opacity: 0.4, fontSize: 12 }}>–</span>
+                  <input type="time" value={editEnd} onChange={e => setEditEnd(e.target.value)}
+                    style={{ flex: 1, padding: "6px 8px", fontSize: 12, fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none" }} />
                 </div>
                 <input
                   value={editTitle}

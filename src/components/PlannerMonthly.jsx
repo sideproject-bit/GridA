@@ -65,6 +65,8 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
   const [editTitle,  setEditTitle]  = useState("");
   const [editColor,  setEditColor]  = useState(EVENT_COLORS[0]);
   const [editMemo,   setEditMemo]   = useState("");
+  const [editStart,  setEditStart]  = useState("");
+  const [editEnd,    setEditEnd]    = useState("");
 
   const firstDow     = new Date(year, month, 1).getDay();
   const daysInMonth  = new Date(year, month + 1, 0).getDate();
@@ -152,12 +154,21 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
     setEditTitle(evt.title);
     setEditColor(evt.color);
     setEditMemo(evt.memo ?? "");
+    setEditStart(evt.startTime ?? "");
+    setEditEnd(evt.endTime ?? "");
     setEditEvt({ evt, dateKey });
   }
 
   function saveEditEvt() {
     if (!editEvt || !editTitle.trim()) return;
-    const changes = { title: editTitle.trim(), color: editColor, memo: editMemo };
+    const newStartCell = editStart ? timeToCell(editStart) : editEvt.evt.startCell;
+    const rawEndCell   = editEnd   ? timeToCell(editEnd) - 1 : editEvt.evt.endCell;
+    const newEndCell   = Math.max(newStartCell ?? 0, rawEndCell ?? 0);
+    const changes = {
+      title: editTitle.trim(), color: editColor, memo: editMemo,
+      ...(editStart && { startTime: editStart, startCell: newStartCell }),
+      ...(editEnd   && { endTime:   editEnd,   endCell:   newEndCell }),
+    };
     if (editEvt.evt._daily) {
       onEditDailyEvent?.(editEvt.evt.id, changes);
     } else {
@@ -480,8 +491,12 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
             background: bg, color: ink, border: `2px solid ${editColor}`,
             borderRadius: 10, padding: 20, boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
           }}>
-            <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.45, marginBottom: 10, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-              {pl.months[month]} {editEvt.evt.title}
+            <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+              <input type="time" value={editStart} onChange={e => setEditStart(e.target.value)}
+                style={{ flex: 1, padding: "6px 8px", fontSize: 12, fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none" }} />
+              <span style={{ lineHeight: "32px", opacity: 0.4, fontSize: 12 }}>–</span>
+              <input type="time" value={editEnd} onChange={e => setEditEnd(e.target.value)}
+                style={{ flex: 1, padding: "6px 8px", fontSize: 12, fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none" }} />
             </div>
             <input
               value={editTitle}
