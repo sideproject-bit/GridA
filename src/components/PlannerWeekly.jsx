@@ -112,7 +112,7 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
 
   function openEditEvt(evt) {
     setEditTitle(evt.title);
-    setEditColor(evt.color);
+    setEditColor(evt._isGroupEvent ? (dark ? "#ffffff" : "#1B1A17") : evt.color);
     setEditMemo(evt.memo ?? "");
     setEditStart(evt.startTime ?? cellToTime(evt.startCell));
     setEditEnd(evt.endTime ?? cellToTimeEnd(evt.endCell));
@@ -640,11 +640,13 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
                   autoFocus
                   style={{ width: "100%", boxSizing: "border-box", padding: "8px 10px", fontSize: 13, fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none", marginBottom: 10 }}
                 />
-                <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-                  {EVENT_COLORS.map(c => (
-                    <div key={c} onClick={() => setEditColor(c)} style={{ width: 22, height: 22, borderRadius: 4, background: c, cursor: "pointer", flexShrink: 0, outline: editColor === c ? `2.5px solid ${ink}` : "none", outlineOffset: 2 }} />
-                  ))}
-                </div>
+                {!viewEvt.event._isGroupEvent && (
+                  <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                    {EVENT_COLORS.map(c => (
+                      <div key={c} onClick={() => setEditColor(c)} style={{ width: 22, height: 22, borderRadius: 4, background: c, cursor: "pointer", flexShrink: 0, outline: editColor === c ? `2.5px solid ${ink}` : "none", outlineOffset: 2 }} />
+                    ))}
+                  </div>
+                )}
                 <textarea
                   value={editMemo}
                   onChange={e => setEditMemo(e.target.value)}

@@ -67,9 +67,7 @@ function EventRow({ evt, isMobile, editMode, dark, ink, acc, border, pl, onMove,
         display: "flex", alignItems: "flex-start", gap: 8,
         padding: "8px 10px",
         background: dark ? "#1e1d16" : "#f0ede2",
-        borderLeft: evt.fromCalendar
-          ? `3px dashed ${evt.color}`
-          : `3px solid ${evt.color}`,
+        borderLeft: `3px solid ${evt.color}`,
         borderRadius: 4,
         transform: isMobile ? `translateX(${dx}px)` : "none",
         transition: startX.current == null ? "transform 0.2s ease" : "none",
@@ -347,7 +345,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
 
   function openEditView(evt) {
     setEditTitle(evt.title);
-    setEditColor(evt.color);
+    setEditColor(evt._isGroupEvent ? (dark ? "#ffffff" : "#1B1A17") : evt.color);
     setEditMemo(evt.memo ?? "");
     setEditStart(evt.startTime ?? cellToTime(evt.startCell));
     setEditEnd(evt.endTime ?? cellToTimeEnd(evt.endCell));
@@ -844,11 +842,13 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
                   autoFocus
                   style={{ width: "100%", boxSizing: "border-box", padding: "8px 10px", fontSize: 13, fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none", marginBottom: 10 }}
                 />
-                <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-                  {EVENT_COLORS.map(c => (
-                    <div key={c} onClick={() => setEditColor(c)} style={{ width: 22, height: 22, borderRadius: 4, background: c, cursor: "pointer", flexShrink: 0, outline: editColor === c ? `2.5px solid ${ink}` : "none", outlineOffset: 2 }} />
-                  ))}
-                </div>
+                {!viewEvent?._isGroupEvent && (
+                  <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                    {EVENT_COLORS.map(c => (
+                      <div key={c} onClick={() => setEditColor(c)} style={{ width: 22, height: 22, borderRadius: 4, background: c, cursor: "pointer", flexShrink: 0, outline: editColor === c ? `2.5px solid ${ink}` : "none", outlineOffset: 2 }} />
+                    ))}
+                  </div>
+                )}
                 <textarea
                   value={editMemo}
                   onChange={e => setEditMemo(e.target.value)}

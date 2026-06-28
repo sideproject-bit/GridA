@@ -14,7 +14,7 @@ export default function SharedEventForm({ pal, dark, onSave, onClose, t, error }
   const [date, setDate] = useState(localToday());
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [color, setColor] = useState(EVENT_COLORS[0]);
+  const color = dark ? "#ffffff" : "#1B1A17";
   const [memo, setMemo] = useState("");
   const [showMemo, setShowMemo] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -43,7 +43,7 @@ export default function SharedEventForm({ pal, dark, onSave, onClose, t, error }
       <div style={{
         position: "fixed", left: "50%", top: "50%", transform: "translate(-50%, -50%)",
         zIndex: 101, width: 320, maxWidth: "calc(100vw - 28px)",
-        background: bg, color: ink, border: `2px solid ${color}`, borderRadius: 10, padding: 20,
+        background: bg, color: ink, border: `2px solid ${ink}33`, borderRadius: 10, padding: 20,
         boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
@@ -81,15 +81,6 @@ export default function SharedEventForm({ pal, dark, onSave, onClose, t, error }
           />
         </div>
 
-        <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-          {EVENT_COLORS.map(c => (
-            <div key={c} onClick={() => setColor(c)} style={{
-              width: 24, height: 24, borderRadius: 4, background: c, cursor: "pointer", flexShrink: 0,
-              outline: color === c ? `2.5px solid ${ink}` : "none", outlineOffset: 2,
-            }} />
-          ))}
-        </div>
-
         <div style={{ marginBottom: showMemo ? 8 : 0 }}>
           <button
             onClick={() => setShowMemo(v => !v)}
@@ -119,7 +110,7 @@ export default function SharedEventForm({ pal, dark, onSave, onClose, t, error }
             onClick={handleSave}
             disabled={!title.trim() || !date || saving}
             style={{
-              background: title.trim() && date ? color : ink + "20",
+              background: title.trim() && date ? pal.accent ?? ink : ink + "20",
               color: title.trim() && date ? "#fff" : ink,
               border: "none", padding: "7px 16px", fontSize: 11, fontWeight: 700,
               cursor: title.trim() && date && !saving ? "pointer" : "not-allowed",
