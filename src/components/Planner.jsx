@@ -482,6 +482,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
           t={t} pal={pal} dark={dark}
           compact={weeklyCompact}
           onToggleCompact={() => setWeeklyCompact(v => !v)}
+          editMode={editMode}
           calEvents={mergedCalEvents}
           recurring={recurring}
           onEditDailyEvent={editDailyEvent}

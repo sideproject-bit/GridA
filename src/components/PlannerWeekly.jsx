@@ -69,7 +69,7 @@ function prevDayKey(dateStr) {
   return localKey(d);
 }
 
-export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleCompact, calEvents, recurring, onEditDailyEvent, onEditCalEvent, onMoveEvent, onAddCalEvent, spans, theme, lang, groupEvents = [] }) {
+export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleCompact, editMode = true, calEvents, recurring, onEditDailyEvent, onEditCalEvent, onMoveEvent, onAddCalEvent, spans, theme, lang, groupEvents = [] }) {
   const pl  = t.planner;
   const wk  = pl.weekly ?? {};
   const { isMobile } = useViewport();
