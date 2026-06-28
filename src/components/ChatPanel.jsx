@@ -263,6 +263,7 @@ export default function ChatPanel({ pal, t, myId, addNotification, onGroupEvents
     setInviteTarget("");
   };
 
+  const [guideOpen, setGuideOpen] = useState(false);
   const isGroupAdmin = activeGroup?.admin_id === myId;
   const ink = pal.ink;
   const bg = pal.bg;
@@ -298,6 +299,8 @@ export default function ChatPanel({ pal, t, myId, addNotification, onGroupEvents
     </div>
   );
 
+  const socialGuide = t.guide?.sections?.find(s => s.category === "Social" || s.category === "소셜");
+
   // ── LIST VIEW ──
   if (chatView === "list") {
     return (
@@ -306,18 +309,45 @@ export default function ChatPanel({ pal, t, myId, addNotification, onGroupEvents
           <h2 style={{ fontWeight: 900, fontSize: 24, textTransform: "uppercase", margin: 0 }}>
             {t.social?.chatTitle ?? "Messages"}
           </h2>
-          <button
-            onClick={() => setChatView("newGroup")}
-            style={{
-              display: "flex", alignItems: "center", gap: 5,
-              background: "none", border: `1px solid ${ink}33`, color: ink,
-              padding: "6px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer",
-              textTransform: "uppercase", letterSpacing: "0.04em",
-            }}
-          >
-            <Plus size={12} /> {t.social?.newGroup ?? "New Group"}
-          </button>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button
+              onClick={() => setGuideOpen(v => !v)}
+              title="Guide"
+              style={{
+                background: guideOpen ? ink : "none", border: `1px solid ${ink}33`,
+                color: guideOpen ? bg : ink, width: 30, height: 30,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", fontSize: 13, fontWeight: 800,
+              }}
+            >?</button>
+            <button
+              onClick={() => setChatView("newGroup")}
+              style={{
+                display: "flex", alignItems: "center", gap: 5,
+                background: "none", border: `1px solid ${ink}33`, color: ink,
+                padding: "6px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer",
+                textTransform: "uppercase", letterSpacing: "0.04em",
+              }}
+            >
+              <Plus size={12} /> {t.social?.newGroup ?? "New Group"}
+            </button>
+          </div>
         </div>
+
+        {/* Inline guide */}
+        {guideOpen && socialGuide && (
+          <div style={{
+            border: `1px solid ${ink}18`, borderRadius: 6, padding: 14, marginBottom: 16,
+            background: acc + "08",
+          }}>
+            {socialGuide.items.map((item, i) => (
+              <div key={i} style={{ marginBottom: i < socialGuide.items.length - 1 ? 12 : 0 }}>
+                <div style={{ fontWeight: 800, fontSize: 12, marginBottom: 3, color: ink }}>{item.t}</div>
+                <div style={{ fontSize: 12, lineHeight: 1.65, opacity: 0.7, color: ink }}>{item.b}</div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {friends.length === 0 && myGroups.length === 0 ? (
           <p style={{ fontSize: 13, opacity: 0.45, color: ink }}>{t.social?.noFriends ?? "Add friends to start chatting."}</p>

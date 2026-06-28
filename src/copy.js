@@ -365,6 +365,15 @@ export const T = {
             { t: "Breaks", b: "When the timer ends, you'll hear a sound and receive a notification. Step away — rest is part of the system." },
           ],
         },
+        {
+          category: "Social",
+          items: [
+            { t: "1:1 Chat", b: "Go to Profile → Social and select a friend to start a private conversation. Messages are kept for 30 days. Tap the + button in the chat header to add a shared calendar event visible in both planners." },
+            { t: "Groups", b: "Tap 'New Group' to create a group (name up to 15 characters). Invite friends who are already in your friends list. The creator becomes the group admin automatically." },
+            { t: "Admin & Members", b: "Admins can add shared events (+ button), invite new members after creation, transfer the admin role, or delete the group entirely. Members can chat and view shared events in their planners — read-only." },
+            { t: "Shared Calendar Events", b: "The + button in any chat (1:1 or group) opens an event form. Saved events appear in all members' Daily, Weekly, and Monthly planner views with a [Group Name] or [Username] prefix. Only admins can delete group events." },
+          ],
+        },
       ],
     },
     splash: { cta: "Click anywhere to begin writing your Mandalart." },
@@ -795,6 +804,15 @@ export const T = {
             { t: "집중 목표", b: "상단 목표 칸에 지금 하는 일을 적어보세요. 목표를 이름으로 정하면 세션 내내 집중하는 데 도움이 돼요." },
             { t: "타이머", b: "시작을 누르면 그리드가 실시간으로 줄어들어요. 활성 칸이 초마다 비워지다가 1분이 지나면 사라져요." },
             { t: "휴식", b: "타이머가 끝나면 소리와 알림이 울려요. 잠깐 자리를 비우세요 — 휴식도 시스템의 일부예요." },
+          ],
+        },
+        {
+          category: "소셜",
+          items: [
+            { t: "1:1 채팅", b: "프로필 → 소셜 탭에서 친구를 선택하면 1:1 대화를 시작할 수 있어요. 메시지는 30일간 보관돼요. 채팅 헤더의 + 버튼으로 공유 일정을 추가하면 두 사람의 플래너에 동시에 표시돼요." },
+            { t: "그룹", b: "'새 그룹' 버튼으로 그룹을 만들 수 있어요. 그룹명은 최대 15자. 이미 친구로 등록된 사람만 초대할 수 있어요. 그룹을 만든 사람이 자동으로 관리자가 돼요." },
+            { t: "관리자 & 멤버", b: "관리자는 공유 일정 추가(+ 버튼), 생성 후 멤버 초대, 관리자 이양, 그룹 삭제를 할 수 있어요. 멤버는 채팅 참여와 플래너에서 공유 일정 확인만 가능해요(읽기 전용)." },
+            { t: "공유 캘린더 일정", b: "채팅(1:1 또는 그룹)의 + 버튼으로 일정을 추가할 수 있어요. 저장된 일정은 모든 멤버의 일간·주간·월간 플래너에 [그룹명] 또는 [유저명] 접두어와 함께 표시돼요. 그룹 일정 삭제는 관리자만 가능해요." },
           ],
         },
       ],
