@@ -361,10 +361,10 @@ function AppShell() {
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
                   <h1 className="home-title" style={{
                     fontWeight: 900, fontSize: "clamp(64px, 22vw, 120px)", letterSpacing: "-0.03em",
-                    lineHeight: 0.88, margin: 0, color: "#fff", textTransform: "uppercase", textAlign: "center",
+                    lineHeight: 0.88, margin: 0, color: "#fff", textAlign: "center",
                     fontFamily: "Helvetica, Arial, sans-serif",
                   }}>
-                    GRIDA
+                    GridA
                   </h1>
                   <p className="home-tagline" style={{ fontSize: 11, letterSpacing: isKo ? "0.04em" : "0.1em", opacity: 0.6, margin: "14px 0 0", color: "#fff", textTransform: "uppercase", textAlign: "center" }}>
                     {t.tagline}
@@ -457,11 +457,10 @@ function AppShell() {
                   lineHeight: 0.88,
                   margin: 0,
                   color: "#fff",
-                  textTransform: "uppercase",
                   textAlign: "center",
                   fontFamily: "Helvetica, Arial, sans-serif",
                 }}>
-                  GRIDA
+                  GridA
                 </h1>
                 <p className="home-tagline" style={{ fontSize: 11, letterSpacing: isKo ? "0.04em" : "0.1em", opacity: 0.6, margin: "14px 0 0", color: "#fff", textTransform: "uppercase", textAlign: "center" }}>
                   {t.tagline}

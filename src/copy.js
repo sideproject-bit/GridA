@@ -1,6 +1,6 @@
 export const T = {
   en: {
-    title: "GRIDA",
+    title: "GridA",
     tagline: "COMPOSITION WITH YOUR DAY, YEAR, AND LIFE",
     loading: "Loading…",
     comingSoon: "Coming soon — this feature is on the way.",
@@ -450,7 +450,7 @@ export const T = {
     },
   },
   ko: {
-    title: "GRIDA",
+    title: "GridA",
     tagline: "하루와 일 년, 그리고 인생을 그리다",
     loading: "불러오는 중…",
     comingSoon: "곧 만나요 — 준비 중인 기능이에요.",

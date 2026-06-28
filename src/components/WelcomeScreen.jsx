@@ -236,7 +236,7 @@ export default function WelcomeScreen({ play, onFinish }) {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <img src="/logo.png" alt="GridA" style={{ width: 22, height: 22, objectFit: "contain" }} />
           <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-            <span style={{ fontWeight: 900, fontSize: 21, color: "rgba(255,255,255,0.85)", letterSpacing: "-0.02em" }}>GRIDA</span>
+            <span style={{ fontWeight: 900, fontSize: 21, color: "rgba(255,255,255,0.85)", letterSpacing: "-0.02em" }}>GridA</span>
             <span style={{ fontWeight: 400, fontSize: 14, color: "rgba(255,255,255,0.35)" }}>.app</span>
           </div>
         </div>

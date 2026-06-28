@@ -139,11 +139,11 @@ function InsertPage({ onDone }) {
           visibility: phase >= 1 ? "visible" : "hidden",
         }}>
           <div style={{
-            fontWeight: 900, fontSize: 30, letterSpacing: "0.55em", paddingLeft: "0.55em",
-            color: "#F2EDE1", textTransform: "uppercase", marginBottom: 5,
+            fontWeight: 900, fontSize: 30, letterSpacing: "0.12em", paddingLeft: "0.12em",
+            color: "#F2EDE1", marginBottom: 5,
             animation: phase >= 1 ? "ipTitleIn 1.1s 0.15s cubic-bezier(0.22,1,0.36,1) both" : "none",
           }}>
-            GRIDA
+            GridA
           </div>
           <div style={{
             fontStyle: "italic", fontSize: 13,
@@ -286,7 +286,7 @@ export default function AuthGate({ play }) {
           <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "0 0 22px" }}>
             <img src="/logo.png" alt="GridA" style={{ width: 32, height: 32, objectFit: "contain", flexShrink: 0 }} />
             <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-              <span style={{ fontWeight: 900, fontSize: 22, color: INK, textTransform: "uppercase", letterSpacing: "-0.02em" }}>GRIDA</span>
+              <span style={{ fontWeight: 900, fontSize: 22, color: INK, letterSpacing: "-0.02em" }}>GridA</span>
               <span style={{ fontWeight: 400, fontSize: 14, color: INK, opacity: 0.45 }}>.app</span>
             </div>
           </div>
