@@ -67,9 +67,9 @@ function EventRow({ evt, isMobile, editMode, dark, ink, acc, border, pl, onMove,
         display: "flex", alignItems: "flex-start", gap: 8,
         padding: "8px 10px",
         background: dark ? "#1e1d16" : "#f0ede2",
-        ...(evt.fromCalendar
-          ? { border: `2px solid ${evt.color}` }
-          : { borderLeft: `3px solid ${evt.color}` }),
+        borderLeft: evt.fromCalendar
+          ? `3px dashed ${evt.color}`
+          : `3px solid ${evt.color}`,
         borderRadius: 4,
         transform: isMobile ? `translateX(${dx}px)` : "none",
         transition: startX.current == null ? "transform 0.2s ease" : "none",
@@ -524,7 +524,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
                 {bFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: bFill.left, width: bFill.width, background: evt.color + "bb" }} />}
                 {cFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: cFill.left, width: cFill.width, background: cEvt.color + "bb" }} />}
                 {rFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: rFill.left, width: rFill.width, background: rEvt.color + "44", borderLeft: `2px dashed ${rEvt.color}` }} />}
-                {gEvt && !inSel && <div style={{ position: "absolute", top: 0, bottom: 0, right: 0, width: 3, background: groupColor, opacity: 0.7 }} />}
+                {gEvt && !inSel && <div style={{ position: "absolute", inset: 0, border: `1.5px dashed ${groupColor}`, opacity: 0.75, pointerEvents: "none" }} />}
               </div>
             );
           })}
@@ -572,7 +572,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
         <div key={ge.id} style={{
           display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 10px", marginBottom: 6,
           background: dark ? "#1e1d16" : "#f0ede2",
-          border: `2px solid ${ge.color ?? "#4A90D9"}`,
+          borderLeft: `3px dashed ${ge.color ?? "#4A90D9"}`,
           borderRadius: 4, opacity: groupDone[ge.id] ? 0.6 : 0.9,
           cursor: ge._isAdmin ? "pointer" : "default",
         }}
