@@ -29,6 +29,12 @@ function getCurrentCell() {
   return now.getHours() * COLS + Math.floor(now.getMinutes() / 10);
 }
 
+function timeStrToMins(str) {
+  if (!str) return null;
+  const [h, m] = str.split(":").map(Number);
+  return h * 60 + (isNaN(m) ? 0 : m);
+}
+
 const MON = { red: "#C7382E", blue: "#2B3DCB", yellow: "#E3B22E" };
 
 // Single event row. Mobile: swipe right = procrastinate, tap = open popup.
@@ -430,6 +436,18 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
     };
   }
 
+  // ── Pixel-precise event overlay helpers ──
+  function evtOverlayPos(startTime, endTime, startCell, endCell) {
+    const startMins = timeStrToMins(startTime) ?? (startCell != null ? startCell * 10 : null);
+    const endMins   = timeStrToMins(endTime)   ?? (endCell   != null ? (endCell + 1) * 10 : null);
+    if (startMins == null) return null;
+    const duration = Math.max(10, (endMins ?? startMins + 60) - startMins);
+    return {
+      top:    HEADER_H + (startMins / 60) * CELL_H,
+      height: Math.max(4, (duration / 60) * CELL_H - 1),
+    };
+  }
+
   // ── Section bodies (shared by desktop columns + mobile segments) ──
   const timeBody = (
     <div
@@ -438,7 +456,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onDoubleClick={handleDoubleClick}
-      style={{ touchAction: "none", userSelect: "none", cursor: editMode ? "crosshair" : "default" }}
+      style={{ touchAction: "none", userSelect: "none", cursor: editMode ? "crosshair" : "default", position: "relative" }}
     >
       {/* Minute header */}
       <div style={{ display: "grid", gridTemplateColumns: `${labelW}px repeat(${COLS}, 1fr)`, height: HEADER_H }}>
@@ -448,7 +466,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
         ))}
       </div>
 
-      {/* Hour rows */}
+      {/* Hour rows — grid lines + selection only, no event colors */}
       {Array.from({ length: ROWS }, (_, h) => (
         <div key={h} style={{ display: "grid", gridTemplateColumns: `${labelW}px repeat(${COLS}, 1fr)` }}>
           <div style={{
@@ -460,40 +478,98 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             {String(h).padStart(2, "0")}
           </div>
           {Array.from({ length: COLS }, (_, m) => {
-            const idx = h * COLS + m;
-            const evt   = cellEventMap[idx];
-            const cEvt  = calCellMap[idx];
-            const rEvt  = recurCellMap[idx];
-            const gEvt  = groupCellMap[idx];
-            const inSel = selRange && idx >= selRange.start && idx <= selRange.end;
+            const idx    = h * COLS + m;
+            const inSel  = selRange && idx >= selRange.start && idx <= selRange.end;
             const isCurr = idx === currentCell;
-            const groupColor = gEvt?.color ?? "#4A90D9";
-            const calColor   = cEvt?.color ?? "#888";
-            const recurColor = rEvt?.color ?? "#888";
-            // Inset rings stacked: cal → recur → group (outermost = group)
-            const shadows = [];
-            if (cEvt && !inSel) shadows.push(`inset 0 0 0 1.5px ${calColor}`);
-            if (rEvt && !inSel) shadows.push(`inset 0 0 0 ${cEvt ? "3px" : "1.5px"} ${recurColor}`);
-            if (gEvt && !inSel) shadows.push(`inset 0 0 0 ${(cEvt || rEvt) ? "4.5px" : "1.5px"} ${groupColor}`);
             return (
               <div key={idx} style={{
                 height: CELL_H,
-                background: inSel ? acc + "55"
-                  : evt  ? evt.color + "bb"
-                  : cEvt ? calColor + "66"
-                  : rEvt ? recurColor + "66"
-                  : gEvt ? groupColor + "55"
-                  : "transparent",
-                border: isCurr
-                  ? `2px solid ${acc}`
-                  : `1px solid ${border}`,
-                boxShadow: shadows.length ? shadows.join(", ") : "none",
+                background: inSel ? acc + "55" : "transparent",
+                border: isCurr ? `2px solid ${acc}` : `1px solid ${border}`,
                 boxSizing: "border-box",
               }} />
             );
           })}
         </div>
       ))}
+
+      {/* ── Pixel-precise event overlays ── */}
+      {blockEvents.map(evt => {
+        const pos = evtOverlayPos(evt.startTime, evt.endTime, evt.startCell, evt.endCell);
+        if (!pos) return null;
+        return (
+          <div key={evt.id} style={{
+            position: "absolute", ...pos,
+            left: labelW + 1, right: 1,
+            background: evt.color + "cc",
+            borderRadius: 2, overflow: "hidden",
+            pointerEvents: "none",
+          }}>
+            {pos.height > 14 && (
+              <div style={{ fontSize: 10, fontWeight: 700, padding: "1px 4px", color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", opacity: 0.9 }}>
+                {evt.title}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      {calendarEvents.map(evt => {
+        const pos = evtOverlayPos(evt.startTime, evt.endTime, evt.startCell, evt.endCell);
+        if (!pos) return null;
+        return (
+          <div key={evt.id} style={{
+            position: "absolute", ...pos,
+            left: labelW + 1, right: 1,
+            background: evt.color + "55",
+            borderLeft: `2.5px solid ${evt.color}`,
+            borderRadius: 2, overflow: "hidden",
+            pointerEvents: "none",
+          }}>
+            {pos.height > 14 && (
+              <div style={{ fontSize: 10, fontWeight: 700, padding: "1px 4px", color: ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", opacity: 0.85 }}>
+                {evt.title}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      {recurEvents.map(evt => {
+        const pos = evtOverlayPos(evt.startTime, evt.endTime, evt.startCell, evt.endCell);
+        if (!pos) return null;
+        return (
+          <div key={evt.id} style={{
+            position: "absolute", ...pos,
+            left: labelW + 1, right: 1,
+            background: evt.color + "44",
+            borderLeft: `2.5px dashed ${evt.color}`,
+            borderRadius: 2, overflow: "hidden",
+            pointerEvents: "none",
+          }}>
+            {pos.height > 14 && (
+              <div style={{ fontSize: 10, fontWeight: 700, padding: "1px 4px", color: ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", opacity: 0.85 }}>
+                {evt.title}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      {groupEvents.map(ge => {
+        const startMins = ge._carryOver ? 0 : timeStrToMins(ge.start_time);
+        if (startMins == null) return null;
+        const crossMidnight = ge.start_time && ge.end_time && ge.start_time > ge.end_time && !ge._carryOver;
+        const endMins = crossMidnight ? 24 * 60 : (ge._carryOver ? timeStrToMins(ge.end_time) : timeStrToMins(ge.end_time)) ?? (startMins + 60);
+        const top    = HEADER_H + (startMins / 60) * CELL_H;
+        const height = Math.max(4, ((endMins - startMins) / 60) * CELL_H - 1);
+        return (
+          <div key={ge.id} style={{
+            position: "absolute", top, height,
+            right: 1, width: 5,
+            background: ge.color ?? "#4A90D9",
+            borderRadius: 2,
+            pointerEvents: "none", opacity: 0.75,
+          }} />
+        );
+      })}
     </div>
   );
 
