@@ -165,6 +165,13 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
 
   // ── Cloud Sync ──
   const SYNC_TIME_KEY = `grida_sync_time_${userId}`;
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 640);
+  useEffect(() => {
+    const h = () => setIsMobile(window.innerWidth <= 640);
+    window.addEventListener("resize", h);
+    return () => window.removeEventListener("resize", h);
+  }, []);
+
   const [syncOpen,   setSyncOpen]   = useState(false);
   const [syncStatus, setSyncStatus] = useState(null); // null|"saving"|"loading"|"saved"|"loaded"|"no_data"|"error"
   const [lastSynced, setLastSynced] = useState(() => localStorage.getItem(`grida_sync_time_${userId}`) ?? null);
@@ -316,7 +323,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
             }}
           >
             <Cloud size={13} />
-            {lastSynced && <span style={{ opacity: 0.65 }}>{formatSyncTime(lastSynced)}</span>}
+            {!isMobile && lastSynced && <span style={{ opacity: 0.65 }}>{formatSyncTime(lastSynced)}</span>}
           </button>
 
           {/* Sync panel */}

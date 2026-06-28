@@ -293,6 +293,7 @@ export const T = {
         { t: "Manage to-dos", b: "To-dos persist across dates. Check the box to mark as done — completed to-dos are automatically removed at midnight. On desktop, use × to delete manually. On mobile, swipe left to delete." },
         { t: "Weekly view", b: "Switch to the Weekly tab to see all 7 days side by side on a time grid. Events from daily and monthly views appear here automatically — scroll horizontally on mobile." },
         { t: "Monthly view & recurring", b: "In the Monthly tab, add events to future dates or set recurring events by day of week. They'll appear automatically in the daily view on the right day." },
+        { t: "Cloud sync", b: "Tap the ☁ button next to the tab bar to sync your planner across devices. ↑ (this device → cloud) saves your current data; ↓ (cloud → this device) restores a previously saved version. Downloading will overwrite your local data." },
       ],
       mobileSteps: [
         { t: "Scrolling the grid", b: "Dragging on the grid selects time blocks, so use the SCROLL rail on the right edge to scroll the day up and down." },
@@ -741,6 +742,7 @@ export const T = {
         { t: "할 일 관리", b: "할 일은 날짜와 무관하게 유지돼요. 체크박스로 완료 표시하면 자정에 자동으로 삭제돼요. 데스크탑에서는 × 버튼으로, 모바일에서는 왼쪽으로 밀어서 삭제할 수 있어요." },
         { t: "주간 뷰", b: "주간 탭으로 이동하면 7일 일정을 타임 그리드 위에서 한눈에 볼 수 있어요. 일일·월간에서 등록한 일정이 자동으로 표시돼요. 모바일에서는 가로로 스크롤하면 돼요." },
         { t: "월간 뷰 & 반복 일정", b: "월간 탭에서 미래 날짜의 일정을 미리 등록하거나 요일 기반 반복 일정을 설정할 수 있어요. 해당 날짜가 되면 일일 뷰에 자동으로 표시돼요." },
+        { t: "클라우드 동기화", b: "탭바 옆 ☁ 버튼으로 기기 간 플래너 데이터를 동기화할 수 있어요. ↑(이 기기 → 클라우드)로 현재 데이터를 저장하고, ↓(클라우드 → 이 기기)로 이전에 저장한 데이터를 불러와요. 불러오기 시 현재 로컬 데이터를 덮어씁니다." },
       ],
       mobileSteps: [
         { t: "격자 스크롤하기", b: "격자를 드래그하면 타임 블록이 선택돼요. 그래서 화면을 위아래로 스크롤하려면 오른쪽 가장자리의 SCROLL 레일을 사용하세요." },
