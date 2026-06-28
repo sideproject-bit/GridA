@@ -353,11 +353,22 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
     onTodosChange(prev => prev.filter(td => td.id !== id));
   }
 
-  // Map events to cells for coloring
+  // Separate drag/daily events from monthly calendar events
+  const blockEvents    = events.filter(e => !e.fromCalendar);
+  const calendarEvents = events.filter(e =>  e.fromCalendar);
+
+  // Time-block cells: daily drag events only (first-come wins)
   const cellEventMap = {};
-  for (const evt of events) {
+  for (const evt of blockEvents) {
     for (let i = evt.startCell; i <= evt.endCell; i++) {
       if (!cellEventMap[i]) cellEventMap[i] = evt;
+    }
+  }
+  // Calendar event cells: shown as inset ring overlay (never replaces block colors)
+  const calCellMap = {};
+  for (const evt of calendarEvents) {
+    for (let i = evt.startCell; i <= evt.endCell; i++) {
+      if (!calCellMap[i]) calCellMap[i] = evt;
     }
   }
 
@@ -423,25 +434,29 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
           </div>
           {Array.from({ length: COLS }, (_, m) => {
             const idx = h * COLS + m;
-            const evt = cellEventMap[idx];
-            const gEvt = groupCellMap[idx];
+            const evt   = cellEventMap[idx];
+            const cEvt  = calCellMap[idx];
+            const gEvt  = groupCellMap[idx];
             const inSel = selRange && idx >= selRange.start && idx <= selRange.end;
             const isCurr = idx === currentCell;
             const groupColor = gEvt?.color ?? "#4A90D9";
+            const calColor   = cEvt?.color ?? "#888";
+            // Build inset rings: calendar event (dashed-style via double shadow) + group event
+            const shadows = [];
+            if (cEvt && !inSel) shadows.push(`inset 0 0 0 1.5px ${calColor}`);
+            if (gEvt && !inSel) shadows.push(`inset 0 0 0 ${cEvt ? "3px" : "1.5px"} ${groupColor}`);
             return (
               <div key={idx} style={{
                 height: CELL_H,
                 background: inSel ? acc + "55"
-                  : evt ? evt.color + "bb"
+                  : evt  ? evt.color + "bb"
+                  : cEvt ? calColor + "66"
                   : gEvt ? groupColor + "55"
                   : "transparent",
                 border: isCurr
                   ? `2px solid ${acc}`
                   : `1px solid ${border}`,
-                // Inset ring always shows group event presence, even under a personal event
-                boxShadow: gEvt && !inSel
-                  ? `inset 0 0 0 1.5px ${groupColor}`
-                  : "none",
+                boxShadow: shadows.length ? shadows.join(", ") : "none",
                 boxSizing: "border-box",
               }} />
             );
