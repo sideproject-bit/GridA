@@ -350,6 +350,7 @@ export const T = {
             { t: "Weekly View", b: "The Weekly tab shows all 7 days side-by-side on a time grid. Events from daily and monthly views appear here automatically. Scroll horizontally on mobile. Tap an event to see its details." },
             { t: "Monthly View & Recurring", b: "In the Monthly tab, add events to future dates or set events that repeat by day of week. They appear automatically in the daily view on the right day. You can also edit or delete daily events from here." },
             { t: "Midnight Reset", b: "Time blocks reset at midnight each day. Daily events are automatically moved to Monthly view and kept for up to 60 days. Completed to-dos are removed at midnight; incomplete ones remain. Monthly events are not affected." },
+            { t: "Cloud Sync", b: "Tap the ☁ button next to the tab bar to sync your planner across devices. Use ↑ (this device → cloud) to back up your current data, or ↓ (cloud → this device) to restore a previously saved version. Loading from cloud will overwrite your local data." },
           ],
         },
         {
@@ -797,6 +798,7 @@ export const T = {
             { t: "주간 보기", b: "주간 탭은 7일을 타임 그리드 위에 나란히 보여줘요. 일일·월간에서 등록한 일정이 자동으로 표시돼요. 모바일에서는 가로로 스크롤하면 돼요. 일정을 탭하면 상세 정보를 볼 수 있어요." },
             { t: "월간 보기 & 반복 일정", b: "월간 탭에서 미래 날짜에 일정을 추가하거나 요일별 반복 일정을 설정할 수 있어요. 일일에서 등록한 일정도 여기서 편집하거나 삭제할 수 있어요." },
             { t: "자정 초기화", b: "타임 블럭은 매일 자정에 초기화돼요. 일일 일정은 자동으로 월간 뷰로 이동되어 최대 60일간 보관돼요. 완료된 할 일은 자정에 삭제되고, 미완료 항목은 유지돼요. 월간 일정은 영향 없어요." },
+            { t: "클라우드 동기화", b: "탭바 옆 ☁ 버튼으로 플래너 데이터를 기기 간에 동기화할 수 있어요. ↑(이 기기 → 클라우드)로 현재 데이터를 백업하고, ↓(클라우드 → 이 기기)로 저장된 데이터를 복원해요. 불러오기 시 현재 로컬 데이터를 덮어씁니다." },
           ],
         },
         {

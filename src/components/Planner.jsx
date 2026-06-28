@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Cloud, CloudUpload, CloudDownload, Check, AlertCircle } from "lucide-react";
 import PlannerDaily from "./PlannerDaily";
 import PlannerMonthly from "./PlannerMonthly";
 import PlannerWeekly from "./PlannerWeekly";
 import { fetchGroupEventsForUser, deleteGroupEvent } from "../api/groupEventsApi";
+import { pushPlannerSync, pullPlannerSync } from "../api/plannerSyncApi";
 
 // Local-timezone date key (toISOString would use UTC and roll over early)
 function localKey(d) {
@@ -161,13 +163,111 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
   const accent = pal.accent;
   const border = dark ? "#333" : "#ddd";
 
+  // ── Cloud Sync ──
+  const SYNC_TIME_KEY = `grida_sync_time_${userId}`;
+  const [syncOpen,   setSyncOpen]   = useState(false);
+  const [syncStatus, setSyncStatus] = useState(null); // null|"saving"|"loading"|"saved"|"loaded"|"no_data"|"error"
+  const [lastSynced, setLastSynced] = useState(() => localStorage.getItem(`grida_sync_time_${userId}`) ?? null);
+  const syncPanelRef = useRef(null);
+
+  // Close panel on outside click
+  useEffect(() => {
+    if (!syncOpen) return;
+    const handler = (e) => {
+      if (syncPanelRef.current && !syncPanelRef.current.contains(e.target)) setSyncOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler);
+    return () => { document.removeEventListener("mousedown", handler); document.removeEventListener("touchstart", handler); };
+  }, [syncOpen]);
+
+  const formatSyncTime = (iso) => {
+    if (!iso) return null;
+    const diff = Math.round((Date.now() - new Date(iso).getTime()) / 1000);
+    if (diff < 60) return lang === "ko" ? "방금 전" : "just now";
+    if (diff < 3600) return lang === "ko" ? `${Math.floor(diff / 60)}분 전` : `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return lang === "ko" ? `${Math.floor(diff / 3600)}시간 전` : `${Math.floor(diff / 3600)}h ago`;
+    return lang === "ko" ? `${Math.floor(diff / 86400)}일 전` : `${Math.floor(diff / 86400)}d ago`;
+  };
+
+  const handleSaveToCloud = async () => {
+    setSyncStatus("saving");
+    try {
+      const payload = {
+        todos,
+        calEvents,
+        recurring,
+        spans,
+        dailyKey: todayKey(),
+        dailyEvents: events,
+        savedAt: new Date().toISOString(),
+      };
+      await pushPlannerSync(userId, payload);
+      const now = new Date().toISOString();
+      localStorage.setItem(SYNC_TIME_KEY, now);
+      setLastSynced(now);
+      setSyncStatus("saved");
+      setTimeout(() => setSyncStatus(null), 3000);
+    } catch {
+      setSyncStatus("error");
+      setTimeout(() => setSyncStatus(null), 3000);
+    }
+  };
+
+  const handleLoadFromCloud = async () => {
+    setSyncStatus("loading");
+    try {
+      const remote = await pullPlannerSync(userId);
+      if (!remote) { setSyncStatus("no_data"); setTimeout(() => setSyncStatus(null), 3000); return; }
+      const d = remote.data;
+      if (d.todos)     setTodos(d.todos);
+      if (d.calEvents) setCalEvents(d.calEvents);
+      if (d.recurring) setRecurring(d.recurring);
+      if (d.spans)     setSpans(d.spans);
+      if (d.dailyKey === todayKey() && d.dailyEvents) setEvents(d.dailyEvents);
+      const t = remote.synced_at;
+      localStorage.setItem(SYNC_TIME_KEY, t);
+      setLastSynced(t);
+      setSyncStatus("loaded");
+      setTimeout(() => setSyncStatus(null), 3000);
+    } catch {
+      setSyncStatus("error");
+      setTimeout(() => setSyncStatus(null), 3000);
+    }
+  };
+
+  const syncCopy = {
+    title:    lang === "ko" ? "플래너 동기화" : "Sync Planner",
+    lastSave: lang === "ko" ? "마지막 저장" : "Last saved",
+    never:    lang === "ko" ? "저장 기록 없음" : "Never saved",
+    push:     lang === "ko" ? "이 기기 → 클라우드" : "This device → Cloud",
+    pushDesc: lang === "ko" ? "현재 기기의 일정·할 일·달력 데이터를 클라우드에 저장해요." : "Saves your events, to-dos, and calendar data from this device to the cloud.",
+    pull:     lang === "ko" ? "클라우드 → 이 기기" : "Cloud → This device",
+    pullDesc: lang === "ko" ? "클라우드에 저장된 데이터를 불러와서 현재 기기에 적용해요." : "Loads the last saved version from the cloud and applies it to this device.",
+    pullWarn: lang === "ko" ? "현재 로컬 데이터를 덮어씁니다." : "This will overwrite your current local data.",
+    saved:    lang === "ko" ? "클라우드에 저장됐어요" : "Saved to cloud",
+    loaded:   lang === "ko" ? "데이터를 불러왔어요" : "Loaded from cloud",
+    no_data:  lang === "ko" ? "저장된 데이터가 없어요" : "No cloud data found",
+    error:    lang === "ko" ? "오류가 발생했어요" : "Something went wrong",
+    saving:   lang === "ko" ? "저장 중…" : "Saving…",
+    loading:  lang === "ko" ? "불러오는 중…" : "Loading…",
+  };
+
+  const statusMsg = syncStatus === "saving"  ? syncCopy.saving
+    : syncStatus === "loading" ? syncCopy.loading
+    : syncStatus === "saved"   ? syncCopy.saved
+    : syncStatus === "loaded"  ? syncCopy.loaded
+    : syncStatus === "no_data" ? syncCopy.no_data
+    : syncStatus === "error"   ? syncCopy.error
+    : null;
+
   // Mondrian tab colors: Daily=red, Weekly=yellow, Monthly=blue
   const tabColor = { daily: isMon ? MON_RED : accent, weekly: isMon ? "#E3B22E" : accent, monthly: isMon ? MON_BLUE : accent };
 
   return (
     <div style={{ color: ink, fontFamily: "inherit" }}>
       {/* Tab bar */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: syncOpen ? 0 : 24, flexWrap: "wrap" }}>
         <div style={{
           display: "flex", gap: isMon ? 0 : 2,
           background: isMon ? "transparent" : dark ? "#1e1d16" : "#e4e1d6",
@@ -200,7 +300,101 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
             {editMode ? pl.viewModeBtn : pl.editModeBtn}
           </button>
         )}
+        {/* Cloud sync button */}
+        <div ref={syncPanelRef} style={{ marginLeft: "auto", position: "relative" }}>
+          <button
+            onClick={() => { setSyncOpen(v => !v); setSyncStatus(null); }}
+            title={syncCopy.title}
+            style={{
+              display: "flex", alignItems: "center", gap: 5,
+              background: syncOpen ? ink : "none",
+              border: `1px solid ${border}`,
+              borderRadius: isMon ? 0 : 6,
+              color: syncOpen ? (dark ? "#1e1d16" : "#fff") : ink,
+              cursor: "pointer", padding: "5px 9px", fontSize: 11, fontWeight: 600,
+              fontFamily: "inherit",
+            }}
+          >
+            <Cloud size={13} />
+            {lastSynced && <span style={{ opacity: 0.65 }}>{formatSyncTime(lastSynced)}</span>}
+          </button>
+
+          {/* Sync panel */}
+          {syncOpen && (
+            <div style={{
+              position: "absolute", right: 0, top: "calc(100% + 6px)", zIndex: 30,
+              width: 280, background: dark ? "#1e1d16" : "#fff",
+              border: `1px solid ${border}`, borderRadius: 8,
+              boxShadow: "0 8px 28px rgba(0,0,0,0.18)", padding: 16,
+            }}>
+              {/* Header */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <span style={{ fontWeight: 800, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.05em", color: ink }}>
+                  {syncCopy.title}
+                </span>
+                <span style={{ fontSize: 10, opacity: 0.45, color: ink }}>
+                  {lastSynced ? `${syncCopy.lastSave}: ${formatSyncTime(lastSynced)}` : syncCopy.never}
+                </span>
+              </div>
+
+              {/* Status message */}
+              {statusMsg && (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 6, marginBottom: 10,
+                  fontSize: 11, fontWeight: 600,
+                  color: syncStatus === "error" ? "#C7382E" : syncStatus === "saved" || syncStatus === "loaded" ? "#2a7a2a" : ink,
+                  opacity: 0.9,
+                }}>
+                  {(syncStatus === "saved" || syncStatus === "loaded") && <Check size={12} />}
+                  {syncStatus === "error" && <AlertCircle size={12} />}
+                  {statusMsg}
+                </div>
+              )}
+
+              {/* Upload button */}
+              <button
+                onClick={handleSaveToCloud}
+                disabled={syncStatus === "saving" || syncStatus === "loading"}
+                style={{
+                  width: "100%", textAlign: "left", padding: "10px 12px", marginBottom: 8,
+                  background: dark ? "#ffffff08" : "#f7f5ef",
+                  border: `1px solid ${border}`, borderRadius: 6,
+                  cursor: syncStatus ? "not-allowed" : "pointer", color: ink,
+                  opacity: syncStatus === "saving" || syncStatus === "loading" ? 0.5 : 1,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4 }}>
+                  <CloudUpload size={14} color={accent} />
+                  <span style={{ fontWeight: 700, fontSize: 12, color: ink }}>{syncCopy.push}</span>
+                </div>
+                <div style={{ fontSize: 11, opacity: 0.55, color: ink, lineHeight: 1.5 }}>{syncCopy.pushDesc}</div>
+              </button>
+
+              {/* Download button */}
+              <button
+                onClick={handleLoadFromCloud}
+                disabled={syncStatus === "saving" || syncStatus === "loading"}
+                style={{
+                  width: "100%", textAlign: "left", padding: "10px 12px",
+                  background: dark ? "#ffffff08" : "#f7f5ef",
+                  border: `1px solid ${border}`, borderRadius: 6,
+                  cursor: syncStatus ? "not-allowed" : "pointer", color: ink,
+                  opacity: syncStatus === "saving" || syncStatus === "loading" ? 0.5 : 1,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4 }}>
+                  <CloudDownload size={14} color={accent} />
+                  <span style={{ fontWeight: 700, fontSize: 12, color: ink }}>{syncCopy.pull}</span>
+                </div>
+                <div style={{ fontSize: 11, opacity: 0.55, color: ink, lineHeight: 1.5, marginBottom: 4 }}>{syncCopy.pullDesc}</div>
+                <div style={{ fontSize: 10, color: "#C7382E", opacity: 0.8 }}>{syncCopy.pullWarn}</div>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
+
+      {syncOpen && <div style={{ marginBottom: 24 }} />}
 
       {tab === "daily" && (
         <PlannerDaily
