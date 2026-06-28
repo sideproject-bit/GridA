@@ -494,15 +494,15 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             const inSel  = selRange && idx >= selRange.start && idx <= selRange.end;
             const isCurr = idx === currentCell;
 
-            // Compute partial fill fraction for an event within this 10-min cell
+            // Compute partial fill as left/width % (time flows left→right within each cell)
             function fillFor(e) {
               if (!e) return null;
               const sM = timeStrToMins(e.startTime) ?? (e.startCell * 10);
               const eM = timeStrToMins(e.endTime)   ?? ((e.endCell + 1) * 10);
               const cs = idx * 10, ce = (idx + 1) * 10;
-              const top = (Math.max(sM, cs) - cs) / 10 * CELL_H;
-              const h   = (Math.min(eM, ce) - Math.max(sM, cs)) / 10 * CELL_H;
-              return h > 0 ? { top, height: h } : null;
+              const left  = (Math.max(sM, cs) - cs) / 10 * 100;
+              const width = (Math.min(eM, ce) - Math.max(sM, cs)) / 10 * 100;
+              return width > 0 ? { left: `${left}%`, width: `${width}%` } : null;
             }
 
             const bFill = !inSel ? fillFor(evt)  : null;
@@ -517,9 +517,9 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
                 border: isCurr ? `2px solid ${acc}` : `1px solid ${border}`,
                 boxSizing: "border-box", overflow: "hidden",
               }}>
-                {bFill && <div style={{ position: "absolute", top: bFill.top, height: bFill.height, left: 0, right: 0, background: evt.color + "bb" }} />}
-                {cFill && <div style={{ position: "absolute", top: cFill.top, height: cFill.height, left: 0, right: 0, background: cEvt.color + "66", borderLeft: `2px solid ${cEvt.color}` }} />}
-                {rFill && <div style={{ position: "absolute", top: rFill.top, height: rFill.height, left: 0, right: 0, background: rEvt.color + "44", borderLeft: `2px dashed ${rEvt.color}` }} />}
+                {bFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: bFill.left, width: bFill.width, background: evt.color + "bb" }} />}
+                {cFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: cFill.left, width: cFill.width, background: cEvt.color + "66", borderLeft: `2px solid ${cEvt.color}` }} />}
+                {rFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: rFill.left, width: rFill.width, background: rEvt.color + "44", borderLeft: `2px dashed ${rEvt.color}` }} />}
                 {gEvt && !inSel && <div style={{ position: "absolute", top: 0, bottom: 0, right: 0, width: 3, background: groupColor, opacity: 0.7 }} />}
               </div>
             );

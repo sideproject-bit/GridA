@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useViewport } from "../hooks/useViewport";
@@ -129,49 +129,19 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
   }
 
   // ── Drag handlers ──
-  function startMoveDrag(evt, dateKey, e) {
-    if (e.button !== 0) return;
-    e.stopPropagation();
-    gridRef.current?.setPointerCapture(e.pointerId);
-    const colWidth = gridRef.current
-      ? (gridRef.current.scrollWidth - LABEL_W) / 7
-      : 80;
-    dragRef.current = {
-      type: "move", evt, dateKey,
-      origStartCell: evt.startCell, origEndCell: evt.endCell,
-      origDayIdx: dayKeys.indexOf(dateKey),
-      startY: e.clientY, startX: e.clientX, colWidth,
-      curStartCell: null, curEndCell: null, curDayIdx: null,
-    };
-    setDraggingId(evt.id);
-  }
-
-  function startResizeDrag(evt, dateKey, e) {
-    e.stopPropagation();
-    gridRef.current?.setPointerCapture(e.pointerId);
-    dragRef.current = {
-      type: "resize", evt, dateKey,
-      origStartCell: evt.startCell, origEndCell: evt.endCell,
-      origDayIdx: dayKeys.indexOf(dateKey),
-      startY: e.clientY, startX: e.clientX, colWidth: 0,
-      curStartCell: null, curEndCell: null, curDayIdx: null,
-    };
-    setDraggingId(evt.id);
-  }
-
-  function onDragMove(e) {
+  const onDragMove = useCallback((e) => {
     const dr = dragRef.current;
     if (!dr) return;
     const deltaY    = e.clientY - dr.startY;
     const deltaCell = Math.round(deltaY / PX_PER_CELL);
 
     if (dr.type === "move") {
-      const duration    = dr.origEndCell - dr.origStartCell;
-      const maxStart    = HOURS * COLS_DAY - 1 - duration;
-      const newStart    = Math.max(0, Math.min(maxStart, dr.origStartCell + deltaCell));
-      const newEnd      = newStart + duration;
-      const deltaDays   = Math.round((e.clientX - dr.startX) / dr.colWidth);
-      const newDayIdx   = Math.max(0, Math.min(6, dr.origDayIdx + deltaDays));
+      const duration  = dr.origEndCell - dr.origStartCell;
+      const maxStart  = HOURS * COLS_DAY - 1 - duration;
+      const newStart  = Math.max(0, Math.min(maxStart, dr.origStartCell + deltaCell));
+      const newEnd    = newStart + duration;
+      const deltaDays = Math.round((e.clientX - dr.startX) / dr.colWidth);
+      const newDayIdx = Math.max(0, Math.min(6, dr.origDayIdx + deltaDays));
       if (dr.curStartCell !== newStart || dr.curDayIdx !== newDayIdx) {
         dr.curStartCell = newStart; dr.curEndCell = newEnd; dr.curDayIdx = newDayIdx;
         dr.moved = true;
@@ -185,15 +155,17 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
         setDragGhost({ evt: dr.evt, dateKey: dr.dateKey, startCell: dr.origStartCell, endCell: newEnd });
       }
     }
-  }
+  }, [dayKeys]);
 
-  function onDragEnd() {
+  const onDragEnd = useCallback(() => {
     const dr = dragRef.current;
     if (!dr) return;
     const moved = dr.moved;
     dragRef.current = null;
     setDraggingId(null);
     setDragGhost(null);
+    window.removeEventListener("pointermove", onDragMove);
+    window.removeEventListener("pointerup",   onDragEnd);
     if (!moved) return;
     const startCell  = dr.curStartCell ?? dr.origStartCell;
     const endCell    = dr.curEndCell   ?? dr.origEndCell;
@@ -205,7 +177,47 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
       startTime: cellToTime(startCell),
       endTime:   cellToTimeEnd(endCell),
     });
+  }, [dayKeys, onDragMove, onMoveEvent]);
+
+  function startMoveDrag(evt, dateKey, e) {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const colWidth = gridRef.current
+      ? (gridRef.current.scrollWidth - LABEL_W) / 7
+      : 80;
+    dragRef.current = {
+      type: "move", evt, dateKey,
+      origStartCell: evt.startCell, origEndCell: evt.endCell,
+      origDayIdx: dayKeys.indexOf(dateKey),
+      startY: e.clientY, startX: e.clientX, colWidth,
+      curStartCell: null, curEndCell: null, curDayIdx: null,
+    };
+    setDraggingId(evt.id);
+    window.addEventListener("pointermove", onDragMove);
+    window.addEventListener("pointerup",   onDragEnd);
   }
+
+  function startResizeDrag(evt, dateKey, e) {
+    e.stopPropagation();
+    e.preventDefault();
+    dragRef.current = {
+      type: "resize", evt, dateKey,
+      origStartCell: evt.startCell, origEndCell: evt.endCell,
+      origDayIdx: dayKeys.indexOf(dateKey),
+      startY: e.clientY, startX: e.clientX, colWidth: 0,
+      curStartCell: null, curEndCell: null, curDayIdx: null,
+    };
+    setDraggingId(evt.id);
+    window.addEventListener("pointermove", onDragMove);
+    window.addEventListener("pointerup",   onDragEnd);
+  }
+
+  // Cleanup on unmount
+  useEffect(() => () => {
+    window.removeEventListener("pointermove", onDragMove);
+    window.removeEventListener("pointerup",   onDragEnd);
+  }, [onDragMove, onDragEnd]);
 
   function getEventsForDay(day, dateKey) {
     const dow  = day.getDay();
@@ -283,11 +295,7 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
           </div>
 
           {/* Time grid */}
-          <div ref={gridRef} style={{ display: "flex", position: "relative" }}
-            onPointerMove={onDragMove}
-            onPointerUp={onDragEnd}
-            onPointerCancel={onDragEnd}
-          >
+          <div ref={gridRef} style={{ display: "flex", position: "relative" }}>
 
             {/* Hour labels */}
             <div style={{ width: LABEL_W, flexShrink: 0, height: totalH, position: "relative" }}>
