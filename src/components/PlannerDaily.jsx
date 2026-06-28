@@ -80,7 +80,7 @@ function EventRow({ evt, isMobile, editMode, dark, ink, acc, border, pl, onMove,
           textDecoration: evt.done && !evt.fromCalendar ? "line-through" : "none",
         }}>{evt.title}</div>
         <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>
-          {cellToTime(evt.startCell)} – {cellToTimeEnd(evt.endCell)}
+          {evt.startTime ?? cellToTime(evt.startCell)} – {evt.endTime ?? cellToTimeEnd(evt.endCell)}
         </div>
         {evt.memo && <div style={{ fontSize: 11, opacity: 0.6, marginTop: 4, wordBreak: "keep-all" }}>{evt.memo}</div>}
         {evt.fromCalendar && <div style={{ fontSize: 10, opacity: 0.35, marginTop: 4 }}>📅 {pl.fromCalendar}</div>}
@@ -845,7 +845,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
                   <div style={{ fontWeight: 800, fontSize: 15, wordBreak: "keep-all", textDecoration: viewEvent.done ? "line-through" : "none", opacity: viewEvent.done ? 0.6 : 1 }}>{viewEvent.title}</div>
                 </div>
                 <div style={{ fontSize: 12, opacity: 0.5, marginBottom: viewEvent.memo ? 10 : 0 }}>
-                  {cellToTime(viewEvent.startCell)} – {cellToTimeEnd(viewEvent.endCell)}
+                  {viewEvent.startTime ?? cellToTime(viewEvent.startCell)} – {viewEvent.endTime ?? cellToTimeEnd(viewEvent.endCell)}
                 </div>
                 {viewEvent.memo && <div style={{ fontSize: 13, lineHeight: 1.6, opacity: 0.8, wordBreak: "keep-all", whiteSpace: "pre-wrap" }}>{viewEvent.memo}</div>}
                 {viewEvent.fromCalendar && <div style={{ fontSize: 11, opacity: 0.4, marginTop: 8 }}>📅 {pl.fromCalendar}</div>}

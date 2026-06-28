@@ -3,12 +3,12 @@ import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useViewport } from "../hooks/useViewport";
 
-const COLS_DAY    = 6;    // 10-min slots per hour (compatible with PlannerDaily)
-const HOURS       = 24;
-const CELL_H      = 48;   // px per hour row
-const PX_PER_CELL = CELL_H / COLS_DAY; // px per 10-min slot (8px)
-const LABEL_W   = 32;   // px for time-label column
-const DAY_MIN_W = 56;   // min px per day column (mobile horizontal scroll)
+const COLS_DAY      = 6;    // 10-min slots per hour
+const HOURS         = 24;
+const CELL_H_WIDE   = 48;   // px per hour row — wide mode
+const CELL_H_NARROW = 22;   // px per hour row — compact mode
+const LABEL_W       = 32;   // px for time-label column
+const DAY_MIN_W     = 56;   // min px per day column (mobile horizontal scroll)
 
 const MON = { red: "#C7382E", blue: "#2B3DCB", yellow: "#E3B22E" };
 
@@ -69,7 +69,7 @@ function prevDayKey(dateStr) {
   return localKey(d);
 }
 
-export default function PlannerWeekly({ t, pal, dark, editMode = true, calEvents, recurring, onEditDailyEvent, onEditCalEvent, onMoveEvent, spans, theme, lang, groupEvents = [] }) {
+export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleCompact, calEvents, recurring, onEditDailyEvent, onEditCalEvent, onMoveEvent, onAddCalEvent, spans, theme, lang, groupEvents = [] }) {
   const pl  = t.planner;
   const wk  = pl.weekly ?? {};
   const { isMobile } = useViewport();
@@ -78,6 +78,9 @@ export default function PlannerWeekly({ t, pal, dark, editMode = true, calEvents
   const acc   = pal.accent;
   const bg    = pal.bg;
   const border = dark ? "#2a2920" : "#e0ddd2";
+
+  const CELL_H      = compact ? CELL_H_NARROW : CELL_H_WIDE;
+  const PX_PER_CELL = CELL_H / COLS_DAY;
 
   const [weekStart, setWeekStart] = useState(() => getWeekMonday(new Date()));
   const [viewEvt,  setViewEvt]  = useState(null); // { event, dateKey }
@@ -93,6 +96,14 @@ export default function PlannerWeekly({ t, pal, dark, editMode = true, calEvents
   const dragRef     = useRef(null);  // drag state (mutations don't re-render)
   const [dragGhost, setDragGhost]   = useState(null);  // { evt, dateKey, startCell, endCell }
   const [draggingId, setDraggingId] = useState(null);  // id of event being dragged (for dimming)
+
+  // Create-by-drag state (desktop only)
+  const createRef   = useRef(null);  // { dateKey, startCell, curEndCell }
+  const [createSel, setCreateSel]   = useState(null);  // { dateKey, startCell, endCell } for ghost
+  const [createPopup, setCreatePopup] = useState(null); // { dateKey, startCell, endCell }
+  const [newTitle,  setNewTitle]    = useState("");
+  const [newColor,  setNewColor]    = useState(EVENT_COLORS[0]);
+  const [newMemo,   setNewMemo]     = useState("");
 
   const days    = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const dayKeys = days.map(localKey);
@@ -227,6 +238,53 @@ export default function PlannerWeekly({ t, pal, dark, editMode = true, calEvents
     if (dr?.onUp)   window.removeEventListener("pointerup",   dr.onUp);
   }, []);
 
+  // ── Create-by-drag (desktop only) ──
+  function startCreateDrag(dateKey, colEl, e) {
+    if (e.button !== 0 || isMobile) return;
+    if (dragRef.current) return; // ignore if event drag active
+    e.preventDefault();
+    const rect = colEl.getBoundingClientRect();
+    const startCell = Math.max(0, Math.min(HOURS * COLS_DAY - 1, Math.floor((e.clientY - rect.top) / PX_PER_CELL)));
+    const cr = { dateKey, startCell, curEndCell: startCell, colEl };
+    createRef.current = cr;
+    setCreateSel({ dateKey, startCell, endCell: startCell });
+
+    function onMove(ev) {
+      if (!createRef.current) return;
+      const cell = Math.max(cr.startCell, Math.min(HOURS * COLS_DAY - 1, Math.floor((ev.clientY - rect.top) / PX_PER_CELL)));
+      if (cell !== cr.curEndCell) {
+        cr.curEndCell = cell;
+        setCreateSel({ dateKey, startCell: cr.startCell, endCell: cell });
+      }
+    }
+    function onUp() {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      const sel = createRef.current;
+      createRef.current = null;
+      setCreateSel(null);
+      if (!sel || sel.curEndCell === sel.startCell) return; // too short — ignore single-cell tap
+      setNewTitle(""); setNewColor(EVENT_COLORS[0]); setNewMemo("");
+      setCreatePopup({ dateKey: sel.dateKey, startCell: sel.startCell, endCell: sel.curEndCell });
+    }
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  }
+
+  function saveNewEvent() {
+    if (!createPopup || !newTitle.trim()) return;
+    const { dateKey, startCell, endCell } = createPopup;
+    const evt = {
+      id: `cal_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+      title: newTitle.trim(), color: newColor, memo: newMemo,
+      startCell, endCell,
+      startTime: cellToTime(startCell),
+      endTime: cellToTimeEnd(endCell),
+    };
+    onAddCalEvent?.(dateKey, evt);
+    setCreatePopup(null);
+  }
+
   function getEventsForDay(day, dateKey) {
     const dow  = day.getDay();
     const cal  = (calEvents[dateKey] ?? [])
@@ -327,11 +385,14 @@ export default function PlannerWeekly({ t, pal, dark, editMode = true, calEvents
               const isToday = dateKey === today;
 
               return (
-                <div key={di} style={{
-                  flex: 1, minWidth: DAY_MIN_W, height: totalH, position: "relative",
-                  borderLeft: `1px solid ${border}`,
-                  background: isToday ? (dark ? `${todayAccent}10` : `${todayAccent}08`) : "transparent",
-                }}>
+                <div key={di}
+                  onPointerDown={!isMobile ? (e) => { if (!e.target.closest("[data-evt]")) startCreateDrag(dateKey, e.currentTarget, e); } : undefined}
+                  style={{
+                    flex: 1, minWidth: DAY_MIN_W, height: totalH, position: "relative",
+                    borderLeft: `1px solid ${border}`,
+                    background: isToday ? (dark ? `${todayAccent}10` : `${todayAccent}08`) : "transparent",
+                    cursor: !isMobile ? "crosshair" : undefined,
+                  }}>
                   {/* Hour grid lines */}
                   {Array.from({ length: HOURS }, (_, h) => (
                     <div key={h}
@@ -366,7 +427,7 @@ export default function PlannerWeekly({ t, pal, dark, editMode = true, calEvents
                           const botPx = Math.min(totalH, (evt.endCell + 1) * PX_PER_CELL) - 1;
                           const htPx  = Math.max(PX_PER_CELL - 2, botPx - topPx);
                           return (
-                            <div key={evt.id}
+                            <div key={evt.id} data-evt="1"
                               onPointerDown={editMode ? (e) => startMoveDrag(evt, dateKey, e) : undefined}
                               onClick={(e) => { if (!dragRef.current) { e.stopPropagation(); setViewEvt({ event: evt, dateKey }); } }}
                               style={{
@@ -385,7 +446,7 @@ export default function PlannerWeekly({ t, pal, dark, editMode = true, calEvents
                               </div>
                               {htPx > PX_PER_CELL * 2 && (
                                 <div style={{ fontSize: 8, opacity: 0.7, color: dark ? "#fff" : "#111" }}>
-                                  {cellToTime(evt.startCell)} – {cellToTimeEnd(evt.endCell)}
+                                  {evt.startTime ?? cellToTime(evt.startCell)} – {evt.endTime ?? cellToTimeEnd(evt.endCell)}
                                 </div>
                               )}
                               {/* Resize handle — edit mode only */}
@@ -423,6 +484,24 @@ export default function PlannerWeekly({ t, pal, dark, editMode = true, calEvents
                               {htPx > PX_PER_CELL * 2 && (
                                 <div style={{ fontSize: 8, opacity: 0.7, color: dark ? "#fff" : "#111" }}>{cellToTime(g.startCell)} – {cellToTimeEnd(g.endCell)}</div>
                               )}
+                            </div>
+                          );
+                        })()}
+
+                        {/* Create-drag selection ghost */}
+                        {createSel && createSel.dateKey === dateKey && (() => {
+                          const topPx = createSel.startCell * PX_PER_CELL;
+                          const botPx = Math.min(totalH, (createSel.endCell + 1) * PX_PER_CELL);
+                          const htPx  = Math.max(PX_PER_CELL, botPx - topPx);
+                          return (
+                            <div style={{
+                              position: "absolute", top: topPx, left: 1, right: 1, height: htPx,
+                              background: acc + "44", border: `1.5px solid ${acc}`,
+                              borderRadius: 2, zIndex: 2, pointerEvents: "none",
+                            }}>
+                              <div style={{ fontSize: 8, opacity: 0.8, padding: "1px 3px", color: dark ? "#fff" : "#111" }}>
+                                {cellToTime(createSel.startCell)} – {cellToTimeEnd(createSel.endCell)}
+                              </div>
                             </div>
                           );
                         })()}
@@ -525,7 +604,7 @@ export default function PlannerWeekly({ t, pal, dark, editMode = true, calEvents
                   <div style={{ fontWeight: 800, fontSize: 15, wordBreak: "keep-all" }}>{viewEvt.event.title}</div>
                 </div>
                 <div style={{ fontSize: 11, opacity: 0.45, marginBottom: 6 }}>
-                  {viewEvt.dateKey} · {cellToTime(viewEvt.event.startCell)} – {cellToTimeEnd(viewEvt.event.endCell)}
+                  {viewEvt.dateKey} · {viewEvt.event.startTime ?? cellToTime(viewEvt.event.startCell)} – {viewEvt.event.endTime ?? cellToTimeEnd(viewEvt.event.endCell)}
                 </div>
                 {viewEvt.event.memo && (
                   <div style={{ fontSize: 13, lineHeight: 1.6, opacity: 0.8, wordBreak: "keep-all", whiteSpace: "pre-wrap", marginBottom: 8 }}>
@@ -549,6 +628,51 @@ export default function PlannerWeekly({ t, pal, dark, editMode = true, calEvents
                 </div>
               </>
             )}
+          </div>
+        </>
+      ), document.body)}
+
+      {/* Create-event popup */}
+      {createPopup && createPortal((
+        <>
+          <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.45)" }} onClick={() => setCreatePopup(null)} />
+          <div style={{
+            position: "fixed",
+            left: isMobile ? 14 : "50%", right: isMobile ? 14 : "auto",
+            top: isMobile ? 16 : "50%",
+            transform: isMobile ? "none" : "translate(-50%, -50%)",
+            zIndex: 51, width: isMobile ? "auto" : 300,
+            background: bg, color: ink,
+            border: `2px solid ${newColor}`, borderRadius: 10, padding: 20,
+            boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.45, marginBottom: 8, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+              {createPopup.dateKey} · {cellToTime(createPopup.startCell)} – {cellToTimeEnd(createPopup.endCell)}
+            </div>
+            <input
+              value={newTitle} onChange={e => setNewTitle(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && saveNewEvent()}
+              autoFocus placeholder={pl.eventTitlePlaceholder}
+              style={{ width: "100%", boxSizing: "border-box", padding: "8px 10px", fontSize: 13, fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none", marginBottom: 10 }}
+            />
+            <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+              {EVENT_COLORS.map(c => (
+                <div key={c} onClick={() => setNewColor(c)} style={{ width: 22, height: 22, borderRadius: 4, background: c, cursor: "pointer", flexShrink: 0, outline: newColor === c ? `2.5px solid ${ink}` : "none", outlineOffset: 2 }} />
+              ))}
+            </div>
+            <textarea
+              value={newMemo} onChange={e => setNewMemo(e.target.value)}
+              placeholder={pl.eventMemoPlaceholder} rows={2}
+              style={{ width: "100%", boxSizing: "border-box", padding: "7px 10px", fontSize: 12, fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none", resize: "none", marginBottom: 12 }}
+            />
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button onClick={() => setCreatePopup(null)} style={{ background: "none", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", color: ink, fontFamily: "inherit" }}>
+                {pl.cancel}
+              </button>
+              <button onClick={saveNewEvent} disabled={!newTitle.trim()} style={{ background: acc, color: "#fff", border: "none", borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: newTitle.trim() ? "pointer" : "not-allowed", fontWeight: 700, fontFamily: "inherit", opacity: newTitle.trim() ? 1 : 0.4 }}>
+                {pl.save || "저장"}
+              </button>
+            </div>
           </div>
         </>
       ), document.body)}

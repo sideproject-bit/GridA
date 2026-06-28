@@ -643,12 +643,26 @@ function TimeStepper({ value, setValue, max, unit, dark, ink, accent }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
       <button onClick={inc} aria-label="up" style={arrowBtn}><ChevronUp size={22} /></button>
-      <div style={{
-        width: 72, textAlign: "center", padding: "8px 0", margin: "2px 0",
-        fontSize: 30, fontWeight: 900, fontVariantNumeric: "tabular-nums",
-        border: `1.5px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 8,
-        background: dark ? "#1e1d16" : "#fff", color: ink, lineHeight: 1,
-      }}>{String(value).padStart(2, "0")}</div>
+      <input
+        type="number" min={0} max={max}
+        value={value}
+        onChange={e => {
+          const n = parseInt(e.target.value, 10);
+          if (!isNaN(n)) setValue(Math.max(0, Math.min(max, n)));
+        }}
+        onBlur={e => {
+          const n = parseInt(e.target.value, 10);
+          setValue(isNaN(n) ? 0 : Math.max(0, Math.min(max, n)));
+        }}
+        style={{
+          width: 72, textAlign: "center", padding: "8px 0", margin: "2px 0",
+          fontSize: 30, fontWeight: 900, fontVariantNumeric: "tabular-nums",
+          border: `1.5px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 8,
+          background: dark ? "#1e1d16" : "#fff", color: ink, lineHeight: 1,
+          outline: "none", fontFamily: "inherit", boxSizing: "border-box",
+          appearance: "textfield", MozAppearance: "textfield",
+        }}
+      />
       <button onClick={dec} aria-label="down" style={arrowBtn}><ChevronDown size={22} /></button>
       <span style={{ fontSize: 11, fontWeight: 700, opacity: 0.5, marginTop: 2 }}>{unit}</span>
     </div>

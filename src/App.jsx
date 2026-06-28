@@ -47,6 +47,7 @@ function AppShell() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
+  const [weeklyCompact, setWeeklyCompact] = useState(false);
   const [notifOn, setNotifOn] = useState(() => typeof localStorage !== "undefined" && localStorage.getItem("grida_notif") === "1");
   const [currentMandalartId, setCurrentMandalartId] = useState(null);
   const [viewingFriend, setViewingFriend] = useState(null);
@@ -266,6 +267,7 @@ function AppShell() {
           theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn}
           notifOn={notifOn} toggleNotif={toggleNotif}
           startView={startView} setStartView={(v) => { setStartView(v); localStorage.setItem("grida_start_view", v); }}
+          weeklyCompact={weeklyCompact} onToggleWeeklyCompact={() => setWeeklyCompact(v => !v)}
           t={t} play={play} music={music} onClose={() => setMobileSettingsOpen(false)}
         />
       )}
@@ -839,7 +841,7 @@ function AppShell() {
               </div>
             ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
-          <Planner t={t} pal={pal} dark={dark} userId={myId} theme={theme} lang={lang} groupEventsVersion={groupEventsVersion} />
+          <Planner t={t} pal={pal} dark={dark} userId={myId} theme={theme} lang={lang} groupEventsVersion={groupEventsVersion} weeklyCompact={weeklyCompact} setWeeklyCompact={setWeeklyCompact} />
         </div>
       )}
 

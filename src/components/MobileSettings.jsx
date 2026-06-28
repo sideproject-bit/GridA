@@ -3,7 +3,7 @@ import { X, Volume2, VolumeX, Moon, Sun, Globe, Music2, Bell, BellOff } from "lu
 import { THEMES } from "../theme";
 
 // Full-screen settings sheet for mobile — replaces the desktop TopControls bar.
-export default function MobileSettings({ pal, dark, setDark, lang, setLang, theme, setTheme, soundOn, setSoundOn, notifOn, toggleNotif, t, play, music, startView, setStartView, onClose }) {
+export default function MobileSettings({ pal, dark, setDark, lang, setLang, theme, setTheme, soundOn, setSoundOn, notifOn, toggleNotif, t, play, music, startView, setStartView, weeklyCompact, onToggleWeeklyCompact, onClose }) {
   const ink = pal.ink;
   const acc = pal.accent;
   const border = `1px solid ${ink}22`;
@@ -96,6 +96,16 @@ export default function MobileSettings({ pal, dark, setDark, lang, setLang, them
             {t.notifications || (lang === "ko" ? "알림" : "Notifications")}
             <span style={{ marginLeft: "auto", fontSize: 12, fontWeight: 700, opacity: 0.6 }}>{notifOn ? "ON" : "OFF"}</span>
           </Row>
+        </Section>
+
+        {/* Weekly view density */}
+        <Section title={lang === "ko" ? "주간 뷰 간격" : "Weekly Density"}>
+          {[["wide", lang === "ko" ? "넓은 간격" : "Wide"], ["compact", lang === "ko" ? "좁은 간격" : "Compact"]].map(([key, label]) => (
+            <Row key={key} onClick={() => { if ((key === "compact") !== weeklyCompact) { onToggleWeeklyCompact?.(); play("E5", "32n"); } }} active={(key === "compact") === !!weeklyCompact}>
+              {label}
+              {(key === "compact") === !!weeklyCompact && <span style={{ marginLeft: "auto", color: acc, fontWeight: 800 }}>✓</span>}
+            </Row>
+          ))}
         </Section>
 
         {/* Start screen */}

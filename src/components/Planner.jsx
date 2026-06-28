@@ -24,7 +24,7 @@ function tomorrowKey() {
 const MON_RED  = "#C7382E";
 const MON_BLUE = "#2B3DCB";
 
-export default function Planner({ t, pal, dark, userId, theme, lang, groupEventsVersion = 0 }) {
+export default function Planner({ t, pal, dark, userId, theme, lang, groupEventsVersion = 0, weeklyCompact = false, setWeeklyCompact }) {
   const pl = t.planner;
   const isMon = theme === "mondrian";
   const [tab, setTab] = useState("daily");
@@ -335,7 +335,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
             }}>{label}</button>
           ))}
         </div>
-        {(tab === "daily" || tab === "weekly") && (
+        {tab === "daily" && (
           <button onClick={() => setEditMode(v => !v)} style={{
             background: "none", border: `1px solid ${border}`,
             borderRadius: isMon ? 0 : 6,
@@ -343,6 +343,16 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
             fontSize: 11, padding: "5px 11px", color: ink, fontWeight: 600,
           }}>
             {editMode ? pl.viewModeBtn : pl.editModeBtn}
+          </button>
+        )}
+        {tab === "weekly" && !isMobile && (
+          <button onClick={() => setWeeklyCompact?.(v => !v)} style={{
+            background: "none", border: `1px solid ${border}`,
+            borderRadius: isMon ? 0 : 6,
+            cursor: "pointer", fontFamily: "inherit",
+            fontSize: 11, padding: "5px 11px", color: ink, fontWeight: 600,
+          }}>
+            {weeklyCompact ? (lang === "ko" ? "넓은 간격" : "Wide") : (lang === "ko" ? "좁은 간격" : "Compact")}
           </button>
         )}
         {/* Cloud sync button */}
@@ -470,12 +480,14 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
       {tab === "weekly" && (
         <PlannerWeekly
           t={t} pal={pal} dark={dark}
-          editMode={editMode}
+          compact={weeklyCompact}
+          onToggleCompact={() => setWeeklyCompact(v => !v)}
           calEvents={mergedCalEvents}
           recurring={recurring}
           onEditDailyEvent={editDailyEvent}
           onEditCalEvent={editCalEvent}
           onMoveEvent={moveCalEventToDate}
+          onAddCalEvent={(dateKey, evt) => setCalEvents(prev => ({ ...prev, [dateKey]: [...(prev[dateKey] ?? []), evt] }))}
           spans={spans}
           theme={theme}
           lang={lang}
