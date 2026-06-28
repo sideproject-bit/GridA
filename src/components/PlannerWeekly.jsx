@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useViewport } from "../hooks/useViewport";
 
-const COLS_DAY  = 6;    // 10-min slots per hour (compatible with PlannerDaily)
-const HOURS     = 24;
-const CELL_H    = 22;   // px per hour row
+const COLS_DAY    = 6;    // 10-min slots per hour (compatible with PlannerDaily)
+const HOURS       = 24;
+const CELL_H      = 22;   // px per hour row
+const PX_PER_CELL = CELL_H / COLS_DAY; // px per 10-min slot (~3.67px)
 const LABEL_W   = 32;   // px for time-label column
 const DAY_MIN_W = 56;   // min px per day column (mobile horizontal scroll)
 
@@ -62,7 +63,7 @@ function prevDayKey(dateStr) {
   return localKey(d);
 }
 
-export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEditDailyEvent, onEditCalEvent, spans, theme, lang, groupEvents = [] }) {
+export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEditDailyEvent, onEditCalEvent, onMoveEvent, spans, theme, lang, groupEvents = [] }) {
   const pl  = t.planner;
   const wk  = pl.weekly ?? {};
   const { isMobile } = useViewport();
@@ -78,6 +79,14 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
   const [editTitle,   setEditTitle]   = useState("");
   const [editColor,   setEditColor]   = useState(EVENT_COLORS[0]);
   const [editMemo,    setEditMemo]    = useState("");
+  const [editStart,   setEditStart]   = useState("");
+  const [editEnd,     setEditEnd]     = useState("");
+
+  // Drag-to-move / resize state
+  const gridRef     = useRef(null);  // the time-grid flex container
+  const dragRef     = useRef(null);  // drag state (mutations don't re-render)
+  const [dragGhost, setDragGhost]   = useState(null);  // { evt, dateKey, startCell, endCell }
+  const [draggingId, setDraggingId] = useState(null);  // id of event being dragged (for dimming)
 
   const days    = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const dayKeys = days.map(localKey);
@@ -88,12 +97,22 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
     setEditTitle(evt.title);
     setEditColor(evt.color);
     setEditMemo(evt.memo ?? "");
+    setEditStart(evt.startTime ?? cellToTime(evt.startCell));
+    setEditEnd(evt.endTime ?? cellToTimeEnd(evt.endCell));
     setIsEditingView(true);
   }
 
   function saveEditEvt() {
     if (!viewEvt || !editTitle.trim()) return;
-    const changes = { title: editTitle.trim(), color: editColor, memo: editMemo };
+    const newStartCell = editStart ? timeToCell(editStart) : viewEvt.event.startCell;
+    const rawEndCell   = editEnd   ? timeToCell(editEnd) - 1 : viewEvt.event.endCell;
+    const newEndCell   = Math.max(newStartCell, rawEndCell);
+    const changes = {
+      title: editTitle.trim(), color: editColor, memo: editMemo,
+      startTime: editStart || viewEvt.event.startTime,
+      endTime:   editEnd   || viewEvt.event.endTime,
+      startCell: newStartCell, endCell: newEndCell,
+    };
     if (viewEvt.event._daily) {
       onEditDailyEvent?.(viewEvt.event.id, changes);
     } else {
@@ -101,6 +120,85 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
     }
     setViewEvt(null);
     setIsEditingView(false);
+  }
+
+  // ── Drag handlers ──
+  function startMoveDrag(evt, dateKey, e) {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    gridRef.current?.setPointerCapture(e.pointerId);
+    const colWidth = gridRef.current
+      ? (gridRef.current.scrollWidth - LABEL_W) / 7
+      : 80;
+    dragRef.current = {
+      type: "move", evt, dateKey,
+      origStartCell: evt.startCell, origEndCell: evt.endCell,
+      origDayIdx: dayKeys.indexOf(dateKey),
+      startY: e.clientY, startX: e.clientX, colWidth,
+      curStartCell: null, curEndCell: null, curDayIdx: null,
+    };
+    setDraggingId(evt.id);
+  }
+
+  function startResizeDrag(evt, dateKey, e) {
+    e.stopPropagation();
+    gridRef.current?.setPointerCapture(e.pointerId);
+    dragRef.current = {
+      type: "resize", evt, dateKey,
+      origStartCell: evt.startCell, origEndCell: evt.endCell,
+      origDayIdx: dayKeys.indexOf(dateKey),
+      startY: e.clientY, startX: e.clientX, colWidth: 0,
+      curStartCell: null, curEndCell: null, curDayIdx: null,
+    };
+    setDraggingId(evt.id);
+  }
+
+  function onDragMove(e) {
+    const dr = dragRef.current;
+    if (!dr) return;
+    const deltaY    = e.clientY - dr.startY;
+    const deltaCell = Math.round(deltaY / PX_PER_CELL);
+
+    if (dr.type === "move") {
+      const duration    = dr.origEndCell - dr.origStartCell;
+      const maxStart    = HOURS * COLS_DAY - 1 - duration;
+      const newStart    = Math.max(0, Math.min(maxStart, dr.origStartCell + deltaCell));
+      const newEnd      = newStart + duration;
+      const deltaDays   = Math.round((e.clientX - dr.startX) / dr.colWidth);
+      const newDayIdx   = Math.max(0, Math.min(6, dr.origDayIdx + deltaDays));
+      if (dr.curStartCell !== newStart || dr.curDayIdx !== newDayIdx) {
+        dr.curStartCell = newStart; dr.curEndCell = newEnd; dr.curDayIdx = newDayIdx;
+        dr.moved = true;
+        setDragGhost({ evt: dr.evt, dateKey: dayKeys[newDayIdx], startCell: newStart, endCell: newEnd });
+      }
+    } else {
+      const newEnd = Math.max(dr.origStartCell, Math.min(HOURS * COLS_DAY - 1, dr.origEndCell + deltaCell));
+      if (dr.curEndCell !== newEnd) {
+        dr.curEndCell = newEnd;
+        dr.moved = true;
+        setDragGhost({ evt: dr.evt, dateKey: dr.dateKey, startCell: dr.origStartCell, endCell: newEnd });
+      }
+    }
+  }
+
+  function onDragEnd() {
+    const dr = dragRef.current;
+    if (!dr) return;
+    const moved = dr.moved;
+    dragRef.current = null;
+    setDraggingId(null);
+    setDragGhost(null);
+    if (!moved) return;
+    const startCell  = dr.curStartCell ?? dr.origStartCell;
+    const endCell    = dr.curEndCell   ?? dr.origEndCell;
+    const newDayIdx  = dr.curDayIdx    ?? dr.origDayIdx;
+    const newDateKey = dayKeys[newDayIdx];
+    if (startCell === dr.origStartCell && endCell === dr.origEndCell && newDateKey === dr.dateKey) return;
+    onMoveEvent?.(dr.evt, dr.dateKey, newDateKey, {
+      startCell, endCell,
+      startTime: cellToTime(startCell),
+      endTime:   cellToTimeEnd(endCell),
+    });
   }
 
   function getEventsForDay(day, dateKey) {
@@ -179,7 +277,11 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
           </div>
 
           {/* Time grid */}
-          <div style={{ display: "flex", position: "relative" }}>
+          <div ref={gridRef} style={{ display: "flex", position: "relative" }}
+            onPointerMove={onDragMove}
+            onPointerUp={onDragEnd}
+            onPointerCancel={onDragEnd}
+          >
 
             {/* Hour labels */}
             <div style={{ width: LABEL_W, flexShrink: 0, height: totalH, position: "relative" }}>
@@ -237,21 +339,23 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
                       <>
                         {/* Personal/calendar events */}
                         {evts.filter(e => e.startCell != null).map(evt => {
+                          const isDragging = draggingId === evt.id;
                           const startH = Math.floor(evt.startCell / COLS_DAY);
-                          // Fix: use (endCell-1) so adjacent events don't visually overlap
                           const endH   = Math.min(HOURS - 1, Math.max(startH, Math.floor((evt.endCell - 1) / COLS_DAY)));
                           const topPx  = startH * CELL_H + 1;
                           const htPx   = Math.max(CELL_H - 2, (endH - startH + 1) * CELL_H - 2);
                           return (
                             <div key={evt.id}
-                              onClick={(e) => { e.stopPropagation(); setViewEvt({ event: evt, dateKey }); }}
+                              onPointerDown={(e) => startMoveDrag(evt, dateKey, e)}
+                              onClick={(e) => { if (!dragRef.current) { e.stopPropagation(); setViewEvt({ event: evt, dateKey }); } }}
                               style={{
                                 position: "absolute", top: topPx, left: 1, right: personalRight, height: htPx,
-                                background: evt.color + "cc",
+                                background: evt.color + (isDragging ? "44" : "cc"),
                                 borderLeft: `2px solid ${evt.color}`,
-                                borderRadius: 2, padding: "1px 3px",
+                                borderRadius: 2, padding: "1px 3px 0",
                                 overflow: "hidden", zIndex: 1,
-                                cursor: "pointer",
+                                cursor: isDragging ? "grabbing" : "grab",
+                                touchAction: "none", userSelect: "none",
                               }}
                             >
                               <div style={{ fontSize: 9, fontWeight: 700, lineHeight: 1.3, color: dark ? "#fff" : "#111", overflow: "hidden" }}>
@@ -262,9 +366,43 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
                                   {cellToTime(evt.startCell)}
                                 </div>
                               )}
+                              {/* Resize handle */}
+                              <div
+                                onPointerDown={(e) => { e.stopPropagation(); startResizeDrag(evt, dateKey, e); }}
+                                style={{
+                                  position: "absolute", bottom: 0, left: 0, right: 0, height: 6,
+                                  cursor: "ns-resize",
+                                  background: `${evt.color}55`,
+                                  borderTop: `1px solid ${evt.color}99`,
+                                }}
+                              />
                             </div>
                           );
                         })}
+
+                        {/* Drag ghost */}
+                        {dragGhost && dragGhost.dateKey === dateKey && (() => {
+                          const g = dragGhost;
+                          const startH = Math.floor(g.startCell / COLS_DAY);
+                          const endH   = Math.min(HOURS - 1, Math.max(startH, Math.floor((g.endCell - 1) / COLS_DAY)));
+                          const topPx  = startH * CELL_H + 1;
+                          const htPx   = Math.max(CELL_H - 2, (endH - startH + 1) * CELL_H - 2);
+                          return (
+                            <div style={{
+                              position: "absolute", top: topPx, left: 1, right: personalRight, height: htPx,
+                              background: g.evt.color + "88",
+                              border: `2px dashed ${g.evt.color}`,
+                              borderRadius: 2, padding: "1px 3px",
+                              overflow: "hidden", zIndex: 3,
+                              pointerEvents: "none",
+                            }}>
+                              <div style={{ fontSize: 9, fontWeight: 700, color: dark ? "#fff" : "#111" }}>{g.evt.title}</div>
+                              {htPx > CELL_H && (
+                                <div style={{ fontSize: 8, opacity: 0.7, color: dark ? "#fff" : "#111" }}>{cellToTime(g.startCell)} – {cellToTimeEnd(g.endCell)}</div>
+                              )}
+                            </div>
+                          );
+                        })()}
 
                         {/* Group events (read-only, right lane) */}
                         {dayGroupEvts.map(({ ge, carryOver }) => {
@@ -327,8 +465,15 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
           }}>
             {isEditingView ? (
               <>
-                <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.45, marginBottom: 10, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                  {viewEvt.dateKey} · {cellToTime(viewEvt.event.startCell)} – {cellToTimeEnd(viewEvt.event.endCell)}
+                <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.45, marginBottom: 8, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                  {viewEvt.dateKey}
+                </div>
+                <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 10 }}>
+                  <input type="time" value={editStart} onChange={e => setEditStart(e.target.value)}
+                    style={{ flex: 1, padding: "6px 8px", fontSize: 12, fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none" }} />
+                  <span style={{ opacity: 0.4, fontSize: 11 }}>–</span>
+                  <input type="time" value={editEnd} onChange={e => setEditEnd(e.target.value)}
+                    style={{ flex: 1, padding: "6px 8px", fontSize: 12, fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 6, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none" }} />
                 </div>
                 <input
                   value={editTitle}
