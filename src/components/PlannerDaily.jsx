@@ -104,7 +104,13 @@ function EventRow({ evt, isMobile, editMode, dark, ink, pl, onDelete, onMove, on
   );
 }
 
-export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, onEditEvent, todos, onTodosChange, onMoveToTomorrow, spans, theme, lang, groupEvents = [] }) {
+function timeToCell(timeStr) {
+  if (!timeStr) return null;
+  const [h, m] = timeStr.split(":").map(Number);
+  return h * COLS + Math.floor(m / 10);
+}
+
+export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, onEditEvent, todos, onTodosChange, onMoveToTomorrow, spans, theme, lang, groupEvents = [], onDeleteGroupEvent }) {
   const pl    = t.planner;
   const ink   = pal.ink;
   const acc   = pal.accent;
@@ -285,6 +291,28 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
     }
   }
 
+  // Map group events to cells (supports cross-midnight carry-over)
+  const groupCellMap = {};
+  for (const ge of groupEvents) {
+    const sc = timeToCell(ge.start_time);
+    if (sc == null) continue;
+    const rawEc = ge.end_time ? timeToCell(ge.end_time) : sc;
+    let startC, endC;
+    if (ge._carryOver) {
+      startC = 0;
+      endC = rawEc ?? sc;
+    } else if (ge.start_time && ge.end_time && ge.start_time > ge.end_time) {
+      startC = sc;
+      endC = TOTAL - 1;
+    } else {
+      startC = sc;
+      endC = rawEc ?? sc;
+    }
+    for (let i = startC; i <= endC; i++) {
+      if (!groupCellMap[i]) groupCellMap[i] = ge;
+    }
+  }
+
   function colHeader(monColor) {
     const bg = isMon ? monColor : acc;
     return {
@@ -326,6 +354,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
           {Array.from({ length: COLS }, (_, m) => {
             const idx = h * COLS + m;
             const evt = cellEventMap[idx];
+            const gEvt = groupCellMap[idx];
             const inSel = selRange && idx >= selRange.start && idx <= selRange.end;
             const isCurr = idx === currentCell;
             return (
@@ -333,9 +362,12 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
                 height: CELL_H,
                 background: inSel ? acc + "55"
                   : evt ? evt.color + "bb"
+                  : gEvt ? (gEvt.color ?? "#4A90D9") + "55"
                   : "transparent",
                 border: isCurr
                   ? `2px solid ${acc}`
+                  : gEvt && !evt
+                  ? `1px dashed ${gEvt.color ?? "#4A90D9"}`
                   : `1px solid ${border}`,
                 boxSizing: "border-box",
               }} />
@@ -370,11 +402,20 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             <div style={{ fontWeight: 700, fontSize: 13, wordBreak: "keep-all" }}>
               <span style={{ opacity: 0.55, marginRight: 4 }}>{ge._groupLabel}</span>{ge.title}
             </div>
-            {(ge.start_time && ge.end_time) && (
-              <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>{ge.start_time} – {ge.end_time}</div>
+            {(ge.start_time) && (
+              <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>
+                {ge.start_time}{ge.end_time ? ` – ${ge.end_time}` : ""}
+                {ge._carryOver && <span style={{ marginLeft: 6, opacity: 0.6 }}>↩</span>}
+              </div>
             )}
             {ge.memo && <div style={{ fontSize: 11, opacity: 0.55, marginTop: 4 }}>{ge.memo}</div>}
           </div>
+          {ge._isAdmin && (
+            <button
+              onClick={() => onDeleteGroupEvent?.(ge.id)}
+              style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.3, fontSize: 16, padding: 0, lineHeight: 1, flexShrink: 0 }}
+            >×</button>
+          )}
         </div>
       ))}
     </>

@@ -204,7 +204,7 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
             const isToday    = key === todayStr;
             const isSelected = d === selectedDay;
             const hasEvents     = (calEvents[key] ?? []).length > 0;
-            const hasGroupEvts  = groupEvents.some(ge => ge.date === key);
+            const hasGroupEvts  = groupEvents.some(ge => ge.date === key || (ge.start_time && ge.end_time && ge.start_time > ge.end_time && (() => { const d = new Date(ge.date + "T00:00:00"); d.setDate(d.getDate() + 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })() === key));
             const cellSpans     = (spans ?? []).filter(s => s.startDate <= key && key <= s.endDate);
             return (
               <div key={i}
@@ -261,7 +261,15 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
         {subTab === "events" && selectedDay && (() => {
           const key = dateKey(selectedDay);
           const dayEvents = calEvents[key] ?? [];
-          const dayGroupEvents = groupEvents.filter(ge => ge.date === key);
+          const dayGroupEvents = groupEvents.filter(ge => {
+            if (ge.date === key) return true;
+            if (ge.start_time && ge.end_time && ge.start_time > ge.end_time) {
+              const d = new Date(ge.date + "T00:00:00"); d.setDate(d.getDate() + 1);
+              const nextKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+              return nextKey === key;
+            }
+            return false;
+          }).map(ge => ({ ...ge, _carryOver: ge.date !== key }));
           return (
             <div>
               <div style={{ fontWeight: 900, fontSize: 14, marginBottom: 12, textTransform: "uppercase" }}>
@@ -294,8 +302,10 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
                     <div style={{ fontWeight: 700, fontSize: 12, wordBreak: "keep-all" }}>
                       <span style={{ opacity: 0.5, marginRight: 4 }}>{ge._groupLabel}</span>{ge.title}
                     </div>
-                    {ge.start_time && ge.end_time && (
-                      <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>{ge.start_time} – {ge.end_time}</div>
+                    {ge.start_time && (
+                      <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>
+                        {ge._carryOver ? `↩ – ${ge.end_time}` : ge.end_time ? `${ge.start_time} – ${ge.end_time}` : ge.start_time}
+                      </div>
                     )}
                     {ge.memo && <div style={{ fontSize: 11, opacity: 0.55, marginTop: 3 }}>{ge.memo}</div>}
                   </div>

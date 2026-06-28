@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import PlannerDaily from "./PlannerDaily";
 import PlannerMonthly from "./PlannerMonthly";
 import PlannerWeekly from "./PlannerWeekly";
-import { fetchGroupEventsForUser } from "../api/groupEventsApi";
+import { fetchGroupEventsForUser, deleteGroupEvent } from "../api/groupEventsApi";
 
 // Local-timezone date key (toISOString would use UTC and roll over early)
 function localKey(d) {
@@ -59,6 +59,13 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
     if (!userId) return;
     fetchGroupEventsForUser(userId).then(setGroupEvents).catch(() => {});
   }, [userId, groupEventsVersion]);
+
+  const handleDeleteGroupEvent = async (id) => {
+    try {
+      await deleteGroupEvent(id);
+      setGroupEvents(prev => prev.filter(e => e.id !== id));
+    } catch {}
+  };
 
   // On mount: migrate past daily keys into calEvents, delete keys older than 60 days.
   useEffect(() => {
@@ -197,7 +204,14 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
           spans={spans}
           theme={theme}
           lang={lang}
-          groupEvents={groupEvents.filter(e => e.date === today)}
+          onDeleteGroupEvent={handleDeleteGroupEvent}
+          groupEvents={(() => {
+            const yesterday = localKey(new Date(new Date().setDate(new Date().getDate() - 1)));
+            return groupEvents.filter(e =>
+              e.date === today ||
+              (e.date === yesterday && e.start_time && e.end_time && e.start_time > e.end_time)
+            ).map(e => ({ ...e, _carryOver: e.date !== today }));
+          })()}
         />
       )}
       {tab === "weekly" && (

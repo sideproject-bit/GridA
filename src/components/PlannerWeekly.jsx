@@ -56,6 +56,12 @@ function timeToCell(timeStr) {
   return h * COLS_DAY + Math.floor(m / 10);
 }
 
+function prevDayKey(dateStr) {
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() - 1);
+  return localKey(d);
+}
+
 export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEditDailyEvent, onEditCalEvent, spans, theme, lang, groupEvents = [] }) {
   const pl  = t.planner;
   const wk  = pl.weekly ?? {};
@@ -234,25 +240,46 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
                       </div>
                     );
                   })}
-                  {/* Group events (read-only) */}
-                  {groupEvents.filter(ge => ge.date === dateKey && ge.start_time).map(ge => {
+                  {/* Group events (read-only, including cross-midnight carry-overs) */}
+                  {[
+                    // Events starting on this day
+                    ...groupEvents.filter(ge => ge.date === dateKey && ge.start_time).map(ge => ({ ge, carryOver: false })),
+                    // Cross-midnight events that started the previous day
+                    ...groupEvents.filter(ge => {
+                      if (!ge.start_time || !ge.end_time || ge.start_time <= ge.end_time) return false;
+                      return ge.date === prevDayKey(dateKey);
+                    }).map(ge => ({ ge, carryOver: true })),
+                  ].map(({ ge, carryOver }) => {
+                    const isCross = ge.start_time && ge.end_time && ge.start_time > ge.end_time;
                     const sc = timeToCell(ge.start_time);
                     const ec = ge.end_time ? timeToCell(ge.end_time) : sc;
                     if (sc == null) return null;
-                    const startH = Math.floor(sc / COLS_DAY);
-                    const endH   = Math.min(HOURS - 1, Math.floor(ec / COLS_DAY));
-                    const topPx  = startH * CELL_H + 1;
-                    const htPx   = Math.max(CELL_H - 2, (endH - startH + 1) * CELL_H - 2);
+                    let startH, endH;
+                    if (carryOver) {
+                      startH = 0;
+                      endH = Math.floor(ec / COLS_DAY);
+                    } else if (isCross) {
+                      startH = Math.floor(sc / COLS_DAY);
+                      endH = HOURS - 1;
+                    } else {
+                      startH = Math.floor(sc / COLS_DAY);
+                      endH = Math.min(HOURS - 1, Math.floor(ec / COLS_DAY));
+                    }
+                    const topPx = startH * CELL_H + 1;
+                    const htPx  = Math.max(CELL_H - 2, (endH - startH + 1) * CELL_H - 2);
+                    const blockColor = ge.color ?? "#4A90D9";
                     return (
-                      <div key={ge.id} style={{
+                      <div key={`${ge.id}_${carryOver ? "co" : "s"}`} style={{
                         position: "absolute", top: topPx, left: 1, right: 1, height: htPx,
-                        background: (ge.color ?? "#4A90D9") + "99",
-                        borderLeft: `2px dashed ${ge.color ?? "#4A90D9"}`,
+                        background: blockColor + "99",
+                        borderLeft: `2px dashed ${blockColor}`,
                         borderRadius: 2, padding: "1px 3px",
                         overflow: "hidden", zIndex: 1,
                       }}>
                         <div style={{ fontSize: 8, opacity: 0.55, lineHeight: 1.2, color: dark ? "#fff" : "#111" }}>{ge._groupLabel}</div>
-                        <div style={{ fontSize: 9, fontWeight: 700, lineHeight: 1.3, color: dark ? "#fff" : "#111", overflow: "hidden" }}>{ge.title}</div>
+                        <div style={{ fontSize: 9, fontWeight: 700, lineHeight: 1.3, color: dark ? "#fff" : "#111", overflow: "hidden" }}>
+                          {ge.title}{carryOver ? " ↩" : isCross ? " →" : ""}
+                        </div>
                       </div>
                     );
                   })}

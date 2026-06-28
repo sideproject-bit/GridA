@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { ArrowLeft, Send, Check, CheckCheck, Plus, Users, Settings, X, LogOut, Trash2, UserCheck } from "lucide-react";
+import { ArrowLeft, Send, Check, CheckCheck, Plus, Users, Settings, X, LogOut, Trash2, UserCheck, CalendarCheck } from "lucide-react";
 import { fetchMessages, sendMessage, markAsRead, subscribeToMessages } from "../api/messagesApi";
 import { listFriends } from "../api/friendsApi";
 import { fetchMyGroups, createGroup, inviteMember, leaveGroup, deleteGroup, transferAdmin, getGroupMembers } from "../api/groupsApi";
-import { addGroupEvent } from "../api/groupEventsApi";
+import { createEventAndInvites, fetchPendingInvites, respondToInvite } from "../api/groupEventsApi";
 import { fetchGroupMessages, sendGroupMessage, subscribeToGroupMessages } from "../api/groupMessagesApi";
 import SharedEventForm from "./SharedEventForm";
 
@@ -22,6 +22,14 @@ function formatTime(iso) {
   return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 }
 
+function formatEventDateTime(date, startTime, endTime) {
+  if (!date) return "";
+  const d = new Date(date + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  if (startTime && endTime) return `${d}  ${startTime}–${endTime}`;
+  if (startTime) return `${d}  ${startTime}`;
+  return d;
+}
+
 function groupByDate(messages, t) {
   const result = [];
   let lastDate = null;
@@ -33,7 +41,7 @@ function groupByDate(messages, t) {
   return result;
 }
 
-export default function ChatPanel({ pal, t, myId, addNotification, onGroupEventsChange }) {
+export default function ChatPanel({ pal, t, myId, myUsername, addNotification, onGroupEventsChange }) {
   const [chatView, setChatView] = useState("list"); // "list"|"direct"|"group"|"newGroup"
   const [friends, setFriends] = useState([]);
   const [myGroups, setMyGroups] = useState([]);
@@ -49,6 +57,10 @@ export default function ChatPanel({ pal, t, myId, addNotification, onGroupEvents
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showEventForm, setShowEventForm] = useState(false);
+  const [eventError, setEventError] = useState("");
+
+  // Pending invites (events awaiting my acceptance)
+  const [pendingInvites, setPendingInvites] = useState([]);
 
   // New group
   const [newGroupName, setNewGroupName] = useState("");
@@ -59,6 +71,8 @@ export default function ChatPanel({ pal, t, myId, addNotification, onGroupEvents
   const [showSettings, setShowSettings] = useState(false);
   const [transferTarget, setTransferTarget] = useState("");
   const [inviteTarget, setInviteTarget] = useState("");
+
+  const [guideOpen, setGuideOpen] = useState(false);
 
   const activeFriendRef = useRef(null);
   const friendsRef = useRef([]);
@@ -75,6 +89,14 @@ export default function ChatPanel({ pal, t, myId, addNotification, onGroupEvents
     listFriends(myId).then(setFriends).catch(() => {});
     fetchMyGroups().then(setMyGroups).catch(() => {});
   }, [myId]);
+
+  // Load all pending invites for me
+  const refreshPendingInvites = useCallback(() => {
+    if (!myId) return;
+    fetchPendingInvites(myId).then(setPendingInvites).catch(() => {});
+  }, [myId]);
+
+  useEffect(() => { refreshPendingInvites(); }, [refreshPendingInvites]);
 
   // Direct message realtime subscription
   useEffect(() => {
@@ -220,16 +242,74 @@ export default function ChatPanel({ pal, t, myId, addNotification, onGroupEvents
       color: formData.color,
       memo: formData.memo,
     };
-    if (chatView === "group" && activeGroup) payload.groupId = activeGroup.id;
-    else if (chatView === "direct" && activeFriend) payload.receiverId = activeFriend.id;
+
+    let memberIds = [];
+    if (chatView === "group" && activeGroup) {
+      payload.groupId = activeGroup.id;
+      memberIds = groupMembers.map(m => m.user_id);
+    } else if (chatView === "direct" && activeFriend) {
+      payload.receiverId = activeFriend.id;
+      memberIds = [activeFriend.id];
+    }
+
     try {
-      await addGroupEvent(payload);
+      await createEventAndInvites(payload, memberIds);
       setShowEventForm(false);
+
+      // Post invite message in chat
+      const dateStr = formatEventDateTime(formData.date, formData.startTime, formData.endTime);
+      const adminName = myUsername ?? "Admin";
+      const inviteText = `${t.social?.invitedYou?.(adminName, formData.title) ?? `${adminName} invited you to "${formData.title}"`}${dateStr ? `\n${dateStr}` : ""}`;
+
+      if (chatView === "group" && activeGroup) {
+        const msg = await sendGroupMessage(activeGroup.id, myId, inviteText);
+        const me = groupMembers.find(m => m.user_id === myId);
+        setGroupMessages(prev => [...prev, { ...msg, _senderName: me?.username ?? "Me" }]);
+      } else if (chatView === "direct" && activeFriend) {
+        const msg = await sendMessage(myId, activeFriend.id, inviteText);
+        setDirectMessages(prev => [...prev, msg]);
+      }
+
+      // Notify admin
+      addNotification?.({
+        type: "info",
+        title: t.social?.addEvent ?? "Shared Event",
+        body: t.social?.eventCreatedNotif ?? "Event created. Members will see it after accepting.",
+      });
+
       onGroupEventsChange?.();
     } catch (err) {
-      console.error("addGroupEvent error:", err);
+      console.error("createEventAndInvites error:", err);
       setEventError(err?.message ?? "Failed to save event.");
-      throw err; // re-throw so SharedEventForm resets saving state
+      throw err;
+    }
+  };
+
+  const handleInviteRespond = async (invite, accepted) => {
+    try {
+      await respondToInvite(invite.id, accepted ? "accepted" : "declined");
+      setPendingInvites(prev => prev.filter(i => i.id !== invite.id));
+
+      if (accepted) {
+        onGroupEventsChange?.();
+
+        // Post response message
+        const myName = myUsername ?? "Member";
+        const responseText = accepted
+          ? `✓ ${myName}: "${invite.event.title}" ${t.social?.accept ?? "accepted"}`
+          : `✗ ${myName}: "${invite.event.title}" ${t.social?.decline ?? "declined"}`;
+
+        if (chatView === "group" && activeGroup) {
+          const msg = await sendGroupMessage(activeGroup.id, myId, responseText);
+          const me = groupMembers.find(m => m.user_id === myId);
+          setGroupMessages(prev => [...prev, { ...msg, _senderName: me?.username ?? "Me" }]);
+        } else if (chatView === "direct" && activeFriend) {
+          const msg = await sendMessage(myId, activeFriend.id, responseText);
+          setDirectMessages(prev => [...prev, msg]);
+        }
+      }
+    } catch (err) {
+      console.error("respondToInvite error:", err);
     }
   };
 
@@ -270,12 +350,63 @@ export default function ChatPanel({ pal, t, myId, addNotification, onGroupEvents
     setInviteTarget("");
   };
 
-  const [guideOpen, setGuideOpen] = useState(false);
-  const [eventError, setEventError] = useState("");
   const isGroupAdmin = activeGroup?.admin_id === myId;
   const ink = pal.ink;
   const bg = pal.bg;
   const acc = pal.accent;
+
+  // Invite cards relevant to current chat
+  const chatInvites = pendingInvites.filter(inv => {
+    if (!inv.event) return false;
+    if (chatView === "group" && activeGroup) return inv.event.group_id === activeGroup.id;
+    if (chatView === "direct" && activeFriend) return inv.event.creator_id === activeFriend.id;
+    return false;
+  });
+
+  const InviteCards = chatInvites.length > 0 && (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", opacity: 0.4, letterSpacing: "0.06em", marginBottom: 6, color: ink }}>
+        {t.social?.pendingInvites ?? "Pending Invites"}
+      </div>
+      {chatInvites.map(inv => (
+        <div key={inv.id} style={{
+          border: `1.5px dashed ${inv.event.color ?? acc}`,
+          borderRadius: 8, padding: "10px 12px", marginBottom: 8,
+          background: (inv.event.color ?? acc) + "10",
+        }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+            <CalendarCheck size={14} style={{ color: inv.event.color ?? acc, flexShrink: 0, marginTop: 2 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: ink, wordBreak: "break-word" }}>{inv.event.title}</div>
+              <div style={{ fontSize: 11, opacity: 0.6, color: ink, marginTop: 2 }}>
+                {inv.creatorUsername} · {formatEventDateTime(inv.event.date, inv.event.start_time, inv.event.end_time)}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
+            <button
+              onClick={() => handleInviteRespond(inv, true)}
+              style={{
+                flex: 1, padding: "6px 0", fontSize: 12, fontWeight: 700, border: "none",
+                background: inv.event.color ?? acc, color: "#fff", cursor: "pointer", borderRadius: 4,
+              }}
+            >
+              {t.social?.accept ?? "수락"}
+            </button>
+            <button
+              onClick={() => handleInviteRespond(inv, false)}
+              style={{
+                flex: 1, padding: "6px 0", fontSize: 12, fontWeight: 700,
+                border: `1px solid ${ink}22`, background: "none", color: ink, cursor: "pointer", borderRadius: 4,
+              }}
+            >
+              {t.social?.decline ?? "거절"}
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   const inputBar = (
     <div style={{ display: "flex", gap: 8, marginTop: 10, borderTop: `1px solid ${ink}18`, paddingTop: 10 }}>
@@ -516,6 +647,8 @@ export default function ChatPanel({ pal, t, myId, addNotification, onGroupEvents
           {t.social?.retentionNotice ?? "Messages kept for 30 days."}
         </div>
 
+        {InviteCards}
+
         <div style={{ flex: 1, overflowY: "auto" }}>
           {loading
             ? <div style={{ textAlign: "center", opacity: 0.3, fontSize: 12, marginTop: 40 }}>…</div>
@@ -532,7 +665,7 @@ export default function ChatPanel({ pal, t, myId, addNotification, onGroupEvents
                   <div style={{
                     maxWidth: "72%", background: isMine ? acc : ink + "12",
                     color: isMine ? "#fff" : ink,
-                    padding: "7px 11px", fontSize: 13, lineHeight: 1.45, wordBreak: "break-word",
+                    padding: "7px 11px", fontSize: 13, lineHeight: 1.45, wordBreak: "break-word", whiteSpace: "pre-wrap",
                     borderRadius: isMine ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
                   }}>
                     {msg.content}
@@ -587,7 +720,6 @@ export default function ChatPanel({ pal, t, myId, addNotification, onGroupEvents
         {/* Settings panel */}
         {showSettings && (
           <div style={{ border: `1px solid ${ink}18`, borderRadius: 6, padding: 14, marginBottom: 12, fontSize: 12 }}>
-            {/* Members list */}
             <div style={{ fontWeight: 700, textTransform: "uppercase", fontSize: 10, opacity: 0.5, marginBottom: 8, letterSpacing: "0.05em" }}>
               {t.social?.members ?? "Members"}
             </div>
@@ -603,7 +735,6 @@ export default function ChatPanel({ pal, t, myId, addNotification, onGroupEvents
               </div>
             ))}
 
-            {/* Invite friend (admin only) */}
             {isGroupAdmin && invitableFriends.length > 0 && (
               <div style={{ marginTop: 12, display: "flex", gap: 6 }}>
                 <select
@@ -621,7 +752,6 @@ export default function ChatPanel({ pal, t, myId, addNotification, onGroupEvents
               </div>
             )}
 
-            {/* Transfer admin (admin only) */}
             {isGroupAdmin && nonAdminMembers.length > 0 && (
               <div style={{ marginTop: 10, display: "flex", gap: 6 }}>
                 <select
@@ -654,6 +784,8 @@ export default function ChatPanel({ pal, t, myId, addNotification, onGroupEvents
           </div>
         )}
 
+        {InviteCards}
+
         {/* Messages */}
         <div style={{ flex: 1, overflowY: "auto" }}>
           {loading
@@ -674,7 +806,7 @@ export default function ChatPanel({ pal, t, myId, addNotification, onGroupEvents
                   <div style={{
                     maxWidth: "72%", background: isMine ? acc : ink + "12",
                     color: isMine ? "#fff" : ink,
-                    padding: "7px 11px", fontSize: 13, lineHeight: 1.45, wordBreak: "break-word",
+                    padding: "7px 11px", fontSize: 13, lineHeight: 1.45, wordBreak: "break-word", whiteSpace: "pre-wrap",
                     borderRadius: isMine ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
                   }}>
                     {msg.content}

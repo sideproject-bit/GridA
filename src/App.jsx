@@ -694,7 +694,7 @@ function AppShell() {
 
             {/* RIGHT: Social / Chat */}
             <div style={{ display: isMobile && profileTab !== "social" ? "none" : undefined }}>
-              <ChatPanel pal={pal} t={t} myId={myId} addNotification={addNotification} onGroupEventsChange={() => setGroupEventsVersion(v => v + 1)} />
+              <ChatPanel pal={pal} t={t} myId={myId} myUsername={profile?.username} addNotification={addNotification} onGroupEventsChange={() => setGroupEventsVersion(v => v + 1)} />
             </div>
           </div>
         </div>

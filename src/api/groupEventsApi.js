@@ -8,8 +8,24 @@ export async function fetchGroupEventsForUser(myId) {
   if (error) throw error;
   if (!events?.length) return [];
 
-  const groupIds = [...new Set(events.filter(e => e.group_id).map(e => e.group_id))];
-  const creatorIds = [...new Set(events.map(e => e.creator_id))];
+  // For events I didn't create, only include ones I've accepted
+  const notMine = events.filter(e => e.creator_id !== myId);
+  const acceptedEventIds = new Set();
+  if (notMine.length) {
+    const { data: invites } = await supabase
+      .from("group_event_invites")
+      .select("event_id")
+      .eq("invitee_id", myId)
+      .eq("status", "accepted")
+      .in("event_id", notMine.map(e => e.id));
+    (invites ?? []).forEach(i => acceptedEventIds.add(i.event_id));
+  }
+
+  const visible = events.filter(e => e.creator_id === myId || acceptedEventIds.has(e.id));
+  if (!visible.length) return [];
+
+  const groupIds = [...new Set(visible.filter(e => e.group_id).map(e => e.group_id))];
+  const creatorIds = [...new Set(visible.map(e => e.creator_id))];
 
   const [groupsRes, profilesRes] = await Promise.all([
     groupIds.length
@@ -23,7 +39,7 @@ export async function fetchGroupEventsForUser(myId) {
   const groupMap = Object.fromEntries((groupsRes.data ?? []).map(g => [g.id, g]));
   const profileMap = Object.fromEntries((profilesRes.data ?? []).map(p => [p.id, p]));
 
-  return events.map(e => ({
+  return visible.map(e => ({
     ...e,
     _groupLabel: e.group_id
       ? `[${groupMap[e.group_id]?.name ?? "Group"}]`
@@ -54,6 +70,54 @@ export async function addGroupEvent({ groupId, receiverId, creatorId, title, dat
     .single();
   if (error) throw error;
   return data;
+}
+
+export async function createEventAndInvites(payload, memberIds) {
+  const event = await addGroupEvent(payload);
+  const invitees = (memberIds ?? []).filter(id => id !== payload.creatorId);
+  if (invitees.length) {
+    const { error } = await supabase
+      .from("group_event_invites")
+      .insert(invitees.map(id => ({ event_id: event.id, invitee_id: id })));
+    if (error) throw error;
+  }
+  return event;
+}
+
+export async function fetchPendingInvites(myId) {
+  const { data, error } = await supabase
+    .from("group_event_invites")
+    .select("id, event_id, created_at")
+    .eq("invitee_id", myId)
+    .eq("status", "pending");
+  if (error) throw error;
+  if (!data?.length) return [];
+
+  const eventIds = data.map(i => i.event_id);
+  const { data: events, error: evErr } = await supabase
+    .from("group_events")
+    .select("id, title, date, start_time, end_time, color, group_id, receiver_id, creator_id")
+    .in("id", eventIds);
+  if (evErr) throw evErr;
+
+  const creatorIds = [...new Set((events ?? []).map(e => e.creator_id))];
+  const { data: profiles } = await supabase
+    .from("profiles").select("id, username").in("id", creatorIds);
+  const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]));
+  const eventMap = Object.fromEntries((events ?? []).map(e => [e.id, e]));
+
+  return data.map(inv => {
+    const ev = eventMap[inv.event_id];
+    return { ...inv, event: ev, creatorUsername: profileMap[ev?.creator_id]?.username ?? "?" };
+  }).filter(inv => inv.event);
+}
+
+export async function respondToInvite(inviteId, status) {
+  const { error } = await supabase
+    .from("group_event_invites")
+    .update({ status, responded_at: new Date().toISOString() })
+    .eq("id", inviteId);
+  if (error) throw error;
 }
 
 export async function deleteGroupEvent(eventId) {
