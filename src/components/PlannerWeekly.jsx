@@ -105,10 +105,18 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
 
   function getEventsForDay(day, dateKey) {
     const dow  = day.getDay();
-    const cal  = (calEvents[dateKey] ?? []).map(e => ({ ...e, _dateKey: dateKey }));
+    const cal  = (calEvents[dateKey] ?? [])
+      .map(e => {
+        // Fallback: derive startCell/endCell from startTime/endTime if missing
+        const startCell = e.startCell ?? (e.startTime ? timeToCell(e.startTime) : null);
+        const endCell   = e.endCell   ?? (e.endTime   ? Math.max(startCell ?? 0, timeToCell(e.endTime) - 1) : startCell);
+        return { ...e, _dateKey: dateKey, startCell, endCell };
+      })
+      .filter(e => e.startCell != null);
     const recur = recurring
       .filter(r => r.days.includes(dow))
-      .map(r => ({ ...r, id: `recur_${r.id}_${dateKey}`, fromCalendar: true, _dateKey: dateKey }));
+      .map(r => ({ ...r, id: `recur_${r.id}_${dateKey}`, fromCalendar: true, _dateKey: dateKey }))
+      .filter(r => r.startCell != null);
     return [...cal, ...recur];
   }
 
@@ -211,78 +219,91 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
                     />
                   ))}
 
-                  {/* Regular events */}
-                  {evts.map(evt => {
-                    const startH = Math.floor(evt.startCell / COLS_DAY);
-                    const endH   = Math.min(HOURS - 1, Math.floor(evt.endCell / COLS_DAY));
-                    const topPx  = startH * CELL_H + 1;
-                    const htPx   = Math.max(CELL_H - 2, (endH - startH + 1) * CELL_H - 2);
+                  {/* Determine group events for this day to decide lane widths */}
+                  {(() => {
+                    const dayGroupEvts = [
+                      ...groupEvents.filter(ge => ge.date === dateKey && ge.start_time).map(ge => ({ ge, carryOver: false })),
+                      ...groupEvents.filter(ge => {
+                        if (!ge.start_time || !ge.end_time || ge.start_time <= ge.end_time) return false;
+                        return ge.date === prevDayKey(dateKey);
+                      }).map(ge => ({ ge, carryOver: true })),
+                    ];
+                    const hasGroup = dayGroupEvts.length > 0;
+                    // When group events exist: personal=left 58%, group=right 40%
+                    const personalRight = hasGroup ? "42%" : 1;
+                    const groupLeft     = "60%";
+
                     return (
-                      <div key={evt.id}
-                        onClick={(e) => { e.stopPropagation(); setViewEvt({ event: evt, dateKey }); }}
-                        style={{
-                          position: "absolute", top: topPx, left: 1, right: 1, height: htPx,
-                          background: evt.color + "cc",
-                          borderLeft: `2px solid ${evt.color}`,
-                          borderRadius: 2, padding: "1px 3px",
-                          overflow: "hidden", zIndex: 1,
-                          cursor: "pointer",
-                        }}
-                      >
-                        <div style={{ fontSize: 9, fontWeight: 700, lineHeight: 1.3, color: dark ? "#fff" : "#111", overflow: "hidden" }}>
-                          {evt.title}
-                        </div>
-                        {htPx > CELL_H && (
-                          <div style={{ fontSize: 8, opacity: 0.7, color: dark ? "#fff" : "#111" }}>
-                            {cellToTime(evt.startCell)}
-                          </div>
-                        )}
-                      </div>
+                      <>
+                        {/* Personal/calendar events */}
+                        {evts.filter(e => e.startCell != null).map(evt => {
+                          const startH = Math.floor(evt.startCell / COLS_DAY);
+                          // Fix: use (endCell-1) so adjacent events don't visually overlap
+                          const endH   = Math.min(HOURS - 1, Math.max(startH, Math.floor((evt.endCell - 1) / COLS_DAY)));
+                          const topPx  = startH * CELL_H + 1;
+                          const htPx   = Math.max(CELL_H - 2, (endH - startH + 1) * CELL_H - 2);
+                          return (
+                            <div key={evt.id}
+                              onClick={(e) => { e.stopPropagation(); setViewEvt({ event: evt, dateKey }); }}
+                              style={{
+                                position: "absolute", top: topPx, left: 1, right: personalRight, height: htPx,
+                                background: evt.color + "cc",
+                                borderLeft: `2px solid ${evt.color}`,
+                                borderRadius: 2, padding: "1px 3px",
+                                overflow: "hidden", zIndex: 1,
+                                cursor: "pointer",
+                              }}
+                            >
+                              <div style={{ fontSize: 9, fontWeight: 700, lineHeight: 1.3, color: dark ? "#fff" : "#111", overflow: "hidden" }}>
+                                {evt.title}
+                              </div>
+                              {htPx > CELL_H && (
+                                <div style={{ fontSize: 8, opacity: 0.7, color: dark ? "#fff" : "#111" }}>
+                                  {cellToTime(evt.startCell)}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        {/* Group events (read-only, right lane) */}
+                        {dayGroupEvts.map(({ ge, carryOver }) => {
+                          const isCross = ge.start_time && ge.end_time && ge.start_time > ge.end_time;
+                          const sc = timeToCell(ge.start_time);
+                          const ec = ge.end_time ? timeToCell(ge.end_time) : sc;
+                          if (sc == null) return null;
+                          let startH, endH;
+                          if (carryOver) {
+                            startH = 0;
+                            endH = Math.max(0, Math.floor((ec - 1) / COLS_DAY));
+                          } else if (isCross) {
+                            startH = Math.floor(sc / COLS_DAY);
+                            endH = HOURS - 1;
+                          } else {
+                            startH = Math.floor(sc / COLS_DAY);
+                            endH = Math.min(HOURS - 1, Math.max(startH, Math.floor((ec - 1) / COLS_DAY)));
+                          }
+                          const topPx = startH * CELL_H + 1;
+                          const htPx  = Math.max(CELL_H - 2, (endH - startH + 1) * CELL_H - 2);
+                          const blockColor = ge.color ?? "#4A90D9";
+                          return (
+                            <div key={`${ge.id}_${carryOver ? "co" : "s"}`} style={{
+                              position: "absolute", top: topPx, left: groupLeft, right: 1, height: htPx,
+                              background: blockColor + "99",
+                              borderLeft: `2px dashed ${blockColor}`,
+                              borderRadius: 2, padding: "1px 3px",
+                              overflow: "hidden", zIndex: 1,
+                            }}>
+                              <div style={{ fontSize: 8, opacity: 0.55, lineHeight: 1.2, color: dark ? "#fff" : "#111" }}>{ge._groupLabel}</div>
+                              <div style={{ fontSize: 9, fontWeight: 700, lineHeight: 1.3, color: dark ? "#fff" : "#111", overflow: "hidden" }}>
+                                {ge.title}{carryOver ? " ↩" : isCross ? " →" : ""}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </>
                     );
-                  })}
-                  {/* Group events (read-only, including cross-midnight carry-overs) */}
-                  {[
-                    // Events starting on this day
-                    ...groupEvents.filter(ge => ge.date === dateKey && ge.start_time).map(ge => ({ ge, carryOver: false })),
-                    // Cross-midnight events that started the previous day
-                    ...groupEvents.filter(ge => {
-                      if (!ge.start_time || !ge.end_time || ge.start_time <= ge.end_time) return false;
-                      return ge.date === prevDayKey(dateKey);
-                    }).map(ge => ({ ge, carryOver: true })),
-                  ].map(({ ge, carryOver }) => {
-                    const isCross = ge.start_time && ge.end_time && ge.start_time > ge.end_time;
-                    const sc = timeToCell(ge.start_time);
-                    const ec = ge.end_time ? timeToCell(ge.end_time) : sc;
-                    if (sc == null) return null;
-                    let startH, endH;
-                    if (carryOver) {
-                      startH = 0;
-                      endH = Math.floor(ec / COLS_DAY);
-                    } else if (isCross) {
-                      startH = Math.floor(sc / COLS_DAY);
-                      endH = HOURS - 1;
-                    } else {
-                      startH = Math.floor(sc / COLS_DAY);
-                      endH = Math.min(HOURS - 1, Math.floor(ec / COLS_DAY));
-                    }
-                    const topPx = startH * CELL_H + 1;
-                    const htPx  = Math.max(CELL_H - 2, (endH - startH + 1) * CELL_H - 2);
-                    const blockColor = ge.color ?? "#4A90D9";
-                    return (
-                      <div key={`${ge.id}_${carryOver ? "co" : "s"}`} style={{
-                        position: "absolute", top: topPx, left: 1, right: 1, height: htPx,
-                        background: blockColor + "99",
-                        borderLeft: `2px dashed ${blockColor}`,
-                        borderRadius: 2, padding: "1px 3px",
-                        overflow: "hidden", zIndex: 1,
-                      }}>
-                        <div style={{ fontSize: 8, opacity: 0.55, lineHeight: 1.2, color: dark ? "#fff" : "#111" }}>{ge._groupLabel}</div>
-                        <div style={{ fontSize: 9, fontWeight: 700, lineHeight: 1.3, color: dark ? "#fff" : "#111", overflow: "hidden" }}>
-                          {ge.title}{carryOver ? " ↩" : isCross ? " →" : ""}
-                        </div>
-                      </div>
-                    );
-                  })}
+                  })()}
                 </div>
               );
             })}

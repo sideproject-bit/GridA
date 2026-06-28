@@ -427,18 +427,21 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             const gEvt = groupCellMap[idx];
             const inSel = selRange && idx >= selRange.start && idx <= selRange.end;
             const isCurr = idx === currentCell;
+            const groupColor = gEvt?.color ?? "#4A90D9";
             return (
               <div key={idx} style={{
                 height: CELL_H,
                 background: inSel ? acc + "55"
                   : evt ? evt.color + "bb"
-                  : gEvt ? (gEvt.color ?? "#4A90D9") + "55"
+                  : gEvt ? groupColor + "55"
                   : "transparent",
                 border: isCurr
                   ? `2px solid ${acc}`
-                  : gEvt && !evt
-                  ? `1px dashed ${gEvt.color ?? "#4A90D9"}`
                   : `1px solid ${border}`,
+                // Inset ring always shows group event presence, even under a personal event
+                boxShadow: gEvt && !inSel
+                  ? `inset 0 0 0 1.5px ${groupColor}`
+                  : "none",
                 boxSizing: "border-box",
               }} />
             );

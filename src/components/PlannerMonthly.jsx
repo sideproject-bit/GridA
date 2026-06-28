@@ -276,7 +276,7 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
                 {pl.months[month]} {selectedDay}{lang === "ko" ? "일" : ""}
               </div>
 
-              {dayEvents.map(evt => (
+              {[...dayEvents].sort((a, b) => (a.startCell ?? Infinity) - (b.startCell ?? Infinity)).map(evt => (
                 <div key={evt.id} style={{
                   display: "flex", alignItems: "flex-start", gap: 8, padding: "7px 10px", marginBottom: 6,
                   background: dark ? "#1e1d16" : "#f0ede2",

@@ -101,21 +101,24 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
     }
 
     if (toMigrate.length > 0) {
-      setCalEvents(prev => {
-        const next = { ...prev };
-        for (const { k, dateStr } of toMigrate) {
-          try {
-            const data = JSON.parse(localStorage.getItem(k) ?? "null");
-            const evts = data?.events ?? [];
-            if (evts.length > 0) {
-              const existingIds = new Set((next[dateStr] ?? []).map(e => e.id));
-              const fresh = evts.filter(e => !existingIds.has(e.id));
-              if (fresh.length > 0) next[dateStr] = [...(next[dateStr] ?? []), ...fresh];
-            }
-          } catch {}
-        }
-        return next;
-      });
+      // Build merged state synchronously from current localStorage (not React state)
+      // so we can persist to CAL_KEY BEFORE deleting old per-day keys — prevents
+      // data loss if the app closes between setState and the calEvents save effect.
+      const storedCal = JSON.parse(localStorage.getItem(`grida_calendar_${userId}`) ?? "{}");
+      const nextCal = { ...storedCal };
+      for (const { k, dateStr } of toMigrate) {
+        try {
+          const data = JSON.parse(localStorage.getItem(k) ?? "null");
+          const evts = data?.events ?? [];
+          if (evts.length > 0) {
+            const existingIds = new Set((nextCal[dateStr] ?? []).map(e => e.id));
+            const fresh = evts.filter(e => !existingIds.has(e.id));
+            if (fresh.length > 0) nextCal[dateStr] = [...(nextCal[dateStr] ?? []), ...fresh];
+          }
+        } catch {}
+      }
+      localStorage.setItem(`grida_calendar_${userId}`, JSON.stringify(nextCal));
+      setCalEvents(nextCal);
     }
     [...toMigrate.map(x => x.k), ...toDelete].forEach(k => localStorage.removeItem(k));
   }, [userId]);
