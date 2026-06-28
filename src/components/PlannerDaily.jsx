@@ -72,27 +72,25 @@ function EventRow({ evt, isMobile, editMode, dark, ink, acc, border, pl, onMove,
         transform: isMobile ? `translateX(${dx}px)` : "none",
         transition: startX.current == null ? "transform 0.2s ease" : "none",
         cursor: "pointer",
-        opacity: evt.done && !evt.fromCalendar ? 0.6 : 1,
+        opacity: evt.done ? 0.6 : 1,
       }}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
           fontWeight: 700, fontSize: 13, wordBreak: "keep-all",
-          textDecoration: evt.done && !evt.fromCalendar ? "line-through" : "none",
+          textDecoration: evt.done ? "line-through" : "none",
         }}>{evt.title}</div>
         <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>
           {evt.startTime ?? cellToTime(evt.startCell)} – {evt.endTime ?? cellToTimeEnd(evt.endCell)}
         </div>
         {evt.memo && <div style={{ fontSize: 11, opacity: 0.6, marginTop: 4, wordBreak: "keep-all" }}>{evt.memo}</div>}
       </div>
-      {!evt.fromCalendar && (
-        <input
-          type="checkbox"
-          checked={!!evt.done}
-          onChange={(e) => { e.stopPropagation(); onCheck?.(evt.id); }}
-          onClick={(e) => e.stopPropagation()}
-          style={{ accentColor: acc, cursor: "pointer", flexShrink: 0, marginTop: 2, width: 15, height: 15 }}
-        />
-      )}
+      <input
+        type="checkbox"
+        checked={!!evt.done}
+        onChange={(e) => { e.stopPropagation(); onCheck?.(evt.id); }}
+        onClick={(e) => e.stopPropagation()}
+        style={{ accentColor: acc, cursor: "pointer", flexShrink: 0, marginTop: 2, width: 15, height: 15 }}
+      />
     </div>
   );
 
@@ -554,7 +552,10 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             isMobile={isMobile} editMode={editMode} dark={dark} ink={ink} acc={acc} border={border} pl={pl}
             onMove={moveToTomorrow}
             onSkip={skipOccurrence}
-            onCheck={(id) => onEditEvent?.(id, { done: !evt.done })}
+            onCheck={(id) => {
+              if (evt.fromCalendar) onEditCalEvent?.(evt._dateKey, id, { done: !evt.done });
+              else onEditEvent?.(id, { done: !evt.done });
+            }}
             onTap={(ev) => setViewEvent(ev)}
             onContext={(ev, x, y) => setCtxMenu({ evt: ev, x, y })}
           />
