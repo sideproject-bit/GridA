@@ -69,7 +69,7 @@ function prevDayKey(dateStr) {
   return localKey(d);
 }
 
-export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEditDailyEvent, onEditCalEvent, onMoveEvent, spans, theme, lang, groupEvents = [] }) {
+export default function PlannerWeekly({ t, pal, dark, editMode = true, calEvents, recurring, onEditDailyEvent, onEditCalEvent, onMoveEvent, spans, theme, lang, groupEvents = [] }) {
   const pl  = t.planner;
   const wk  = pl.weekly ?? {};
   const { isMobile } = useViewport();
@@ -360,7 +360,7 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
                           const htPx   = Math.max(CELL_H - 2, (endH - startH + 1) * CELL_H - 2);
                           return (
                             <div key={evt.id}
-                              onPointerDown={(e) => startMoveDrag(evt, dateKey, e)}
+                              onPointerDown={editMode ? (e) => startMoveDrag(evt, dateKey, e) : undefined}
                               onClick={(e) => { if (!dragRef.current) { e.stopPropagation(); setViewEvt({ event: evt, dateKey }); } }}
                               style={{
                                 position: "absolute", top: topPx, left: 1, right: personalRight, height: htPx,
@@ -368,8 +368,9 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
                                 borderLeft: `2px solid ${evt.color}`,
                                 borderRadius: 2, padding: "1px 3px 0",
                                 overflow: "hidden", zIndex: 1,
-                                cursor: isDragging ? "grabbing" : "grab",
-                                touchAction: "none", userSelect: "none",
+                                cursor: editMode ? (isDragging ? "grabbing" : "grab") : "pointer",
+                                touchAction: editMode ? "none" : undefined,
+                                userSelect: "none",
                               }}
                             >
                               <div style={{ fontSize: 9, fontWeight: 700, lineHeight: 1.3, color: dark ? "#fff" : "#111", overflow: "hidden" }}>
@@ -380,16 +381,18 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
                                   {cellToTime(evt.startCell)}
                                 </div>
                               )}
-                              {/* Resize handle */}
-                              <div
-                                onPointerDown={(e) => { e.stopPropagation(); startResizeDrag(evt, dateKey, e); }}
-                                style={{
-                                  position: "absolute", bottom: 0, left: 0, right: 0, height: 6,
-                                  cursor: "ns-resize",
-                                  background: `${evt.color}55`,
-                                  borderTop: `1px solid ${evt.color}99`,
-                                }}
-                              />
+                              {/* Resize handle — edit mode only */}
+                              {editMode && (
+                                <div
+                                  onPointerDown={(e) => { e.stopPropagation(); startResizeDrag(evt, dateKey, e); }}
+                                  style={{
+                                    position: "absolute", bottom: 0, left: 0, right: 0, height: 6,
+                                    cursor: "ns-resize",
+                                    background: `${evt.color}55`,
+                                    borderTop: `1px solid ${evt.color}99`,
+                                  }}
+                                />
+                              )}
                             </div>
                           );
                         })}
@@ -535,7 +538,7 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
                   <div style={{ fontSize: 10, opacity: 0.35, marginBottom: 8 }}>📅 {pl.fromCalendar}</div>
                 )}
                 <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
-                  {!viewEvt.event.id.startsWith("recur_") && (
+                  {editMode && !viewEvt.event.id.startsWith("recur_") && (
                     <button onClick={() => openEditEvt(viewEvt.event)}
                       style={{ background: acc, color: "#fff", border: "none", borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
                       {pl.edit || "Edit"}

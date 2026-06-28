@@ -148,6 +148,30 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
       [dateKey]: (prev[dateKey] ?? []).filter(e => e.id !== id),
     }));
 
+  const moveCalEventToDate = (evt, origDateKey, newDateKey, changes) => {
+    if (origDateKey === newDateKey) {
+      if (evt._daily) {
+        setEvents(prev => prev.map(e => e.id === evt.id ? { ...e, ...changes } : e));
+      } else {
+        setCalEvents(prev => ({
+          ...prev,
+          [origDateKey]: (prev[origDateKey] ?? []).map(e => e.id === evt.id ? { ...e, ...changes } : e),
+        }));
+      }
+    } else {
+      const clean = { id: evt.id, title: evt.title, color: evt.color, memo: evt.memo ?? "", ...changes };
+      if (evt._daily) {
+        setEvents(prev => prev.filter(e => e.id !== evt.id));
+      } else {
+        setCalEvents(prev => ({
+          ...prev,
+          [origDateKey]: (prev[origDateKey] ?? []).filter(e => e.id !== evt.id),
+        }));
+      }
+      setCalEvents(prev => ({ ...prev, [newDateKey]: [...(prev[newDateKey] ?? []), clean] }));
+    }
+  };
+
   const skipRecurringOccurrence = (recurringId, dateKey) =>
     setRecurring(prev => prev.map(r =>
       r.id === recurringId ? { ...r, exceptions: [...(r.exceptions ?? []), dateKey] } : r
@@ -311,7 +335,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
             }}>{label}</button>
           ))}
         </div>
-        {tab === "daily" && (
+        {(tab === "daily" || tab === "weekly") && (
           <button onClick={() => setEditMode(v => !v)} style={{
             background: "none", border: `1px solid ${border}`,
             borderRadius: isMon ? 0 : 6,
@@ -446,10 +470,12 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
       {tab === "weekly" && (
         <PlannerWeekly
           t={t} pal={pal} dark={dark}
+          editMode={editMode}
           calEvents={mergedCalEvents}
           recurring={recurring}
           onEditDailyEvent={editDailyEvent}
           onEditCalEvent={editCalEvent}
+          onMoveEvent={moveCalEventToDate}
           spans={spans}
           theme={theme}
           lang={lang}
