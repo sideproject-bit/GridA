@@ -33,10 +33,11 @@ const MON = { red: "#C7382E", blue: "#2B3DCB", yellow: "#E3B22E" };
 
 // Single event row. Mobile: swipe right = procrastinate, tap = open popup.
 // Desktop: click = open popup, right-click = context menu.
-function EventRow({ evt, isMobile, editMode, dark, ink, acc, border, pl, onMove, onCheck, onTap, onContext }) {
+function EventRow({ evt, isMobile, editMode, dark, ink, acc, border, pl, onMove, onSkip, onCheck, onTap, onContext }) {
   const [dx, setDx] = useState(0);
   const startX = useRef(null);
-  const canProc = editMode && !evt.fromCalendar;
+  const canProc = editMode && !evt._recurring;
+  const canSkip = editMode && !!evt._recurring;
   const THRESH = 80;
 
   const onTouchStart = (e) => { startX.current = e.touches[0].clientX; };
@@ -47,6 +48,7 @@ function EventRow({ evt, isMobile, editMode, dark, ink, acc, border, pl, onMove,
   const onTouchEnd = () => {
     if (startX.current == null) return;
     if (dx > THRESH && canProc) onMove(evt);
+    else if (dx > THRESH && canSkip) onSkip?.(evt);
     else if (Math.abs(dx) < 10) onTap?.(evt); // tap → open popup
     startX.current = null;
     setDx(0);
@@ -92,7 +94,7 @@ function EventRow({ evt, isMobile, editMode, dark, ink, acc, border, pl, onMove,
   if (!isMobile) {
     return (
       <div
-        onContextMenu={canProc ? (e) => { e.preventDefault(); onContext(evt, e.clientX, e.clientY); } : undefined}
+        onContextMenu={(canProc || canSkip) ? (e) => { e.preventDefault(); onContext(evt, e.clientX, e.clientY); } : undefined}
         style={{ marginBottom: 6 }}
       >
         {card}
@@ -102,9 +104,11 @@ function EventRow({ evt, isMobile, editMode, dark, ink, acc, border, pl, onMove,
 
   return (
     <div style={{ position: "relative", marginBottom: 6, overflow: "hidden", borderRadius: 4 }}>
-      {canProc && (
+      {(canProc || canSkip) && (
         <div style={{ position: "absolute", inset: 0, display: "flex", justifyContent: "flex-start", alignItems: "center", paddingLeft: 14, fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-          <span style={{ color: MON.blue, opacity: dx > 20 ? 1 : 0.3 }}>→ {pl.moveTomorrow || "Tomorrow"}</span>
+          <span style={{ color: MON.blue, opacity: dx > 20 ? 1 : 0.3 }}>
+            {canSkip ? `✕ ${pl.skipOccurrence || "Skip today"}` : `→ ${pl.moveTomorrow || "Tomorrow"}`}
+          </span>
         </div>
       )}
       <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
@@ -180,7 +184,7 @@ function timeToCell(timeStr) {
   return h * COLS + Math.floor(m / 10);
 }
 
-export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, onEditEvent, todos, onTodosChange, onMoveToTomorrow, spans, theme, lang, groupEvents = [], onDeleteGroupEvent }) {
+export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, onEditEvent, onEditCalEvent, onDeleteCalEvent, todos, onTodosChange, onMoveToTomorrow, onSkipRecurring, spans, theme, lang, groupEvents = [], onDeleteGroupEvent }) {
   const pl    = t.planner;
   const ink   = pal.ink;
   const acc   = pal.accent;
@@ -288,6 +292,12 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
     else openPopup(cell, cell);
   }
 
+  function skipOccurrence(evt) {
+    onSkipRecurring?.(evt._recurringId, evt._dateKey);
+    setViewEvent(null);
+    setCtxMenu(null);
+  }
+
   function moveToTomorrow(evt) {
     onMoveToTomorrow?.({
       id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
@@ -299,7 +309,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
       startCell: evt.startCell,
       endCell: evt.endCell,
     });
-    if (!evt.fromCalendar) deleteEvent(evt.id);
+    deleteEvent(evt);
     setViewEvent(null);
     setCtxMenu(null);
   }
@@ -329,13 +339,22 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
 
   function saveEditView() {
     if (!viewEvent || !editTitle.trim()) return;
-    onEditEvent?.(viewEvent.id, { title: editTitle.trim(), color: editColor, memo: editMemo });
+    const changes = { title: editTitle.trim(), color: editColor, memo: editMemo };
+    if (viewEvent.fromCalendar) {
+      onEditCalEvent?.(viewEvent._dateKey, viewEvent.id, changes);
+    } else {
+      onEditEvent?.(viewEvent.id, changes);
+    }
     setViewEvent(null);
     setIsEditingView(false);
   }
 
-  function deleteEvent(id) {
-    onEventsChange(prev => prev.filter(e => e.id !== id));
+  function deleteEvent(evt) {
+    if (evt.fromCalendar) {
+      onDeleteCalEvent?.(evt._dateKey, evt.id);
+    } else {
+      onEventsChange(prev => prev.filter(e => e.id !== evt.id));
+    }
   }
 
   function addTodo(e) {
@@ -491,6 +510,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             key={evt.id} evt={evt}
             isMobile={isMobile} editMode={editMode} dark={dark} ink={ink} acc={acc} border={border} pl={pl}
             onMove={moveToTomorrow}
+            onSkip={skipOccurrence}
             onCheck={(id) => onEditEvent?.(id, { done: !evt.done })}
             onTap={(ev) => setViewEvent(ev)}
             onContext={(ev, x, y) => setCtxMenu({ evt: ev, x, y })}
@@ -781,9 +801,16 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
                 </div>
                 {viewEvent.memo && <div style={{ fontSize: 13, lineHeight: 1.6, opacity: 0.8, wordBreak: "keep-all", whiteSpace: "pre-wrap" }}>{viewEvent.memo}</div>}
                 {viewEvent.fromCalendar && <div style={{ fontSize: 11, opacity: 0.4, marginTop: 8 }}>📅 {pl.fromCalendar}</div>}
-                {editMode && !viewEvent.fromCalendar && (
+                {editMode && viewEvent._recurring && (
                   <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 16 }}>
-                    <button onClick={() => { deleteEvent(viewEvent.id); setViewEvent(null); }} style={{ background: "none", border: `1px solid ${MON.red}`, color: MON.red, borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
+                    <button onClick={() => skipOccurrence(viewEvent)} style={{ background: "none", border: `1px solid ${MON.red}`, color: MON.red, borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
+                      ✕ {pl.skipOccurrence || "Skip today"}
+                    </button>
+                  </div>
+                )}
+                {editMode && !viewEvent._recurring && (
+                  <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 16 }}>
+                    <button onClick={() => { deleteEvent(viewEvent); setViewEvent(null); }} style={{ background: "none", border: `1px solid ${MON.red}`, color: MON.red, borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
                       {pl.delete || "Delete"}
                     </button>
                     <button onClick={() => moveToTomorrow(viewEvent)} style={{ background: MON.blue, color: "#fff", border: "none", borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
@@ -809,12 +836,20 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             background: bg, color: ink, border: `1px solid ${ink}33`,
             borderRadius: 6, padding: 4, boxShadow: "0 8px 24px rgba(0,0,0,0.3)", minWidth: 150,
           }}>
-            <button onClick={() => moveToTomorrow(ctxMenu.evt)} style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", color: ink, fontSize: 12, padding: "8px 10px", fontFamily: "inherit" }}>
-              → {pl.moveTomorrow || "Move to tomorrow"}
-            </button>
-            <button onClick={() => { deleteEvent(ctxMenu.evt.id); setCtxMenu(null); }} style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", color: MON.red, fontSize: 12, padding: "8px 10px", fontFamily: "inherit" }}>
-              {pl.delete || "Delete"}
-            </button>
+            {ctxMenu.evt._recurring ? (
+              <button onClick={() => skipOccurrence(ctxMenu.evt)} style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", color: MON.red, fontSize: 12, padding: "8px 10px", fontFamily: "inherit" }}>
+                ✕ {pl.skipOccurrence || "Skip today"}
+              </button>
+            ) : (
+              <>
+                <button onClick={() => moveToTomorrow(ctxMenu.evt)} style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", color: ink, fontSize: 12, padding: "8px 10px", fontFamily: "inherit" }}>
+                  → {pl.moveTomorrow || "Move to tomorrow"}
+                </button>
+                <button onClick={() => { deleteEvent(ctxMenu.evt); setCtxMenu(null); }} style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", color: MON.red, fontSize: 12, padding: "8px 10px", fontFamily: "inherit" }}>
+                  {pl.delete || "Delete"}
+                </button>
+              </>
+            )}
           </div>
         </>
       ), document.body)}

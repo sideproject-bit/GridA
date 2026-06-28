@@ -142,14 +142,25 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
       [dateKey]: (prev[dateKey] ?? []).map(e => e.id === id ? { ...e, ...changes } : e),
     }));
 
+  const deleteCalEvent = (dateKey, id) =>
+    setCalEvents(prev => ({
+      ...prev,
+      [dateKey]: (prev[dateKey] ?? []).filter(e => e.id !== id),
+    }));
+
+  const skipRecurringOccurrence = (recurringId, dateKey) =>
+    setRecurring(prev => prev.map(r =>
+      r.id === recurringId ? { ...r, exceptions: [...(r.exceptions ?? []), dateKey] } : r
+    ));
+
   const today    = todayKey();
   const todayDow = new Date().getDay();
   const allDailyEvents = [
     ...events,
-    ...(calEvents[today] ?? []).map(e => ({ ...e, fromCalendar: true })),
+    ...(calEvents[today] ?? []).map(e => ({ ...e, fromCalendar: true, _dateKey: today })),
     ...recurring
-      .filter(r => r.days.includes(todayDow))
-      .map(r => ({ ...r, id: `recur_${r.id}_${today}`, fromCalendar: true })),
+      .filter(r => r.days.includes(todayDow) && !(r.exceptions ?? []).includes(today))
+      .map(r => ({ ...r, id: `recur_${r.id}_${today}`, fromCalendar: true, _recurring: true, _recurringId: r.id, _dateKey: today })),
   ];
 
   // Merge today's daily events into calEvents for Weekly/Monthly.
@@ -413,9 +424,12 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
           events={allDailyEvents}
           onEventsChange={setEvents}
           onEditEvent={editDailyEvent}
+          onEditCalEvent={editCalEvent}
+          onDeleteCalEvent={deleteCalEvent}
           todos={todos}
           onTodosChange={setTodos}
           onMoveToTomorrow={moveEventToTomorrow}
+          onSkipRecurring={skipRecurringOccurrence}
           spans={spans}
           theme={theme}
           lang={lang}
@@ -453,6 +467,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
           onEditCalEvent={editCalEvent}
           recurring={recurring}
           onRecurringChange={setRecurring}
+          onSkipRecurring={skipRecurringOccurrence}
           spans={spans}
           onSpansChange={setSpans}
           groupEvents={groupEvents}

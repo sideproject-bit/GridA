@@ -27,7 +27,7 @@ function evtTime(evt) {
   return start && end ? `${start} – ${end}` : null;
 }
 
-export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEventsChange, onDeleteDailyEvent, onEditDailyEvent, onEditCalEvent, recurring, onRecurringChange, spans, onSpansChange, groupEvents = [] }) {
+export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEventsChange, onDeleteDailyEvent, onEditDailyEvent, onEditCalEvent, recurring, onRecurringChange, onSkipRecurring, spans, onSpansChange, groupEvents = [] }) {
   const pl  = t.planner;
   const ink = pal.ink;
   const acc = pal.accent;
@@ -203,7 +203,9 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
             const key   = dateKey(d);
             const isToday    = key === todayStr;
             const isSelected = d === selectedDay;
-            const hasEvents     = (calEvents[key] ?? []).length > 0;
+            const cellDow    = new Date(key + "T00:00:00").getDay();
+            const hasRecurring = recurring.some(r => r.days.includes(cellDow) && !(r.exceptions ?? []).includes(key));
+            const hasEvents     = (calEvents[key] ?? []).length > 0 || hasRecurring;
             const hasGroupEvts  = groupEvents.some(ge => ge.date === key || (ge.start_time && ge.end_time && ge.start_time > ge.end_time && (() => { const d = new Date(ge.date + "T00:00:00"); d.setDate(d.getDate() + 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })() === key));
             const cellSpans     = (spans ?? []).filter(s => s.startDate <= key && key <= s.endDate);
             return (
@@ -261,6 +263,12 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
         {subTab === "events" && selectedDay && (() => {
           const key = dateKey(selectedDay);
           const dayEvents = calEvents[key] ?? [];
+          const selectedDow = new Date(key + "T00:00:00").getDay();
+          const dayRecurring = recurring
+            .filter(r => r.days.includes(selectedDow) && !(r.exceptions ?? []).includes(key))
+            .map(r => ({ ...r, _recurring: true, _recurringId: r.id }));
+          const allDayEvents = [...dayEvents, ...dayRecurring]
+            .sort((a, b) => (a.startCell ?? Infinity) - (b.startCell ?? Infinity));
           const dayGroupEvents = groupEvents.filter(ge => {
             if (ge.date === key) return true;
             if (ge.start_time && ge.end_time && ge.start_time > ge.end_time) {
@@ -276,18 +284,25 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
                 {pl.months[month]} {selectedDay}{lang === "ko" ? "일" : ""}
               </div>
 
-              {[...dayEvents].sort((a, b) => (a.startCell ?? Infinity) - (b.startCell ?? Infinity)).map(evt => (
-                <div key={evt.id} style={{
+              {allDayEvents.map(evt => (
+                <div key={evt._recurring ? `recur_${evt.id}_${key}` : evt.id} style={{
                   display: "flex", alignItems: "flex-start", gap: 8, padding: "7px 10px", marginBottom: 6,
                   background: dark ? "#1e1d16" : "#f0ede2",
-                  borderLeft: `3px solid ${evt.color}`, borderRadius: 4,
+                  borderLeft: `3px ${evt._recurring ? "dashed" : "solid"} ${evt.color}`, borderRadius: 4,
                 }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700, fontSize: 12, wordBreak: "keep-all" }}>{evt.title}</div>
                     {evtTime(evt) && <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>{evtTime(evt)}</div>}
+                    {evt._recurring && <div style={{ fontSize: 10, opacity: 0.35, marginTop: 2 }}>↻ {pl.recurring || "Recurring"}</div>}
                   </div>
-                  <button onClick={() => openEditEvt(evt, dateKey(selectedDay))} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.45, fontSize: 12, padding: "0 2px", lineHeight: 1 }}>✏</button>
-                  <button onClick={() => deleteCalEvent(selectedDay, evt)} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.3, fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
+                  {evt._recurring ? (
+                    <button onClick={() => onSkipRecurring?.(evt._recurringId, key)} style={{ background: "none", border: "none", cursor: "pointer", color: "#C7382E", opacity: 0.6, fontSize: 11, padding: "0 2px", lineHeight: 1, fontFamily: "inherit", fontWeight: 700 }}>✕</button>
+                  ) : (
+                    <>
+                      <button onClick={() => openEditEvt(evt, dateKey(selectedDay))} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.45, fontSize: 12, padding: "0 2px", lineHeight: 1 }}>✏</button>
+                      <button onClick={() => deleteCalEvent(selectedDay, evt)} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.3, fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
+                    </>
+                  )}
                 </div>
               ))}
 
