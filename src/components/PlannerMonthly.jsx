@@ -27,7 +27,7 @@ function evtTime(evt) {
   return start && end ? `${start} – ${end}` : null;
 }
 
-export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEventsChange, onDeleteDailyEvent, onEditDailyEvent, onEditCalEvent, recurring, onRecurringChange, spans, onSpansChange }) {
+export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEventsChange, onDeleteDailyEvent, onEditDailyEvent, onEditCalEvent, recurring, onRecurringChange, spans, onSpansChange, groupEvents = [] }) {
   const pl  = t.planner;
   const ink = pal.ink;
   const acc = pal.accent;
@@ -203,8 +203,9 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
             const key   = dateKey(d);
             const isToday    = key === todayStr;
             const isSelected = d === selectedDay;
-            const hasEvents  = (calEvents[key] ?? []).length > 0;
-            const cellSpans  = (spans ?? []).filter(s => s.startDate <= key && key <= s.endDate);
+            const hasEvents     = (calEvents[key] ?? []).length > 0;
+            const hasGroupEvts  = groupEvents.some(ge => ge.date === key);
+            const cellSpans     = (spans ?? []).filter(s => s.startDate <= key && key <= s.endDate);
             return (
               <div key={i}
                 onClick={() => setSelectedDay(d === selectedDay ? null : d)}
@@ -219,9 +220,10 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
                 <span style={{ fontSize: 13, fontWeight: isToday ? 900 : 400, color: isSelected ? "#fff" : ink }}>
                   {d}
                 </span>
-                {hasEvents && (
-                  <div style={{ width: 4, height: 4, borderRadius: 2, background: isSelected ? "#fff" : acc, marginTop: 2 }} />
-                )}
+                <div style={{ display: "flex", gap: 2, marginTop: 2 }}>
+                  {hasEvents && <div style={{ width: 4, height: 4, borderRadius: 2, background: isSelected ? "#fff" : acc }} />}
+                  {hasGroupEvts && <div style={{ width: 4, height: 4, borderRadius: 2, background: isSelected ? "#fff" : "#4A90D9", opacity: 0.8 }} />}
+                </div>
                 {cellSpans.slice(0, 2).map(s => (
                   <div key={s.id} style={{
                     fontSize: 7, fontWeight: 700, padding: "0 3px", marginTop: 2,
@@ -259,6 +261,7 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
         {subTab === "events" && selectedDay && (() => {
           const key = dateKey(selectedDay);
           const dayEvents = calEvents[key] ?? [];
+          const dayGroupEvents = groupEvents.filter(ge => ge.date === key);
           return (
             <div>
               <div style={{ fontWeight: 900, fontSize: 14, marginBottom: 12, textTransform: "uppercase" }}>
@@ -277,6 +280,25 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
                   </div>
                   <button onClick={() => openEditEvt(evt, dateKey(selectedDay))} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.45, fontSize: 12, padding: "0 2px", lineHeight: 1 }}>✏</button>
                   <button onClick={() => deleteCalEvent(selectedDay, evt)} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.3, fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
+                </div>
+              ))}
+
+              {/* Group events (read-only) */}
+              {dayGroupEvents.map(ge => (
+                <div key={ge.id} style={{
+                  display: "flex", alignItems: "flex-start", gap: 8, padding: "7px 10px", marginBottom: 6,
+                  background: dark ? "#1e1d16" : "#f0ede2",
+                  borderLeft: `3px dashed ${ge.color ?? "#4A90D9"}`, borderRadius: 4,
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: 12, wordBreak: "keep-all" }}>
+                      <span style={{ opacity: 0.5, marginRight: 4 }}>{ge._groupLabel}</span>{ge.title}
+                    </div>
+                    {ge.start_time && ge.end_time && (
+                      <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>{ge.start_time} – {ge.end_time}</div>
+                    )}
+                    {ge.memo && <div style={{ fontSize: 11, opacity: 0.55, marginTop: 3 }}>{ge.memo}</div>}
+                  </div>
                 </div>
               ))}
 

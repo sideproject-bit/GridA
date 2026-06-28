@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import PlannerDaily from "./PlannerDaily";
 import PlannerMonthly from "./PlannerMonthly";
 import PlannerWeekly from "./PlannerWeekly";
+import { fetchGroupEventsForUser } from "../api/groupEventsApi";
 
 // Local-timezone date key (toISOString would use UTC and roll over early)
 function localKey(d) {
@@ -21,7 +22,7 @@ function tomorrowKey() {
 const MON_RED  = "#C7382E";
 const MON_BLUE = "#2B3DCB";
 
-export default function Planner({ t, pal, dark, userId, theme, lang }) {
+export default function Planner({ t, pal, dark, userId, theme, lang, groupEventsVersion = 0 }) {
   const pl = t.planner;
   const isMon = theme === "mondrian";
   const [tab, setTab] = useState("daily");
@@ -42,6 +43,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
   const [calEvents, setCalEvents] = useState(() => load(CAL_KEY, {}));
   const [recurring, setRecurring] = useState(() => load(RECUR_KEY, []));
   const [spans,     setSpans]     = useState(() => load(SPANS_KEY, []));
+  const [groupEvents, setGroupEvents] = useState([]);
 
   useEffect(() => {
     const prev = load(DAILY_KEY, {});
@@ -51,6 +53,12 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
   useEffect(() => { localStorage.setItem(CAL_KEY,   JSON.stringify(calEvents)); }, [calEvents]);
   useEffect(() => { localStorage.setItem(RECUR_KEY, JSON.stringify(recurring)); }, [recurring]);
   useEffect(() => { localStorage.setItem(SPANS_KEY, JSON.stringify(spans));    }, [spans]);
+
+  // Fetch group events from Supabase
+  useEffect(() => {
+    if (!userId) return;
+    fetchGroupEventsForUser(userId).then(setGroupEvents).catch(() => {});
+  }, [userId, groupEventsVersion]);
 
   // On mount: migrate past daily keys into calEvents, delete keys older than 60 days.
   useEffect(() => {
@@ -189,6 +197,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
           spans={spans}
           theme={theme}
           lang={lang}
+          groupEvents={groupEvents.filter(e => e.date === today)}
         />
       )}
       {tab === "weekly" && (
@@ -201,6 +210,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
           spans={spans}
           theme={theme}
           lang={lang}
+          groupEvents={groupEvents}
         />
       )}
       {tab === "monthly" && (
@@ -216,6 +226,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang }) {
           onRecurringChange={setRecurring}
           spans={spans}
           onSpansChange={setSpans}
+          groupEvents={groupEvents}
         />
       )}
     </div>

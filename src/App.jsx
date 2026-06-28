@@ -57,6 +57,7 @@ function AppShell() {
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [profileTab, setProfileTab] = useState("profile"); // "profile" | "social"
   const [aboutTab, setAboutTab] = useState("about"); // "about" | "guide"
+  const [groupEventsVersion, setGroupEventsVersion] = useState(0);
   const [startView, setStartView] = useState(() => localStorage.getItem("grida_start_view") || "home");
   const [gridTutorialOpen, setGridTutorialOpen] = useState(false);
   const [pomodoroGuideOpen,  setPomodoroGuideOpen]  = useState(false);
@@ -693,7 +694,7 @@ function AppShell() {
 
             {/* RIGHT: Social / Chat */}
             <div style={{ display: isMobile && profileTab !== "social" ? "none" : undefined }}>
-              <ChatPanel pal={pal} t={t} myId={myId} addNotification={addNotification} />
+              <ChatPanel pal={pal} t={t} myId={myId} addNotification={addNotification} onGroupEventsChange={() => setGroupEventsVersion(v => v + 1)} />
             </div>
           </div>
         </div>
@@ -823,7 +824,7 @@ function AppShell() {
               </div>
             ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} notifOn={notifOn} toggleNotif={toggleNotif} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
-          <Planner t={t} pal={pal} dark={dark} userId={myId} theme={theme} lang={lang} />
+          <Planner t={t} pal={pal} dark={dark} userId={myId} theme={theme} lang={lang} groupEventsVersion={groupEventsVersion} />
         </div>
       )}
 

@@ -104,7 +104,7 @@ function EventRow({ evt, isMobile, editMode, dark, ink, pl, onDelete, onMove, on
   );
 }
 
-export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, onEditEvent, todos, onTodosChange, onMoveToTomorrow, spans, theme, lang }) {
+export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, onEditEvent, todos, onTodosChange, onMoveToTomorrow, spans, theme, lang, groupEvents = [] }) {
   const pl    = t.planner;
   const ink   = pal.ink;
   const acc   = pal.accent;
@@ -347,16 +347,37 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
   );
 
   const eventsBody = (
-    events.length === 0
-      ? <div style={{ fontSize: 12, opacity: 0.3, paddingTop: 4 }}>{pl.noEvents}</div>
-      : [...events].sort((a, b) => a.startCell - b.startCell).map(evt => (
-        <EventRow
-          key={evt.id} evt={evt}
-          isMobile={isMobile} editMode={editMode} dark={dark} ink={ink} pl={pl}
-          onDelete={deleteEvent} onMove={moveToTomorrow}
-          onContext={(ev, x, y) => setCtxMenu({ evt: ev, x, y })}
-        />
-      ))
+    <>
+      {events.length === 0 && groupEvents.length === 0
+        ? <div style={{ fontSize: 12, opacity: 0.3, paddingTop: 4 }}>{pl.noEvents}</div>
+        : [...events].sort((a, b) => a.startCell - b.startCell).map(evt => (
+          <EventRow
+            key={evt.id} evt={evt}
+            isMobile={isMobile} editMode={editMode} dark={dark} ink={ink} pl={pl}
+            onDelete={deleteEvent} onMove={moveToTomorrow}
+            onContext={(ev, x, y) => setCtxMenu({ evt: ev, x, y })}
+          />
+        ))
+      }
+      {groupEvents.map(ge => (
+        <div key={ge.id} style={{
+          display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 10px", marginBottom: 6,
+          background: dark ? "#1e1d16" : "#f0ede2",
+          borderLeft: `3px solid ${ge.color ?? "#4A90D9"}`,
+          borderRadius: 4, opacity: 0.9,
+        }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, wordBreak: "keep-all" }}>
+              <span style={{ opacity: 0.55, marginRight: 4 }}>{ge._groupLabel}</span>{ge.title}
+            </div>
+            {(ge.start_time && ge.end_time) && (
+              <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>{ge.start_time} – {ge.end_time}</div>
+            )}
+            {ge.memo && <div style={{ fontSize: 11, opacity: 0.55, marginTop: 4 }}>{ge.memo}</div>}
+          </div>
+        </div>
+      ))}
+    </>
   );
 
   const todoBody = (

@@ -50,7 +50,13 @@ function cellToTimeEnd(cell) {
 
 const EVENT_COLORS = ["#FFAAAA", "#FFE599", "#AAD4FF", "#C7382E", "#C8960A", "#1A2A9E"];
 
-export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEditDailyEvent, onEditCalEvent, spans, theme, lang }) {
+function timeToCell(timeStr) {
+  if (!timeStr) return null;
+  const [h, m] = timeStr.split(":").map(Number);
+  return h * COLS_DAY + Math.floor(m / 10);
+}
+
+export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEditDailyEvent, onEditCalEvent, spans, theme, lang, groupEvents = [] }) {
   const pl  = t.planner;
   const wk  = pl.weekly ?? {};
   const { isMobile } = useViewport();
@@ -199,7 +205,7 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
                     />
                   ))}
 
-                  {/* Events */}
+                  {/* Regular events */}
                   {evts.map(evt => {
                     const startH = Math.floor(evt.startCell / COLS_DAY);
                     const endH   = Math.min(HOURS - 1, Math.floor(evt.endCell / COLS_DAY));
@@ -225,6 +231,28 @@ export default function PlannerWeekly({ t, pal, dark, calEvents, recurring, onEd
                             {cellToTime(evt.startCell)}
                           </div>
                         )}
+                      </div>
+                    );
+                  })}
+                  {/* Group events (read-only) */}
+                  {groupEvents.filter(ge => ge.date === dateKey && ge.start_time).map(ge => {
+                    const sc = timeToCell(ge.start_time);
+                    const ec = ge.end_time ? timeToCell(ge.end_time) : sc;
+                    if (sc == null) return null;
+                    const startH = Math.floor(sc / COLS_DAY);
+                    const endH   = Math.min(HOURS - 1, Math.floor(ec / COLS_DAY));
+                    const topPx  = startH * CELL_H + 1;
+                    const htPx   = Math.max(CELL_H - 2, (endH - startH + 1) * CELL_H - 2);
+                    return (
+                      <div key={ge.id} style={{
+                        position: "absolute", top: topPx, left: 1, right: 1, height: htPx,
+                        background: (ge.color ?? "#4A90D9") + "99",
+                        borderLeft: `2px dashed ${ge.color ?? "#4A90D9"}`,
+                        borderRadius: 2, padding: "1px 3px",
+                        overflow: "hidden", zIndex: 1,
+                      }}>
+                        <div style={{ fontSize: 8, opacity: 0.55, lineHeight: 1.2, color: dark ? "#fff" : "#111" }}>{ge._groupLabel}</div>
+                        <div style={{ fontSize: 9, fontWeight: 700, lineHeight: 1.3, color: dark ? "#fff" : "#111", overflow: "hidden" }}>{ge.title}</div>
                       </div>
                     );
                   })}
