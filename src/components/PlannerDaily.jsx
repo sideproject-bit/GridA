@@ -511,6 +511,11 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             const cFill = !inSel && !evt ? fillFor(cEvt)  : null;
             const rFill = !inSel && !evt && !cEvt ? fillFor(rEvt) : null;
             const groupColor = gEvt?.color ?? "#4A90D9";
+            const gFill = gEvt && !inSel ? fillFor({
+              startTime: gEvt.start_time, endTime: gEvt.end_time,
+              startCell: timeToCell(gEvt.start_time) ?? 0,
+              endCell: gEvt.end_time ? timeToEndCell(gEvt.end_time) : (timeToCell(gEvt.start_time) ?? 0),
+            }) : null;
 
             return (
               <div key={idx} style={{
@@ -522,7 +527,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
                 {bFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: bFill.left, width: bFill.width, background: evt.color + "bb" }} />}
                 {cFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: cFill.left, width: cFill.width, background: cEvt.color + "bb" }} />}
                 {rFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: rFill.left, width: rFill.width, background: rEvt.color + "44", borderLeft: `2px dashed ${rEvt.color}` }} />}
-                {gEvt && !inSel && <div style={{ position: "absolute", inset: 0, border: `1.5px dashed ${groupColor}`, opacity: 0.75, pointerEvents: "none" }} />}
+                {gFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: gFill.left, width: gFill.width, border: `1.5px dashed ${groupColor}`, boxSizing: "border-box", opacity: 0.75, pointerEvents: "none" }} />}
               </div>
             );
           })}
