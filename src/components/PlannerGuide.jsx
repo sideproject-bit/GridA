@@ -110,6 +110,25 @@ const STEP_VISUALS = [
       })}
     </svg>
   ),
+  // Step 6: cloud sync
+  ({ accent }) => (
+    <svg width={180} height={90} viewBox="0 0 180 90">
+      {/* Cloud icon */}
+      <ellipse cx={90} cy={38} rx={28} ry={18} fill={accent + "30"} stroke={accent} strokeWidth={1.5} />
+      <ellipse cx={72} cy={44} rx={16} ry={12} fill={accent + "30"} stroke={accent} strokeWidth={1.5} />
+      <ellipse cx={108} cy={44} rx={16} ry={12} fill={accent + "30"} stroke={accent} strokeWidth={1.5} />
+      <rect x={62} y={44} width={56} height={14} fill={accent + "30"} />
+      <rect x={62} y={44} width={56} height={2} fill="none" />
+      {/* Upload arrow */}
+      <line x1={75} y1={70} x2={75} y2={56} stroke={accent} strokeWidth={2} strokeLinecap="round" />
+      <polyline points="69,63 75,56 81,63" fill="none" stroke={accent} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      {/* Download arrow */}
+      <line x1={105} y1={56} x2={105} y2={70} stroke="#ffffff88" strokeWidth={2} strokeLinecap="round" />
+      <polyline points="99,63 105,70 111,63" fill="none" stroke="#ffffff88" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <text x={75} y={84} textAnchor="middle" fill={accent} fontSize={7} fontWeight={700} opacity={0.8}>UPLOAD</text>
+      <text x={105} y={84} textAnchor="middle" fill="#ffffff88" fontSize={7} fontWeight={700} opacity={0.8}>DOWNLOAD</text>
+    </svg>
+  ),
 ];
 
 // Mobile-only extra steps: scroll rail + procrastinate/delete swipe
