@@ -69,7 +69,7 @@ function prevDayKey(dateStr) {
   return localKey(d);
 }
 
-export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleCompact, editMode = true, calEvents, recurring, onEditDailyEvent, onEditCalEvent, onMoveEvent, onAddCalEvent, spans, theme, lang, groupEvents = [] }) {
+export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleCompact, editMode = true, calEvents, recurring, onEditDailyEvent, onEditCalEvent, onMoveEvent, onAddCalEvent, spans, theme, lang, groupEvents = [], onDeleteGroupEvent, onEditGroupEvent }) {
   const pl  = t.planner;
   const wk  = pl.weekly ?? {};
   const { isMobile } = useViewport();
@@ -130,7 +130,9 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
       endTime:   editEnd   || viewEvt.event.endTime,
       startCell: newStartCell, endCell: newEndCell,
     };
-    if (viewEvt.event._daily) {
+    if (viewEvt.event._isGroupEvent) {
+      onEditGroupEvent?.(viewEvt.event.id, changes);
+    } else if (viewEvt.event._daily) {
       onEditDailyEvent?.(viewEvt.event.id, changes);
     } else {
       onEditCalEvent?.(viewEvt.dateKey, viewEvt.event.id, changes);
@@ -563,13 +565,31 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
                           const htPx  = Math.max(PX_PER_CELL - 2, botPx - topPx);
                           const blockColor = ge.color ?? "#4A90D9";
                           return (
-                            <div key={`${ge.id}_${carryOver ? "co" : "s"}`} style={{
-                              position: "absolute", top: topPx, left: groupLeft, right: 1, height: htPx,
-                              background: blockColor + "99",
-                              borderLeft: `2px dashed ${blockColor}`,
-                              borderRadius: 2, padding: "1px 3px",
-                              overflow: "hidden", zIndex: 1,
-                            }}>
+                            <div key={`${ge.id}_${carryOver ? "co" : "s"}`}
+                              data-evt="1"
+                              onClick={ge._isAdmin ? () => {
+                                const sc = timeToCell(ge.start_time) ?? 0;
+                                const ec = ge.end_time ? timeToEndCell(ge.end_time) : sc;
+                                setViewEvt({
+                                  dateKey: ge.date,
+                                  event: {
+                                    ...ge,
+                                    _isGroupEvent: true,
+                                    startTime: ge.start_time ?? "",
+                                    endTime: ge.end_time ?? "",
+                                    startCell: sc,
+                                    endCell: ec,
+                                  },
+                                });
+                              } : undefined}
+                              style={{
+                                position: "absolute", top: topPx, left: groupLeft, right: 1, height: htPx,
+                                background: blockColor + "99",
+                                borderLeft: `2px dashed ${blockColor}`,
+                                borderRadius: 2, padding: "1px 3px",
+                                overflow: "hidden", zIndex: 1,
+                                cursor: ge._isAdmin ? "pointer" : "default",
+                              }}>
                               <div style={{ fontSize: 8, opacity: 0.55, lineHeight: 1.2, color: dark ? "#fff" : "#111" }}>{ge._groupLabel}</div>
                               <div style={{ fontSize: 9, fontWeight: 700, lineHeight: 1.3, color: dark ? "#fff" : "#111", overflow: "hidden" }}>
                                 {ge.title}{carryOver ? " ↩" : isCross ? " →" : ""}
@@ -659,7 +679,13 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
                   <div style={{ fontSize: 10, opacity: 0.35, marginBottom: 8 }}>📅 {pl.fromCalendar}</div>
                 )}
                 <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
-                  {editMode && !viewEvt.event.id.startsWith("recur_") && (
+                  {viewEvt.event._isGroupEvent && (
+                    <button onClick={() => { onDeleteGroupEvent?.(viewEvt.event.id); setViewEvt(null); }}
+                      style={{ background: "none", border: `1px solid #C7382E`, color: "#C7382E", borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
+                      {pl.delete || "Delete"}
+                    </button>
+                  )}
+                  {(editMode || viewEvt.event._isGroupEvent) && !viewEvt.event.id?.startsWith("recur_") && (
                     <button onClick={() => openEditEvt(viewEvt.event)}
                       style={{ background: acc, color: "#fff", border: "none", borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
                       {pl.edit || "Edit"}

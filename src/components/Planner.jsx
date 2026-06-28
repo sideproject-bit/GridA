@@ -501,6 +501,8 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
           theme={theme}
           lang={lang}
           groupEvents={groupEvents}
+          onDeleteGroupEvent={handleDeleteGroupEvent}
+          onEditGroupEvent={handleEditGroupEvent}
         />
       )}
       {tab === "monthly" && (
