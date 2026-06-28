@@ -83,7 +83,6 @@ function EventRow({ evt, isMobile, editMode, dark, ink, acc, border, pl, onMove,
           {evt.startTime ?? cellToTime(evt.startCell)} – {evt.endTime ?? cellToTimeEnd(evt.endCell)}
         </div>
         {evt.memo && <div style={{ fontSize: 11, opacity: 0.6, marginTop: 4, wordBreak: "keep-all" }}>{evt.memo}</div>}
-        {evt.fromCalendar && <div style={{ fontSize: 10, opacity: 0.35, marginTop: 4 }}>📅 {pl.fromCalendar}</div>}
       </div>
       {!evt.fromCalendar && (
         <input
@@ -518,7 +517,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
                 boxSizing: "border-box", overflow: "hidden",
               }}>
                 {bFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: bFill.left, width: bFill.width, background: evt.color + "bb" }} />}
-                {cFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: cFill.left, width: cFill.width, background: cEvt.color + "66", borderLeft: `2px solid ${cEvt.color}` }} />}
+                {cFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: cFill.left, width: cFill.width, background: cEvt.color + "bb" }} />}
                 {rFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: rFill.left, width: rFill.width, background: rEvt.color + "44", borderLeft: `2px dashed ${rEvt.color}` }} />}
                 {gEvt && !inSel && <div style={{ position: "absolute", top: 0, bottom: 0, right: 0, width: 3, background: groupColor, opacity: 0.7 }} />}
               </div>
