@@ -18,6 +18,22 @@ export async function getContactMessages(userId) {
   return { data: data || [], error };
 }
 
+export async function getAllContactMessages() {
+  const { data, error } = await supabase
+    .from("contact_messages")
+    .select("*, profiles(username, id)")
+    .order("created_at", { ascending: false });
+  return { data: data || [], error };
+}
+
+export async function replyToContactMessage(id, adminReply) {
+  const { error } = await supabase
+    .from("contact_messages")
+    .update({ admin_reply: adminReply, status: "replied", replied_at: new Date().toISOString() })
+    .eq("id", id);
+  return { error };
+}
+
 export async function sendEmailNotification({ fromName, fromEmail, subject, message }) {
   const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
   const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;

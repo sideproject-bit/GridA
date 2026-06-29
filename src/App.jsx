@@ -35,6 +35,7 @@ import MandalartGuide from "./components/MandalartGuide";
 import Planner from "./components/Planner";
 import MobileSettings from "./components/MobileSettings";
 import ChatPanel from "./components/ChatPanel";
+import AdminPanel from "./components/AdminPanel";
 
 function AppShell() {
   const { session, profile, loading, signOut } = useAuth();
@@ -204,6 +205,7 @@ function AppShell() {
 
   const myId = session.user.id;
   const myCode = profile ? `${profile.username}#${profile.tag}` : "";
+  const isAdmin = session.user.email === "mileyn0331@gmail.com";
 
   const TUTORIAL_SKIP_KEY = `gridTutorialSkip_${myId}`;
 
@@ -411,6 +413,13 @@ function AppShell() {
                     </button>
                   );
                 })}
+                {isAdmin && (
+                  <button onClick={() => { closeMenu(); navigateTo("admin"); play("F5", "16n"); }}
+                    className="home-tile"
+                    style={{ height: 64, flexShrink: 0, background: "#C7382E", border: "none", padding: "0 24px", cursor: "pointer", color: "#fff", textAlign: "left", display: "flex", alignItems: "center", gap: 14 }}>
+                    <span style={{ fontWeight: 800, fontSize: 15, textTransform: "uppercase", letterSpacing: "0.02em" }}>Admin</span>
+                  </button>
+                )}
 
                 {/* Footer: replay guide (left) + settings (right) */}
                 <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 18px 18px" }}>
@@ -491,8 +500,8 @@ function AppShell() {
               ))}
             </div>
 
-            {/* Bottom bar — Profile / About */}
-            <div style={{ gridRow: "2", gridColumn: "1", display: "grid", gap: 4, background: "#000", gridTemplateColumns: "1fr 1fr", minHeight: 0 }}>
+            {/* Bottom bar — Profile / About / Admin */}
+            <div style={{ gridRow: "2", gridColumn: "1", display: "grid", gap: 4, background: "#000", gridTemplateColumns: isAdmin ? "1fr 1fr 120px" : "1fr 1fr", minHeight: 0 }}>
               <button onClick={() => { navigateTo("profile"); play("C5", "16n"); }} onMouseEnter={() => play("A5", "64n")}
                 className="home-tile"
                 style={{ background: profileBg, border: "none", padding: "16px 22px", cursor: "pointer", color: profileFg, textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
@@ -505,6 +514,13 @@ function AppShell() {
                 <BookOpen size={18} color={pal.ink} />
                 <span style={{ fontWeight: 800, fontSize: 13, textTransform: "uppercase", opacity: 0.65 }}>{t.menu.about}</span>
               </button>
+              {isAdmin && (
+                <button onClick={() => { navigateTo("admin"); play("F5", "16n"); }} onMouseEnter={() => play("D5", "64n")}
+                  className="home-tile"
+                  style={{ background: "#C7382E", border: "none", padding: "16px 16px", cursor: "pointer", color: "#fff", textAlign: "left", display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontWeight: 800, fontSize: 12, textTransform: "uppercase" }}>Admin</span>
+                </button>
+              )}
             </div>
           </div>
         );
@@ -904,6 +920,17 @@ function AppShell() {
             readOnly
             ownerLabel={viewingFriend?.code}
           />
+        </div>
+      )}
+
+      {view === "admin" && isAdmin && (
+        <div className="fade-in">
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
+            <button onClick={() => navigateTo("home")} style={{ background: "none", border: "none", color: pal.ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+              <ArrowLeft size={14} /> {t.back}
+            </button>
+          </div>
+          <AdminPanel pal={pal} dark={dark} />
         </div>
       )}
 
