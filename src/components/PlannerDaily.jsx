@@ -130,62 +130,174 @@ function EventRow({ evt, isMobile, editMode, dark, ink, acc, border, pl, onMove,
   );
 }
 
-// To-do item. Mobile: swipe left = delete. Desktop: × button.
-function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl, onToggle, onDelete }) {
+const PRIORITY_COLOR = { high: "#C7382E", medium: "#E3B22E", low: "#4A90D9" };
+const PRIORITY_CYCLE = [null, "high", "medium", "low"];
+const PRIORITY_RANK  = { high: 0, medium: 1, low: 2 };
+
+// To-do item with priority dot, sub-tasks, and swipe-to-delete on mobile.
+function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl,
+  onToggle, onDelete, onUpdatePriority, onAddSubtask, onToggleSubtask, onDeleteSubtask }) {
   const [dx, setDx] = useState(0);
+  const [expanded, setExpanded] = useState(true);
+  const [showSubInput, setShowSubInput] = useState(false);
+  const [subText, setSubText] = useState("");
   const startX = useRef(null);
+  const subInputRef = useRef(null);
   const THRESH = 80;
 
-  const onTouchStart = (e) => { startX.current = e.touches[0].clientX; };
-  const onTouchMove  = (e) => {
-    if (startX.current == null) return;
-    setDx(e.touches[0].clientX - startX.current);
-  };
-  const onTouchEnd = () => {
-    if (startX.current == null) return;
-    if (dx < -THRESH) onDelete(td.id);
-    startX.current = null;
-    setDx(0);
+  const hasChildren = td.children?.length > 0;
+  const doneChildren  = td.children?.filter(c => c.done).length ?? 0;
+  const totalChildren = td.children?.length ?? 0;
+  const allDone   = hasChildren ? doneChildren === totalChildren : td.done;
+  const effectiveDone = allDone;
+
+  const cyclePriority = () => {
+    const idx = PRIORITY_CYCLE.indexOf(td.priority ?? null);
+    onUpdatePriority(td.id, PRIORITY_CYCLE[(idx + 1) % PRIORITY_CYCLE.length]);
   };
 
-  const item = (
+  const commitSubtask = () => {
+    if (subText.trim()) { onAddSubtask(td.id, subText.trim()); setSubText(""); }
+    setShowSubInput(false);
+  };
+
+  const onTouchStart = (e) => { startX.current = e.touches[0].clientX; };
+  const onTouchMove  = (e) => { if (startX.current == null) return; setDx(e.touches[0].clientX - startX.current); };
+  const onTouchEnd   = () => {
+    if (startX.current == null) return;
+    if (dx < -THRESH) onDelete(td.id);
+    startX.current = null; setDx(0);
+  };
+
+  const rowBg  = dark ? "#1e1d16" : "#f0ede2";
+  const subBg  = dark ? "#181710" : "#e4e1d6";
+  const dotColor = PRIORITY_COLOR[td.priority] ?? (dark ? "#3a3a3a" : "#d0cdc4");
+
+  const mainRow = (
     <div style={{
-      display: "flex", alignItems: "center", gap: 8, padding: "6px 6px 6px 0",
-      borderBottom: `1px solid ${border}`,
-      background: dark ? "#1e1d16" : "#f0ede2",
+      display: "flex", alignItems: "center", gap: 6, padding: "6px 6px 6px 0",
+      borderBottom: hasChildren && expanded ? "none" : `1px solid ${border}`,
+      background: rowBg,
       transform: isMobile ? `translateX(${dx}px)` : "none",
       transition: startX.current == null ? "transform 0.2s ease" : "none",
     }}>
+      {/* Priority dot */}
+      <div
+        title={td.priority ?? "no priority"}
+        onClick={editMode ? cyclePriority : undefined}
+        style={{
+          width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
+          background: dotColor,
+          cursor: editMode ? "pointer" : "default",
+          border: td.priority ? "none" : `1.5px solid ${dark ? "#555" : "#bbb"}`,
+          boxSizing: "border-box",
+        }}
+      />
+      {/* Checkbox */}
       <input
         type="checkbox"
-        checked={td.done}
-        onChange={() => onToggle(td.id)}
+        checked={effectiveDone}
+        onChange={() => {
+          if (hasChildren) {
+            const next = !allDone;
+            td.children.forEach(c => onToggleSubtask(td.id, c.id, next));
+          } else { onToggle(td.id); }
+        }}
         style={{ accentColor: acc, cursor: "pointer", flexShrink: 0 }}
       />
-      <span style={{ flex: 1, minWidth: 0, fontSize: 13, textDecoration: td.done ? "line-through" : "none", opacity: td.done ? 0.35 : 1, wordBreak: "break-word" }}>
+      {/* Label */}
+      <span
+        onClick={hasChildren ? () => setExpanded(v => !v) : undefined}
+        style={{
+          flex: 1, minWidth: 0, fontSize: 13,
+          textDecoration: effectiveDone ? "line-through" : "none",
+          opacity: effectiveDone ? 0.35 : 1,
+          wordBreak: "break-word",
+          cursor: hasChildren ? "pointer" : "default",
+        }}
+      >
         {td.text}
+        {hasChildren && (
+          <span style={{ marginLeft: 7, fontSize: 10, opacity: 0.5, fontWeight: 700 }}>
+            {doneChildren}/{totalChildren} {Math.round(doneChildren / totalChildren * 100)}%
+          </span>
+        )}
+        {hasChildren && (
+          <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.4 }}>{expanded ? "▾" : "▸"}</span>
+        )}
       </span>
+      {/* Add subtask button */}
+      {editMode && (
+        <button
+          onClick={() => { setShowSubInput(v => !v); setExpanded(true); setTimeout(() => subInputRef.current?.focus(), 50); }}
+          title="Add sub-task"
+          style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.3, fontSize: 14, padding: "0 2px", lineHeight: 1, flexShrink: 0 }}
+        >⊕</button>
+      )}
+      {/* Delete button */}
       {editMode && !isMobile && (
         <button onClick={() => onDelete(td.id)} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.25, fontSize: 16, padding: "0 2px", lineHeight: 1, flexShrink: 0 }}>×</button>
       )}
     </div>
   );
 
-  if (!isMobile) return <div style={{ marginBottom: 0 }}>{item}</div>;
+  const childrenSection = hasChildren && expanded && (
+    <div style={{ borderBottom: `1px solid ${border}` }}>
+      {td.children.map(child => (
+        <div key={child.id} style={{
+          display: "flex", alignItems: "center", gap: 6,
+          padding: "5px 6px 5px 22px",
+          background: subBg,
+          borderTop: `1px solid ${border}44`,
+        }}>
+          <input
+            type="checkbox"
+            checked={child.done}
+            onChange={() => onToggleSubtask(td.id, child.id, !child.done)}
+            style={{ accentColor: acc, cursor: "pointer", flexShrink: 0 }}
+          />
+          <span style={{ flex: 1, minWidth: 0, fontSize: 12, textDecoration: child.done ? "line-through" : "none", opacity: child.done ? 0.35 : 1, wordBreak: "break-word" }}>
+            {child.text}
+          </span>
+          {editMode && (
+            <button onClick={() => onDeleteSubtask(td.id, child.id)} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.25, fontSize: 14, padding: "0 2px", lineHeight: 1, flexShrink: 0 }}>×</button>
+          )}
+        </div>
+      ))}
+      {showSubInput && (
+        <div style={{ display: "flex", gap: 6, padding: "5px 6px 5px 22px", background: subBg, borderTop: `1px solid ${border}44` }}>
+          <input
+            ref={subInputRef}
+            value={subText}
+            onChange={e => setSubText(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") commitSubtask(); if (e.key === "Escape") { setShowSubInput(false); setSubText(""); } }}
+            placeholder="Sub-task…"
+            style={{ flex: 1, fontSize: 12, padding: "3px 6px", fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 4, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none" }}
+          />
+          <button onClick={commitSubtask} style={{ background: acc, color: "#fff", border: "none", borderRadius: 4, padding: "3px 8px", fontSize: 11, cursor: "pointer", fontWeight: 700 }}>✓</button>
+        </div>
+      )}
+    </div>
+  );
+
+  if (!isMobile) return <div>{mainRow}{childrenSection}</div>;
 
   return (
-    <div style={{ position: "relative", overflow: "hidden" }}>
-      <div style={{
-        position: "absolute", inset: 0, display: "flex", alignItems: "center",
-        justifyContent: "flex-end", paddingRight: 14,
-        fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em",
-        color: MON.red, opacity: dx < -20 ? 1 : 0.3,
-      }}>
-        {pl.delete || "Delete"} ✕
+    <div>
+      <div style={{ position: "relative", overflow: "hidden" }}>
+        <div style={{
+          position: "absolute", inset: 0, display: "flex", alignItems: "center",
+          justifyContent: "flex-end", paddingRight: 14,
+          fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em",
+          color: MON.red, opacity: dx < -20 ? 1 : 0.3,
+        }}>
+          {pl.delete || "Delete"} ✕
+        </div>
+        <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
+          {mainRow}
+        </div>
       </div>
-      <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
-        {item}
-      </div>
+      {childrenSection}
     </div>
   );
 }
@@ -421,7 +533,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
   function addTodo(e) {
     e.preventDefault();
     if (!todoInput.trim()) return;
-    onTodosChange(prev => [...prev, { id: Date.now().toString(), text: todoInput.trim(), done: false }]);
+    onTodosChange(prev => [...prev, { id: Date.now().toString(), text: todoInput.trim(), done: false, priority: null, children: [] }]);
     setTodoInput("");
   }
 
@@ -431,6 +543,34 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
 
   function deleteTodo(id) {
     onTodosChange(prev => prev.filter(td => td.id !== id));
+  }
+
+  function updatePriority(id, priority) {
+    onTodosChange(prev => prev.map(td => td.id === id ? { ...td, priority } : td));
+  }
+
+  function addSubtask(parentId, text) {
+    onTodosChange(prev => prev.map(td =>
+      td.id === parentId
+        ? { ...td, children: [...(td.children ?? []), { id: `${parentId}_${Date.now()}`, text, done: false }] }
+        : td
+    ));
+  }
+
+  function toggleSubtask(parentId, childId, done) {
+    onTodosChange(prev => prev.map(td =>
+      td.id === parentId
+        ? { ...td, children: (td.children ?? []).map(c => c.id === childId ? { ...c, done } : c) }
+        : td
+    ));
+  }
+
+  function deleteSubtask(parentId, childId) {
+    onTodosChange(prev => prev.map(td =>
+      td.id === parentId
+        ? { ...td, children: (td.children ?? []).filter(c => c.id !== childId) }
+        : td
+    ));
   }
 
   // Separate drag/daily events, monthly calendar events, and recurring events
@@ -665,9 +805,16 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
     </>
   );
 
-  const doneTodosCount = todos.filter(td => td.done).length;
+  const doneTodosCount = todos.filter(td =>
+    td.children?.length ? td.children.every(c => c.done) : td.done
+  ).length;
   const totalTodosCount = todos.length;
   const todosPct = totalTodosCount === 0 ? 0 : Math.round((doneTodosCount / totalTodosCount) * 100);
+
+  // Sort by priority (high → medium → low → none), preserving relative order within same priority
+  const sortedTodos = [...todos].sort((a, b) =>
+    (PRIORITY_RANK[a.priority] ?? 3) - (PRIORITY_RANK[b.priority] ?? 3)
+  );
 
   const todoBody = (
     <>
@@ -693,13 +840,17 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
           </div>
         </div>
       )}
-      {todos.length === 0
+      {sortedTodos.length === 0
         ? <div style={{ fontSize: 12, opacity: 0.3 }}>{pl.noTodos}</div>
-        : todos.map(td => (
+        : sortedTodos.map(td => (
           <TodoItem
             key={td.id} td={td}
             isMobile={isMobile} editMode={editMode} dark={dark} ink={ink} acc={acc} border={border} pl={pl}
             onToggle={toggleTodo} onDelete={deleteTodo}
+            onUpdatePriority={updatePriority}
+            onAddSubtask={addSubtask}
+            onToggleSubtask={toggleSubtask}
+            onDeleteSubtask={deleteSubtask}
           />
         ))
       }
