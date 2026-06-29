@@ -180,10 +180,10 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
       const dKeys     = dayKeysRef.current;
       if (dr.type === "move") {
         const totalCells = dr.totalCells ?? (dr.origEndCell - dr.origStartCell + 1);
+        // Ghost shows up to midnight (clamped); unified handler does actual split on drop
         const ghostEnd  = Math.min(HOURS * COLS_DAY - 1, dr.origStartCell + totalCells - 1);
         const duration  = ghostEnd - dr.origStartCell;
-        const maxStart  = HOURS * COLS_DAY - 1 - duration;
-        const newStart  = Math.max(0, Math.min(maxStart, dr.origStartCell + deltaCell));
+        const newStart  = Math.max(0, Math.min(HOURS * COLS_DAY - 1, dr.origStartCell + deltaCell));
         const newEnd    = newStart + duration;
         const deltaDays = Math.round((e.clientX - dr.startX) / dr.colWidth);
         const newDayIdx = Math.max(0, Math.min(6, dr.origDayIdx + deltaDays));
@@ -215,10 +215,15 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
       const newDateKey = dayKeysRef.current[newDayIdx];
       if (startCell === dr.origStartCell && endCell === dr.origEndCell && newDateKey === dr.dateKey) return;
 
-      // Midnight-crossing pair: delegate to unified handler
-      if (dr.type === "move" && (dr.evt.hasContinuation || dr.evt.isContinuation) && onMoveMidnightEvent) {
-        onMoveMidnightEvent(dr.evt, dr.dateKey, newDateKey, startCell);
-        return;
+      // Delegate to unified midnight handler if:
+      // (a) event is already a pair, or (b) new position crosses midnight
+      if (dr.type === "move" && onMoveMidnightEvent) {
+        const duration   = dr.origEndCell - dr.origStartCell;
+        const newEndCell = startCell + duration;
+        if (dr.evt.hasContinuation || dr.evt.isContinuation || newEndCell >= HOURS * COLS_DAY) {
+          onMoveMidnightEvent(dr.evt, dr.dateKey, newDateKey, startCell);
+          return;
+        }
       }
 
       onMoveEvent?.(dr.evt, dr.dateKey, newDateKey, {

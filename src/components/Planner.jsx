@@ -230,10 +230,46 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
     }
   };
 
-  // Move a midnight-crossing event pair as a single logical unit.
-  // Preserves total duration; merges into one event if new position no longer crosses midnight.
+  // Move any event, splitting at midnight if the new position crosses it,
+  // or merging an existing pair into one if it no longer crosses midnight.
   const moveMidnightEvent = (evt, origDateKey, newDateKey, newStartCell) => {
-    // Resolve which half we have and find the other
+    // ── Case: regular event dragged to cross midnight ──
+    if (!evt.hasContinuation && !evt.isContinuation) {
+      const duration   = evt.endCell - evt.startCell;
+      const newEndCell = newStartCell + duration;
+      if (newEndCell < TOTAL_CELLS) return; // shouldn't reach here, but guard
+      const contEndCell = newEndCell - TOTAL_CELLS;
+      const nextDateKey = nextDayKeyOf(newDateKey);
+      const baseId = evt.id;
+      const updatedOrig = {
+        id: baseId, title: evt.title, color: evt.color, memo: evt.memo ?? "",
+        startCell: newStartCell, endCell: TOTAL_CELLS - 1,
+        startTime: cellToTime(newStartCell), endTime: "00:00",
+        hasContinuation: true, fromCalendar: true,
+      };
+      const updatedCont = {
+        id: `${baseId}_cont`, title: evt.title, color: evt.color, memo: evt.memo ?? "",
+        startCell: 0, endCell: contEndCell,
+        startTime: "00:00", endTime: cellToTimeEnd(contEndCell),
+        isContinuation: true, continuationOf: baseId, fromCalendar: true,
+      };
+      if (evt._daily) setEvents(prev => prev.filter(e => e.id !== baseId));
+      setCalEvents(prev => {
+        const next = { ...prev };
+        // Remove original from its old location
+        if (evt._daily) {
+          // already removed from events; nothing in calEvents
+        } else {
+          next[origDateKey] = (next[origDateKey] ?? []).filter(e => e.id !== baseId);
+        }
+        next[newDateKey]  = [...(next[newDateKey]  ?? []).filter(e => e.id !== baseId),      updatedOrig];
+        next[nextDateKey] = [...(next[nextDateKey] ?? []).filter(e => e.id !== updatedCont.id), updatedCont];
+        return next;
+      });
+      return;
+    }
+
+    // ── Case: already paired — resolve both halves ──
     let origEvt, origDateK, contEvt, contDateK;
     if (evt.hasContinuation) {
       origEvt   = evt;
