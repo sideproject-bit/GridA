@@ -146,9 +146,13 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
 
   function saveEditEvt() {
     if (!viewEvt || !editTitle.trim()) return;
-    const newStartCell = editStart ? timeToCell(editStart) : viewEvt.event.startCell;
-    const rawEndCell   = editEnd   ? timeToEndCell(editEnd) : viewEvt.event.endCell;
-    const newEndCell   = Math.max(newStartCell, rawEndCell);
+    const newStartCell  = editStart ? timeToCell(editStart) : viewEvt.event.startCell;
+    const rawEndCell    = editEnd   ? timeToEndCell(editEnd) : viewEvt.event.endCell;
+    // "00:00" endTime on a midnight-crossing event → timeToEndCell returns -1; keep original endCell
+    const resolvedEndCell = (rawEndCell <= 0 && viewEvt.event.hasContinuation)
+      ? viewEvt.event.endCell
+      : rawEndCell;
+    const newEndCell    = Math.max(newStartCell, resolvedEndCell);
     const changes = {
       title: editTitle.trim(), color: editColor, memo: editMemo,
       startTime: editStart || viewEvt.event.startTime,
