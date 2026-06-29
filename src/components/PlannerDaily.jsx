@@ -588,69 +588,80 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
       )}
       {events.length === 0 && groupEvents.length === 0
         ? <div style={{ fontSize: 12, opacity: 0.3, paddingTop: 4 }}>{pl.noEvents}</div>
-        : [...events].sort((a, b) => a.startCell - b.startCell).map(evt => (
-          <EventRow
-            key={evt.id} evt={evt}
-            isMobile={isMobile} editMode={editMode} dark={dark} ink={ink} acc={acc} border={border} pl={pl}
-            onMove={moveToTomorrow}
-            onSkip={skipOccurrence}
-            onCheck={(id) => {
-              if (evt.fromCalendar) onEditCalEvent?.(evt._dateKey, id, { done: !evt.done });
-              else onEditEvent?.(id, { done: !evt.done });
-            }}
-            onTap={(ev) => setViewEvent(ev)}
-            onContext={(ev, x, y) => setCtxMenu({ evt: ev, x, y })}
-            onDelete={(ev) => deleteEvent(ev)}
-          />
-        ))
-      }
-      {groupEvents.map(ge => (
-        <div key={ge.id} style={{
-          display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 10px", marginBottom: 6,
-          background: dark ? "#1e1d16" : "#f0ede2",
-          borderLeft: `3px dashed ${resolveColor(ge.color)}`,
-          borderRadius: 4, opacity: groupDone[ge.id] ? 0.6 : 0.9,
-          cursor: ge._isAdmin ? "pointer" : "default",
-        }}
-          onClick={ge._isAdmin ? () => {
-            const sc = timeToCell(ge.start_time) ?? 0;
-            const ec = ge.end_time ? timeToEndCell(ge.end_time) : sc;
-            setViewEvent({
-              ...ge,
-              _isGroupEvent: true,
-              fromCalendar: false,
-              startTime: ge.start_time ?? "",
-              endTime: ge.end_time ?? "",
-              startCell: sc,
-              endCell: ec,
-              done: groupDone[ge.id] ?? false,
-            });
-          } : undefined}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              fontWeight: 700, fontSize: 13, wordBreak: "keep-all",
-              textDecoration: groupDone[ge.id] ? "line-through" : "none",
-            }}>
-              <span style={{ opacity: 0.55, marginRight: 4 }}>{ge._groupLabel}</span>{ge.title}
-            </div>
-            {ge.start_time && (
-              <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>
-                {ge.start_time}{ge.end_time ? ` – ${ge.end_time}` : ""}
-                {ge._carryOver && <span style={{ marginLeft: 6, opacity: 0.6 }}>↩</span>}
+        : [
+            ...events.map(e => ({ _type: "regular", _sortCell: e.startCell, data: e })),
+            ...groupEvents.map(ge => ({ _type: "group", _sortCell: timeToCell(ge.start_time) ?? 0, data: ge })),
+          ]
+          .sort((a, b) => a._sortCell - b._sortCell)
+          .map(item => {
+            if (item._type === "regular") {
+              const evt = item.data;
+              return (
+                <EventRow
+                  key={evt.id} evt={evt}
+                  isMobile={isMobile} editMode={editMode} dark={dark} ink={ink} acc={acc} border={border} pl={pl}
+                  onMove={moveToTomorrow}
+                  onSkip={skipOccurrence}
+                  onCheck={(id) => {
+                    if (evt.fromCalendar) onEditCalEvent?.(evt._dateKey, id, { done: !evt.done });
+                    else onEditEvent?.(id, { done: !evt.done });
+                  }}
+                  onTap={(ev) => setViewEvent(ev)}
+                  onContext={(ev, x, y) => setCtxMenu({ evt: ev, x, y })}
+                  onDelete={(ev) => deleteEvent(ev)}
+                />
+              );
+            }
+            const ge = item.data;
+            return (
+              <div key={ge.id} style={{
+                display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 10px", marginBottom: 6,
+                background: dark ? "#1e1d16" : "#f0ede2",
+                borderLeft: `3px dashed ${resolveColor(ge.color)}`,
+                borderRadius: 4, opacity: groupDone[ge.id] ? 0.6 : 0.9,
+                cursor: ge._isAdmin ? "pointer" : "default",
+              }}
+                onClick={ge._isAdmin ? () => {
+                  const sc = timeToCell(ge.start_time) ?? 0;
+                  const ec = ge.end_time ? timeToEndCell(ge.end_time) : sc;
+                  setViewEvent({
+                    ...ge,
+                    _isGroupEvent: true,
+                    fromCalendar: false,
+                    startTime: ge.start_time ?? "",
+                    endTime: ge.end_time ?? "",
+                    startCell: sc,
+                    endCell: ec,
+                    done: groupDone[ge.id] ?? false,
+                  });
+                } : undefined}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    fontWeight: 700, fontSize: 13, wordBreak: "keep-all",
+                    textDecoration: groupDone[ge.id] ? "line-through" : "none",
+                  }}>
+                    <span style={{ opacity: 0.55, marginRight: 4 }}>{ge._groupLabel}</span>{ge.title}
+                  </div>
+                  {ge.start_time && (
+                    <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>
+                      {ge.start_time}{ge.end_time ? ` – ${ge.end_time}` : ""}
+                      {ge._carryOver && <span style={{ marginLeft: 6, opacity: 0.6 }}>↩</span>}
+                    </div>
+                  )}
+                  {ge.memo && <div style={{ fontSize: 11, opacity: 0.55, marginTop: 4 }}>{ge.memo}</div>}
+                </div>
+                <input
+                  type="checkbox"
+                  checked={!!groupDone[ge.id]}
+                  onChange={(e) => { e.stopPropagation(); setGroupDone(prev => ({ ...prev, [ge.id]: !prev[ge.id] })); }}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ accentColor: resolveColor(ge.color), cursor: "pointer", flexShrink: 0, marginTop: 2, width: 15, height: 15 }}
+                />
               </div>
-            )}
-            {ge.memo && <div style={{ fontSize: 11, opacity: 0.55, marginTop: 4 }}>{ge.memo}</div>}
-          </div>
-          <input
-            type="checkbox"
-            checked={!!groupDone[ge.id]}
-            onChange={(e) => { e.stopPropagation(); setGroupDone(prev => ({ ...prev, [ge.id]: !prev[ge.id] })); }}
-            onClick={(e) => e.stopPropagation()}
-            style={{ accentColor: resolveColor(ge.color), cursor: "pointer", flexShrink: 0, marginTop: 2, width: 15, height: 15 }}
-          />
-        </div>
-      ))}
+            );
+          })
+      }
     </>
   );
 
