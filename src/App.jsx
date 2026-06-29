@@ -39,7 +39,7 @@ import ChatPanel from "./components/ChatPanel";
 import AdminPanel from "./components/AdminPanel";
 
 function AppShell() {
-  const { session, profile, loading, signOut } = useAuth();
+  const { session, profile, loading, signOut, updateProfile } = useAuth();
   const [dark, setDark] = useState(() => localStorage.getItem("grida_dark") !== "0");
   const [theme, setTheme] = useState("mondrian");
   const [lang, setLang] = useState(() => localStorage.getItem("grida_lang") || "en");
@@ -69,6 +69,8 @@ function AppShell() {
   const [mandalartGuideOpen, setMandalartGuideOpen] = useState(false);
   const [notifPanelOpen, setNotifPanelOpen] = useState(false);
   const prevUserIdRef = useRef(null);
+  const profilePrefsApplied = useRef(false);
+  const savePrefsTimer = useRef(null);
 
   const pal = paletteFor(theme, dark);
   const t = T[lang];
@@ -164,6 +166,40 @@ function AppShell() {
       }
     }
   }, [music.trackIndex, session?.user?.id]);
+
+  // Apply pref_* columns from profile (Supabase wins over localStorage)
+  useEffect(() => {
+    if (!profile?.id) return;
+    profilePrefsApplied.current = false;
+    if (profile.pref_dark != null)         { setDark(profile.pref_dark); localStorage.setItem("grida_dark", profile.pref_dark ? "1" : "0"); }
+    if (profile.pref_lang)                 { setLang(profile.pref_lang); localStorage.setItem("grida_lang", profile.pref_lang); }
+    if (profile.pref_theme && THEMES[profile.pref_theme]) setTheme(profile.pref_theme);
+    if (profile.pref_sound != null)        setSoundOn(profile.pref_sound);
+    if (profile.pref_notif != null)        setNotifOn(profile.pref_notif);
+    if (profile.pref_start_view)           { setStartView(profile.pref_start_view); localStorage.setItem("grida_start_view", profile.pref_start_view); }
+    if (profile.pref_weekly_compact != null) setWeeklyCompact(profile.pref_weekly_compact);
+    if (profile.pref_music_track != null)  music.selectTrack(profile.pref_music_track);
+    setTimeout(() => { profilePrefsApplied.current = true; }, 500);
+  }, [profile?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Save all prefs to Supabase (1s debounce) after initial profile load
+  useEffect(() => {
+    if (!profilePrefsApplied.current || !session?.user?.id) return;
+    clearTimeout(savePrefsTimer.current);
+    savePrefsTimer.current = setTimeout(() => {
+      updateProfile({
+        pref_dark: dark,
+        pref_lang: lang,
+        pref_theme: theme,
+        pref_sound: soundOn,
+        pref_notif: notifOn,
+        pref_start_view: startView,
+        pref_weekly_compact: weeklyCompact,
+        pref_music_track: music.trackIndex ?? null,
+      }).catch(() => {});
+    }, 1000);
+    return () => clearTimeout(savePrefsTimer.current);
+  }, [dark, lang, theme, soundOn, notifOn, startView, weeklyCompact, music.trackIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Open onboarding only on first visit (profile.has_seen_onboarding === false)
   useEffect(() => {
