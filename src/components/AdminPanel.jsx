@@ -18,8 +18,9 @@ export default function AdminPanel({ pal, dark }) {
     if (error) {
       console.error("AdminPanel load error:", error);
       setLoadError(error.message ?? JSON.stringify(error));
+    } else {
+      setMessages(data);
     }
-    setMessages(data);
     setLoading(false);
   };
 
