@@ -137,11 +137,17 @@ const PRIORITY_RANK  = { high: 0, medium: 1, low: 2 };
 
 // To-do item with priority dot, sub-tasks, and swipe-to-delete on mobile.
 function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl,
-  onToggle, onDelete, onUpdatePriority, onAddSubtask, onToggleSubtask, onDeleteSubtask }) {
+  onToggle, onDelete, onUpdatePriority, onAddSubtask, onToggleSubtask, onDeleteSubtask, onEditTodo, onEditSubtask }) {
   const [dx, setDx] = useState(0);
   const [expanded, setExpanded] = useState(true);
   const [showSubInput, setShowSubInput] = useState(false);
   const [subText, setSubText] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(td.text);
+  const [editingChildId, setEditingChildId] = useState(null);
+  const [editChildText, setEditChildText] = useState("");
+  const editInputRef = useRef(null);
+  const editChildRef = useRef(null);
   const startX = useRef(null);
   const subInputRef = useRef(null);
   const THRESH = 80;
@@ -161,6 +167,22 @@ function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl,
     if (subText.trim()) { onAddSubtask(td.id, subText.trim()); setSubText(""); }
     setShowSubInput(false);
   };
+
+  const startEdit = () => { setEditText(td.text); setIsEditing(true); setTimeout(() => editInputRef.current?.focus(), 30); };
+  const commitEdit = () => {
+    const t = editText.trim();
+    if (t && t !== td.text) onEditTodo?.(td.id, t);
+    setIsEditing(false);
+  };
+  const cancelEdit = () => { setEditText(td.text); setIsEditing(false); };
+
+  const startChildEdit = (child) => { setEditChildText(child.text); setEditingChildId(child.id); setTimeout(() => editChildRef.current?.focus(), 30); };
+  const commitChildEdit = () => {
+    const t = editChildText.trim();
+    if (t && t !== td.children?.find(c => c.id === editingChildId)?.text) onEditSubtask?.(td.id, editingChildId, t);
+    setEditingChildId(null);
+  };
+  const cancelChildEdit = () => setEditingChildId(null);
 
   const onTouchStart = (e) => { startX.current = e.touches[0].clientX; };
   const onTouchMove  = (e) => { if (startX.current == null) return; setDx(e.touches[0].clientX - startX.current); };
@@ -197,26 +219,38 @@ function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl,
         style={{ accentColor: acc, cursor: "pointer", flexShrink: 0 }}
       />
       {/* Label */}
-      <span
-        onClick={hasChildren ? () => setExpanded(v => !v) : undefined}
-        style={{
-          flex: 1, minWidth: 0, fontSize: 13,
-          textDecoration: effectiveDone ? "line-through" : "none",
-          opacity: effectiveDone ? 0.35 : 1,
-          wordBreak: "break-word",
-          cursor: hasChildren ? "pointer" : "default",
-        }}
-      >
-        {td.text}
-        {hasChildren && (
-          <span style={{ marginLeft: 7, fontSize: 10, opacity: 0.5, fontWeight: 700 }}>
-            {doneChildren}/{totalChildren} {Math.round(doneChildren / totalChildren * 100)}%
-          </span>
-        )}
-        {hasChildren && (
-          <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.4 }}>{expanded ? "▾" : "▸"}</span>
-        )}
-      </span>
+      {isEditing ? (
+        <input
+          ref={editInputRef}
+          value={editText}
+          onChange={e => setEditText(e.target.value)}
+          onBlur={commitEdit}
+          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); commitEdit(); } if (e.key === "Escape") cancelEdit(); }}
+          style={{ flex: 1, minWidth: 0, fontSize: 13, padding: "1px 4px", fontFamily: "inherit", border: `1px solid ${acc}88`, borderRadius: 4, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none" }}
+        />
+      ) : (
+        <span
+          onClick={hasChildren ? () => setExpanded(v => !v) : undefined}
+          onDoubleClick={editMode ? startEdit : undefined}
+          style={{
+            flex: 1, minWidth: 0, fontSize: 13,
+            textDecoration: effectiveDone ? "line-through" : "none",
+            opacity: effectiveDone ? 0.35 : 1,
+            wordBreak: "break-word",
+            cursor: editMode ? (hasChildren ? "pointer" : "text") : (hasChildren ? "pointer" : "default"),
+          }}
+        >
+          {td.text}
+          {hasChildren && (
+            <span style={{ marginLeft: 7, fontSize: 10, opacity: 0.5, fontWeight: 700 }}>
+              {doneChildren}/{totalChildren} {Math.round(doneChildren / totalChildren * 100)}%
+            </span>
+          )}
+          {hasChildren && (
+            <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.4 }}>{expanded ? "▾" : "▸"}</span>
+          )}
+        </span>
+      )}
 
       {/* Right-side controls */}
       <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
@@ -274,9 +308,23 @@ function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl,
             onChange={() => onToggleSubtask(td.id, child.id, !child.done)}
             style={{ accentColor: acc, cursor: "pointer", flexShrink: 0 }}
           />
-          <span style={{ flex: 1, minWidth: 0, fontSize: 12, textDecoration: child.done ? "line-through" : "none", opacity: child.done ? 0.35 : 1, wordBreak: "break-word" }}>
-            {child.text}
-          </span>
+          {editingChildId === child.id ? (
+            <input
+              ref={editChildRef}
+              value={editChildText}
+              onChange={e => setEditChildText(e.target.value)}
+              onBlur={commitChildEdit}
+              onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); commitChildEdit(); } if (e.key === "Escape") cancelChildEdit(); }}
+              style={{ flex: 1, minWidth: 0, fontSize: 12, padding: "1px 4px", fontFamily: "inherit", border: `1px solid ${acc}88`, borderRadius: 4, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none" }}
+            />
+          ) : (
+            <span
+              onDoubleClick={editMode ? () => startChildEdit(child) : undefined}
+              style={{ flex: 1, minWidth: 0, fontSize: 12, textDecoration: child.done ? "line-through" : "none", opacity: child.done ? 0.35 : 1, wordBreak: "break-word", cursor: editMode ? "text" : "default" }}
+            >
+              {child.text}
+            </span>
+          )}
           {editMode && (
             <button onClick={() => onDeleteSubtask(td.id, child.id)} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.25, fontSize: 14, padding: "0 2px", lineHeight: 1, flexShrink: 0 }}>×</button>
           )}
@@ -565,6 +613,18 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
 
   function deleteTodo(id) {
     onTodosChange(prev => prev.filter(td => td.id !== id));
+  }
+
+  function editTodo(id, text) {
+    onTodosChange(prev => prev.map(td => td.id === id ? { ...td, text } : td));
+  }
+
+  function editSubtask(parentId, childId, text) {
+    onTodosChange(prev => prev.map(td =>
+      td.id === parentId
+        ? { ...td, children: (td.children ?? []).map(c => c.id === childId ? { ...c, text } : c) }
+        : td
+    ));
   }
 
   function updatePriority(id, priority) {
@@ -880,6 +940,8 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
               onAddSubtask={addSubtask}
               onToggleSubtask={toggleSubtask}
               onDeleteSubtask={deleteSubtask}
+              onEditTodo={editTodo}
+              onEditSubtask={editSubtask}
             />
           ))
         }
