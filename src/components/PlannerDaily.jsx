@@ -146,8 +146,10 @@ function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl,
   const [editText, setEditText] = useState(td.text);
   const [editingChildId, setEditingChildId] = useState(null);
   const [editChildText, setEditChildText] = useState("");
+  const [showPriorityMenu, setShowPriorityMenu] = useState(false);
   const editInputRef = useRef(null);
   const editChildRef = useRef(null);
+  const priorityBtnRef = useRef(null);
   const startX = useRef(null);
   const subInputRef = useRef(null);
   const THRESH = 80;
@@ -254,23 +256,54 @@ function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl,
 
       {/* Right-side controls */}
       <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
-        {/* Priority badge — always show when set; show faint in edit mode when unset */}
+        {/* Priority badge — click to open picker in edit mode */}
         {(td.priority || editMode) && (
-          <button
-            onClick={editMode ? cyclePriority : undefined}
-            title={editMode ? "Click to change priority" : td.priority ?? ""}
-            style={{
-              display: "flex", alignItems: "center", gap: 3,
-              padding: "1px 6px", borderRadius: 3, fontSize: 10, fontWeight: 800,
-              border: "none", cursor: editMode ? "pointer" : "default",
-              letterSpacing: "0.04em",
-              background: td.priority ? PRIORITY_COLOR[td.priority] + "22" : (dark ? "#ffffff0d" : "#0000000a"),
-              color: td.priority ? PRIORITY_COLOR[td.priority] : (dark ? "#ffffff33" : "#00000033"),
-            }}
-          >
-            {td.priority && <span style={{ width: 6, height: 6, borderRadius: "50%", background: PRIORITY_COLOR[td.priority], flexShrink: 0, display: "inline-block" }} />}
-            {td.priority ? PRIORITY_LABEL[td.priority] : pl.priorityNone}
-          </button>
+          <div style={{ position: "relative" }}>
+            <button
+              ref={priorityBtnRef}
+              onClick={editMode ? () => setShowPriorityMenu(v => !v) : undefined}
+              style={{
+                display: "flex", alignItems: "center", gap: 3,
+                padding: "1px 6px", borderRadius: 3, fontSize: 10, fontWeight: 800,
+                border: "none", cursor: editMode ? "pointer" : "default",
+                letterSpacing: "0.04em",
+                background: td.priority ? PRIORITY_COLOR[td.priority] + "22" : (dark ? "#ffffff0d" : "#0000000a"),
+                color: td.priority ? PRIORITY_COLOR[td.priority] : (dark ? "#ffffff33" : "#00000033"),
+              }}
+            >
+              {td.priority && <span style={{ width: 6, height: 6, borderRadius: "50%", background: PRIORITY_COLOR[td.priority], flexShrink: 0, display: "inline-block" }} />}
+              {td.priority ? PRIORITY_LABEL[td.priority] : pl.priorityNone}
+            </button>
+            {showPriorityMenu && (
+              <div
+                onMouseLeave={() => setShowPriorityMenu(false)}
+                style={{
+                  position: "absolute", bottom: "calc(100% + 4px)", left: 0, zIndex: 200,
+                  background: dark ? "#2a2920" : "#fff",
+                  border: `1px solid ${dark ? "#444" : "#ddd"}`,
+                  borderRadius: 6, boxShadow: "0 4px 16px #0003",
+                  overflow: "hidden", minWidth: 110,
+                }}
+              >
+                {[["high", PRIORITY_LABEL.high], ["medium", PRIORITY_LABEL.medium], ["low", PRIORITY_LABEL.low], [null, pl.priorityNone]].map(([val, label]) => (
+                  <button
+                    key={val ?? "none"}
+                    onClick={() => { onUpdatePriority(td.id, val); setShowPriorityMenu(false); }}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 7,
+                      width: "100%", padding: "7px 10px", border: "none", cursor: "pointer",
+                      background: td.priority === val ? (val ? PRIORITY_COLOR[val] + "22" : (dark ? "#ffffff11" : "#00000009")) : "transparent",
+                      color: val ? PRIORITY_COLOR[val] : (dark ? "#ffffff66" : "#00000066"),
+                      fontSize: 11, fontWeight: 800, letterSpacing: "0.04em", textAlign: "left",
+                    }}
+                  >
+                    {val && <span style={{ width: 7, height: 7, borderRadius: "50%", background: PRIORITY_COLOR[val], flexShrink: 0, display: "inline-block" }} />}
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         )}
         {/* Add subtask button */}
         {editMode && (
