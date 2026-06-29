@@ -695,7 +695,11 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             function fillFor(e) {
               if (!e) return null;
               const sM = timeStrToMins(e.startTime) ?? (e.startCell * 10);
-              const eM = timeStrToMins(e.endTime)   ?? ((e.endCell + 1) * 10);
+              const rawEM = timeStrToMins(e.endTime);
+              // "00:00" endTime on a midnight-crossing event means end-of-day (1440), not start-of-day (0)
+              const eM = (rawEM === 0 && e.endCell != null && e.endCell > 0)
+                ? (e.endCell + 1) * 10
+                : (rawEM ?? ((e.endCell + 1) * 10));
               const cs = idx * 10, ce = (idx + 1) * 10;
               const left  = (Math.max(sM, cs) - cs) / 10 * 100;
               const width = (Math.min(eM, ce) - Math.max(sM, cs)) / 10 * 100;
