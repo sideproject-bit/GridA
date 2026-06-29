@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import * as Tone from "tone";
 import { X, ChevronUp, ChevronDown, Trash2, Zap } from "lucide-react";
 import BreathingBlocks from "./BreathingBlocks";
+import { pushPomodoroRecords, pullPomodoroRecords } from "../api/pomodoroApi";
 
 const COLS = 9;
 const ROWS = 5;
@@ -55,12 +56,49 @@ export default function PomodoroTimer({ t, pal, dark, theme, notifOn, userId, on
   const [liSavedFlash, setLiSavedFlash] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
   const liGoalFiredRef = useRef(false);
-  const recKey    = `grida_lockin_${userId ?? "anon"}`;
-  const pomRunKey = `grida_pom_run_${userId ?? "anon"}`;
-  const liRunKey  = `grida_lockin_run_${userId ?? "anon"}`;
+  const recKey      = `grida_lockin_${userId ?? "anon"}`;
+  const recSyncKey  = `grida_lockin_sync_${userId ?? "anon"}`;
+  const pomRunKey   = `grida_pom_run_${userId ?? "anon"}`;
+  const liRunKey    = `grida_lockin_run_${userId ?? "anon"}`;
   const [records, setRecords] = useState(() => {
     try { return JSON.parse(localStorage.getItem(recKey) ?? "[]"); } catch { return []; }
   });
+
+  // Auto-save refs
+  const autoSaveTimer  = useRef(null);
+  const isFirstRecRender = useRef(true);
+  const loadingFromCloud = useRef(false);
+
+  // On mount: auto-load from cloud if cloud records are newer
+  useEffect(() => {
+    if (!userId) return;
+    const localSyncTime = localStorage.getItem(recSyncKey);
+    pullPomodoroRecords(userId).then(remote => {
+      if (!remote) return;
+      const cloudIsNewer = !localSyncTime || new Date(remote.synced_at) > new Date(localSyncTime);
+      if (!cloudIsNewer) return;
+      loadingFromCloud.current = true;
+      const cloudRecords = remote.records ?? [];
+      setRecords(cloudRecords);
+      try { localStorage.setItem(recKey, JSON.stringify(cloudRecords)); } catch (_) {}
+      localStorage.setItem(recSyncKey, remote.synced_at);
+      setTimeout(() => { loadingFromCloud.current = false; }, 2000);
+    }).catch(() => {});
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-save records to cloud with 2s debounce
+  useEffect(() => {
+    if (isFirstRecRender.current) { isFirstRecRender.current = false; return; }
+    if (loadingFromCloud.current || !userId) return;
+    clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(async () => {
+      try {
+        await pushPomodoroRecords(userId, records);
+        localStorage.setItem(recSyncKey, new Date().toISOString());
+      } catch (_) {}
+    }, 2000);
+    return () => clearTimeout(autoSaveTimer.current);
+  }, [records]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Restore persisted timer state on mount
   useEffect(() => {
