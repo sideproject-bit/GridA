@@ -90,15 +90,6 @@ export function useEventNotifications(enabled, userId, t) {
         tryNotif(p.notifStartTitle, p.notifStartBody(evt.title));
       }
 
-      // Personal events: 10-min warning
-      for (const evt of [...events, ...calEvents, ...recurring]) {
-        if (evt.startCell !== curCell + 1) continue;
-        const tag = `warn_${evt.id}_${today}_${curCell}`;
-        if (fired.current.has(tag)) continue;
-        fired.current.add(tag);
-        tryNotif(p.notifWarnTitle, p.notifWarnBody(evt.title));
-      }
-
       // Group events: fire at start
       for (const ge of groupEvents) {
         const sc = timeToCell(ge.start_time);
@@ -109,15 +100,6 @@ export function useEventNotifications(enabled, userId, t) {
         tryNotif(p.notifStartTitle, p.notifStartBody(ge.title));
       }
 
-      // Group events: 10-min warning
-      for (const ge of groupEvents) {
-        const sc = timeToCell(ge.start_time);
-        if (sc === null || sc !== curCell + 1) continue;
-        const tag = `gewarn_${ge.id}_${today}_${curCell}`;
-        if (fired.current.has(tag)) continue;
-        fired.current.add(tag);
-        tryNotif(p.notifWarnTitle, p.notifWarnBody(ge.title));
-      }
     };
 
     check();

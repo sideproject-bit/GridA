@@ -2,6 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { subscribeToMessages } from "../api/messagesApi";
 import { subscribeToAllGroupMessages } from "../api/groupMessagesApi";
+
+function tryBrowserNotif(title, body) {
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  try { new Notification(title, { body }); } catch (_) {}
+}
 import { fetchMyGroups } from "../api/groupsApi";
 
 export function useChatNotifications(myId, addNotification, notifOn) {
@@ -57,13 +62,11 @@ export function useChatNotifications(myId, addNotification, notifOn) {
       const isActive = activeChatRef.current.type === "direct" && activeChatRef.current.id === msg.sender_id;
       if (isActive) return;
       setUnreadDirect(prev => new Set([...prev, msg.sender_id]));
+      const body = msg.content.length > 60 ? msg.content.slice(0, 60) + "…" : msg.content;
       if (notifOnRef.current) {
         const name = await getSenderName(msg.sender_id);
-        addNotifRef.current?.({
-          type: "chat",
-          title: name,
-          body: msg.content.length > 60 ? msg.content.slice(0, 60) + "…" : msg.content,
-        });
+        addNotifRef.current?.({ type: "chat", title: name, body });
+        tryBrowserNotif(name, body);
       }
     }, "_notif");
     return () => ch?.unsubscribe();
@@ -78,11 +81,10 @@ export function useChatNotifications(myId, addNotification, notifOn) {
       setUnreadGroups(prev => new Set([...prev, msg.group_id]));
       if (notifOnRef.current) {
         const group = groupsRef.current.find(g => g.id === msg.group_id);
-        addNotifRef.current?.({
-          type: "chat",
-          title: group?.name ?? "Group",
-          body: msg.content.length > 60 ? msg.content.slice(0, 60) + "…" : msg.content,
-        });
+        const title = group?.name ?? "Group";
+        const body = msg.content.length > 60 ? msg.content.slice(0, 60) + "…" : msg.content;
+        addNotifRef.current?.({ type: "chat", title, body });
+        tryBrowserNotif(title, body);
       }
     });
     return () => ch?.unsubscribe();
