@@ -7,6 +7,7 @@ import { T } from "./copy";
 import { useSound } from "./useSound";
 import { useViewport } from "./hooks/useViewport";
 import { useEventNotifications } from "./hooks/useEventNotifications";
+import { useRealtimeNotifications } from "./hooks/useRealtimeNotifications";
 import { useNotifications } from "./hooks/useNotifications";
 import { useChatNotifications } from "./hooks/useChatNotifications";
 import NotificationPanel from "./components/NotificationPanel";
@@ -75,6 +76,7 @@ function AppShell() {
   const music = useMusicPlayer();
   const { isMobile } = useViewport();
   useEventNotifications(notifOn, session?.user?.id, t);
+  useRealtimeNotifications(session?.user?.id, addNotification, notifOn, t);
   const { notifications, unreadCount, banner, setBanner, addNotification, markRead, markAllRead, deleteNotification, clearAll: clearAllNotifs } = useNotifications(session?.user?.id);
   const { unreadDirect, unreadGroups, clearUnreadDirect, clearUnreadGroup, setActiveChat, refreshChatGroups } = useChatNotifications(session?.user?.id, addNotification, notifOn);
 
