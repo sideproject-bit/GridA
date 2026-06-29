@@ -235,7 +235,7 @@ function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl,
             }}
           >
             {td.priority && <span style={{ width: 6, height: 6, borderRadius: "50%", background: PRIORITY_COLOR[td.priority], flexShrink: 0, display: "inline-block" }} />}
-            {td.priority ? PRIORITY_LABEL[td.priority] : "—"}
+            {td.priority ? PRIORITY_LABEL[td.priority] : pl.priorityNone}
           </button>
         )}
         {/* Add subtask button */}
