@@ -5,7 +5,7 @@ const REPEL_RADIUS = 130;
 const REPEL_STRENGTH = 0.5;
 const MAX_SPEED = 2.2;
 
-const MONDRIAN_COLORS = ["#C7382E", "#2B3DCB", "#E3B22E", "#F2EDE1"];
+const MONDRIAN_COLORS = ["#C7382E", "#2B3DCB", "#F5C800", "#F2EDE1"];
 
 function makeBlocks(w, h, accent, colors) {
   return Array.from({ length: COUNT }, (_, i) => ({

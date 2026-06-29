@@ -36,7 +36,7 @@ function timeStrToMins(str) {
   return h * 60 + (isNaN(m) ? 0 : m);
 }
 
-const MON = { red: "#C7382E", blue: "#2B3DCB", yellow: "#E3B22E" };
+const MON = { red: "#C7382E", blue: "#2B3DCB", yellow: "#F5C800" };
 
 // Single event row. Mobile: swipe right = procrastinate, tap = open popup.
 // Desktop: click = open popup, right-click = context menu.
@@ -147,6 +147,7 @@ function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl,
   const [editingChildId, setEditingChildId] = useState(null);
   const [editChildText, setEditChildText] = useState("");
   const [showPriorityMenu, setShowPriorityMenu] = useState(false);
+  const [menuPos, setMenuPos] = useState(null);
   const editInputRef = useRef(null);
   const editChildRef = useRef(null);
   const priorityBtnRef = useRef(null);
@@ -265,7 +266,13 @@ function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl,
           <div style={{ position: "relative" }}>
             <button
               ref={priorityBtnRef}
-              onClick={editMode ? () => setShowPriorityMenu(v => !v) : undefined}
+              onClick={editMode ? () => {
+                if (!showPriorityMenu) {
+                  const rect = priorityBtnRef.current.getBoundingClientRect();
+                  setMenuPos({ top: rect.bottom + 4, left: rect.left });
+                }
+                setShowPriorityMenu(v => !v);
+              } : undefined}
               style={{
                 display: "flex", alignItems: "center", gap: 3,
                 padding: "1px 6px", borderRadius: 3, fontSize: 10, fontWeight: 800,
@@ -278,11 +285,11 @@ function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl,
               {td.priority && <span style={{ width: 6, height: 6, borderRadius: "50%", background: PRIORITY_COLOR[td.priority], flexShrink: 0, display: "inline-block" }} />}
               {td.priority ? PRIORITY_LABEL[td.priority] : pl.priorityNone}
             </button>
-            {showPriorityMenu && (
+            {showPriorityMenu && menuPos && createPortal(
               <div
                 onMouseLeave={() => setShowPriorityMenu(false)}
                 style={{
-                  position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 200,
+                  position: "fixed", top: menuPos.top, left: menuPos.left, zIndex: 9999,
                   background: dark ? "#2a2920" : "#fff",
                   border: `1px solid ${dark ? "#444" : "#ddd"}`,
                   borderRadius: 6, boxShadow: "0 4px 16px #0003",
@@ -305,7 +312,8 @@ function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl,
                     {label}
                   </button>
                 ))}
-              </div>
+              </div>,
+              document.body
             )}
           </div>
         )}
@@ -1024,7 +1032,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
           fontSize: isMobile ? 22 : 13,
           fontWeight: isMobile ? 900 : 700,
           letterSpacing: isMobile ? "-0.01em" : "normal",
-          color: isMobile ? (dark ? "#E3B22E" : "#2B3DCB") : ink,
+          color: isMobile ? (dark ? "#F5C800" : "#2B3DCB") : ink,
           opacity: isMobile ? 1 : 0.5,
         }}>
           {new Date().toLocaleDateString(lang === "ko" ? "ko-KR" : "en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}

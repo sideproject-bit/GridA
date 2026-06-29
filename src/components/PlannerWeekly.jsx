@@ -10,7 +10,7 @@ const CELL_H_NARROW = 22;   // px per hour row — compact mode
 const LABEL_W       = 32;   // px for time-label column
 const DAY_MIN_W     = 56;   // min px per day column (mobile horizontal scroll)
 
-const MON = { red: "#C7382E", blue: "#2B3DCB", yellow: "#E3B22E" };
+const MON = { red: "#C7382E", blue: "#2B3DCB", yellow: "#F5C800" };
 
 function localKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -111,6 +111,20 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
   const dayKeys = days.map(localKey);
   const today   = localKey(new Date());
   const totalH  = HOURS * CELL_H;
+
+  // Current time indicator
+  const [nowPx, setNowPx] = useState(() => {
+    const n = new Date();
+    return (n.getHours() + n.getMinutes() / 60) * CELL_H;
+  });
+  useEffect(() => {
+    const tick = () => {
+      const n = new Date();
+      setNowPx((n.getHours() + n.getMinutes() / 60) * CELL_H);
+    };
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
+  }, [CELL_H]);
 
   // Auto-scroll to current hour on mount
   useEffect(() => {
@@ -498,6 +512,14 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
                       }}
                     />
                   ))}
+
+                  {/* Current time indicator — only on today's column */}
+                  {isToday && (
+                    <div style={{ position: "absolute", left: 0, right: 0, top: nowPx, zIndex: 10, pointerEvents: "none" }}>
+                      <div style={{ position: "absolute", left: -6, top: -4, width: 8, height: 8, borderRadius: "50%", background: MON.red }} />
+                      <div style={{ height: 2, background: MON.red, opacity: 0.8 }} />
+                    </div>
+                  )}
 
                   {/* Determine group events for this day to decide lane widths */}
                   {(() => {

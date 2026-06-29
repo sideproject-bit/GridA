@@ -11,7 +11,7 @@ const BLOCKS = [
   { id: 2, color: "#2B3DCB", col: "4/7", row: "1/3" },
   { id: 3, color: "#F0EBE0", col: "3/4", row: "2/3" },
   { id: 4, color: "#F0EBE0", col: "1/2", row: "3/4" },
-  { id: 5, color: "#E3B22E", col: "2/4", row: "3/5" },
+  { id: 5, color: "#F5C800", col: "2/4", row: "3/5" },
   { id: 6, color: "#F0EBE0", col: "4/5", row: "3/4" },
   { id: 7, color: "#C7382E", col: "5/7", row: "3/4" },
   { id: 8, color: "#2B3DCB", col: "1/2", row: "4/5" },

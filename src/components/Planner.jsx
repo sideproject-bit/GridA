@@ -5,6 +5,7 @@ import PlannerMonthly from "./PlannerMonthly";
 import PlannerWeekly from "./PlannerWeekly";
 import { fetchGroupEventsForUser, deleteGroupEvent, updateGroupEvent } from "../api/groupEventsApi";
 import { pushPlannerSync, pullPlannerSync, pushPlannerSyncHistory } from "../api/plannerSyncApi";
+import { supabase } from "../lib/supabaseClient";
 
 // Local-timezone date key (toISOString would use UTC and roll over early)
 function localKey(d) {
@@ -95,6 +96,18 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
     if (!userId) return;
     fetchGroupEventsForUser(userId).then(setGroupEvents).catch(() => {});
   }, [userId, groupEventsVersion]);
+
+  // Realtime: re-fetch when any group_event or invite changes
+  useEffect(() => {
+    if (!userId) return;
+    const refetch = () => fetchGroupEventsForUser(userId).then(setGroupEvents).catch(() => {});
+    const ch = supabase
+      .channel(`planner_group_events_${userId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "group_events" }, refetch)
+      .on("postgres_changes", { event: "*", schema: "public", table: "group_event_invites", filter: `invitee_id=eq.${userId}` }, refetch)
+      .subscribe();
+    return () => { ch?.unsubscribe(); };
+  }, [userId]);
 
   const handleDeleteGroupEvent = async (id) => {
     try {

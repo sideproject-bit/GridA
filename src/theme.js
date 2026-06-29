@@ -1,5 +1,5 @@
 export const THEMES = {
-  mondrian: { name: { en: "Mondrian", ko: "몬드리안" }, accents: ["#C7382E", "#2B3DCB", "#E3B22E"] },
+  mondrian: { name: { en: "Mondrian", ko: "몬드리안" }, accents: ["#C7382E", "#2B3DCB", "#F5C800"] },
   blue:     { name: { en: "Neptune",  ko: "해왕성" },   accents: ["#2B3DCB", "#2B3DCB", "#2B3DCB"] },
   red:      { name: { en: "Mars",     ko: "화성" },     accents: ["#C7382E", "#C7382E", "#C7382E"] },
   green:    { name: { en: "Earth",    ko: "지구" },     accents: ["#1F7A4D", "#1F7A4D", "#1F7A4D"] },
@@ -19,7 +19,7 @@ const HOME_BLOCKS = {
 
 // Per-theme home feature tiles: [background, text] for planner / mandalart / pomodoro
 const HOME_FEATURES = {
-  mondrian: { planner: ["#1B1A17", "#fff"], mandalart: ["#E3B22E", "#1a1a1a"], pomodoro: ["#C7382E", "#fff"] },
+  mondrian: { planner: ["#1B1A17", "#fff"], mandalart: ["#F5C800", "#1a1a1a"], pomodoro: ["#C7382E", "#fff"] },
   blue:     { planner: ["#1B1A17", "#fff"], mandalart: ["#2B3DCB", "#fff"],   pomodoro: ["#5B6BE0", "#fff"] },
   red:      { planner: ["#1B1A17", "#fff"], mandalart: ["#C7382E", "#fff"],   pomodoro: ["#E0655B", "#fff"] },
   green:    { planner: ["#1B1A17", "#fff"], mandalart: ["#1F7A4D", "#fff"],   pomodoro: ["#C4956A", "#1a1a1a"] },
@@ -29,7 +29,7 @@ const HOME_FEATURES = {
 
 // Per-theme "New Mandalart" button background (text is always dark #1a1a1a)
 export const NEW_BTN_BG = {
-  mondrian: "#E3B22E",
+  mondrian: "#F5C800",
   blue:     "#dde0ff",
   red:      "#c4956a",
   green:    "#c4956a",

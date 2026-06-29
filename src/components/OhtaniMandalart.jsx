@@ -63,15 +63,15 @@ function CellBox({ cell, isMain, isSub, pal, big = false }) {
 }
 
 export default function OhtaniMandalart({ pal, t }) {
-  const isKo = t.about.ohtaniLabel === "오타니 방식";
+  const isKo = t.mandalartAbout.ohtaniLabel === "오타니 방식";
   const grid = isKo ? GRID_KO : GRID_EN;
   const [compact, setCompact] = useState(false);
   const [focusBlock, setFocusBlock] = useState([1, 1]);
   const [fbr, fbc] = focusBlock;
 
-  const label = t.about.ohtaniGridLabel;
-  const caption = t.about.ohtaniGridCaption;
-  const cta = t.about.ohtaniGridCta;
+  const label = t.mandalartAbout.ohtaniGridLabel;
+  const caption = t.mandalartAbout.ohtaniGridCaption;
+  const cta = t.mandalartAbout.ohtaniGridCta;
   const fullViewLabel = isKo ? "전체 보기" : "Full Grid";
   const focusViewLabel = isKo ? "포커스 뷰" : "Focus View";
 
