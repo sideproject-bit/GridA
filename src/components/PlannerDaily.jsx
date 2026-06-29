@@ -8,6 +8,7 @@ const HEADER_H = 22;   // px for minute header row
 const COLS     = 6;
 const ROWS     = 24;
 const TOTAL    = ROWS * COLS; // 144
+const GRID_H   = HEADER_H + ROWS * CELL_H; // 646px — used to cap event/todo list height
 
 const EVENT_COLORS = ["#FFAAAA", "#FFE599", "#AAD4FF", "#C7382E", "#C8960A", "#1A2A9E"];
 
@@ -745,6 +746,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
           </div>
         </div>
       )}
+      <div style={{ overflowY: "auto", maxHeight: GRID_H - 60 }}>
       {events.length === 0 && groupEvents.length === 0
         ? <div style={{ fontSize: 12, opacity: 0.3, paddingTop: 4 }}>{pl.noEvents}</div>
         : [
@@ -821,6 +823,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             );
           })
       }
+      </div>
     </>
   );
 
@@ -859,20 +862,22 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
           </div>
         </div>
       )}
-      {sortedTodos.length === 0
-        ? <div style={{ fontSize: 12, opacity: 0.3 }}>{pl.noTodos}</div>
-        : sortedTodos.map(td => (
-          <TodoItem
-            key={td.id} td={td}
-            isMobile={isMobile} editMode={editMode} dark={dark} ink={ink} acc={acc} border={border} pl={pl}
-            onToggle={toggleTodo} onDelete={deleteTodo}
-            onUpdatePriority={updatePriority}
-            onAddSubtask={addSubtask}
-            onToggleSubtask={toggleSubtask}
-            onDeleteSubtask={deleteSubtask}
-          />
-        ))
-      }
+      <div style={{ overflowY: "auto", maxHeight: GRID_H - 115 }}>
+        {sortedTodos.length === 0
+          ? <div style={{ fontSize: 12, opacity: 0.3 }}>{pl.noTodos}</div>
+          : sortedTodos.map(td => (
+            <TodoItem
+              key={td.id} td={td}
+              isMobile={isMobile} editMode={editMode} dark={dark} ink={ink} acc={acc} border={border} pl={pl}
+              onToggle={toggleTodo} onDelete={deleteTodo}
+              onUpdatePriority={updatePriority}
+              onAddSubtask={addSubtask}
+              onToggleSubtask={toggleSubtask}
+              onDeleteSubtask={deleteSubtask}
+            />
+          ))
+        }
+      </div>
     </>
   );
 
