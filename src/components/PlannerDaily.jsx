@@ -278,7 +278,7 @@ function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl,
               <div
                 onMouseLeave={() => setShowPriorityMenu(false)}
                 style={{
-                  position: "absolute", bottom: "calc(100% + 4px)", left: 0, zIndex: 200,
+                  position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 200,
                   background: dark ? "#2a2920" : "#fff",
                   border: `1px solid ${dark ? "#444" : "#ddd"}`,
                   borderRadius: 6, boxShadow: "0 4px 16px #0003",
