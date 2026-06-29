@@ -149,7 +149,7 @@ function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl, onToggle
 
   const item = (
     <div style={{
-      display: "flex", alignItems: "center", gap: 8, padding: "6px 0",
+      display: "flex", alignItems: "center", gap: 8, padding: "6px 6px 6px 0",
       borderBottom: `1px solid ${border}`,
       background: dark ? "#1e1d16" : "#f0ede2",
       transform: isMobile ? `translateX(${dx}px)` : "none",
@@ -161,11 +161,11 @@ function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl, onToggle
         onChange={() => onToggle(td.id)}
         style={{ accentColor: acc, cursor: "pointer", flexShrink: 0 }}
       />
-      <span style={{ flex: 1, fontSize: 13, textDecoration: td.done ? "line-through" : "none", opacity: td.done ? 0.35 : 1, wordBreak: "keep-all" }}>
+      <span style={{ flex: 1, minWidth: 0, fontSize: 13, textDecoration: td.done ? "line-through" : "none", opacity: td.done ? 0.35 : 1, wordBreak: "break-word" }}>
         {td.text}
       </span>
       {editMode && !isMobile && (
-        <button onClick={() => onDelete(td.id)} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.25, fontSize: 16, padding: 0, lineHeight: 1, flexShrink: 0 }}>×</button>
+        <button onClick={() => onDelete(td.id)} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.25, fontSize: 16, padding: "0 2px", lineHeight: 1, flexShrink: 0 }}>×</button>
       )}
     </div>
   );
@@ -764,7 +764,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             <div style={colHeader(MON.blue)}>{pl.eventsCol}</div>
             {eventsBody}
           </div>
-          <div>
+          <div style={{ minWidth: 0, overflow: "hidden" }}>
             <div style={colHeader(MON.yellow)}>{pl.todoCol}</div>
             {todoBody}
           </div>
