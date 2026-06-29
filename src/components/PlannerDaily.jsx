@@ -80,9 +80,10 @@ function EventRow({ evt, isMobile, editMode, dark, ink, acc, border, pl, onMove,
         <div style={{
           fontWeight: 700, fontSize: 13, wordBreak: "keep-all",
           textDecoration: evt.done ? "line-through" : "none",
-        }}>{evt.title}</div>
+        }}>{evt.isContinuation ? `↩ ${evt.title}` : evt.title}</div>
         <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>
           {evt.startTime ?? cellToTime(evt.startCell)} – {evt.endTime ?? cellToTimeEnd(evt.endCell)}
+          {evt.hasContinuation && " →"}
         </div>
         {evt.memo && <div style={{ fontSize: 11, opacity: 0.6, marginTop: 4, wordBreak: "keep-all" }}>{evt.memo}</div>}
       </div>
@@ -202,7 +203,7 @@ function timeToEndCell(timeStr) {
   return Math.ceil((h * 60 + m) / 10) - 1;
 }
 
-export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, onEditEvent, onEditCalEvent, onDeleteCalEvent, todos, onTodosChange, onMoveToTomorrow, onSkipRecurring, spans, theme, lang, groupEvents = [], onDeleteGroupEvent, onEditGroupEvent }) {
+export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, onEditEvent, onEditCalEvent, onDeleteCalEvent, todos, onTodosChange, onMoveToTomorrow, onSkipRecurring, spans, theme, lang, groupEvents = [], onDeleteGroupEvent, onEditGroupEvent, onSaveContinuation }) {
   const pl    = t.planner;
   const ink   = pal.ink;
   const acc   = pal.accent;
@@ -219,6 +220,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
   const [popTitle,    setPopTitle]    = useState("");
   const [popColor,    setPopColor]    = useState(EVENT_COLORS[0]);
   const [popMemo,     setPopMemo]     = useState("");
+  const [popEndTime,  setPopEndTime]  = useState("");
   const [todoInput,   setTodoInput]   = useState("");
   const [section,     setSection]     = useState("time"); // mobile segment: time | events | todo
   const [viewEvent,   setViewEvent]   = useState(null); // tapped a filled block → show its details
@@ -258,6 +260,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
   function openPopup(startCell, endCell) {
     setPopup({ startCell, endCell });
     setPopTitle(""); setPopColor(EVENT_COLORS[0]); setPopMemo("");
+    setPopEndTime(cellToTimeEnd(endCell));
   }
 
   function handlePointerDown(e) {
@@ -338,17 +341,38 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
 
   function saveEvent() {
     if (!popup || !popTitle.trim()) return;
-    const evt = {
-      id: Date.now().toString(),
-      title: popTitle.trim(),
-      color: popColor,
-      memo: popMemo,
-      startCell: popup.startCell,
-      endCell: popup.endCell,
-      startTime: cellToTime(popup.startCell),
-      endTime: cellToTimeEnd(popup.endCell),
-    };
-    onEventsChange(prev => [...prev, evt]);
+    const startTime = cellToTime(popup.startCell);
+    const endTime = popEndTime || cellToTimeEnd(popup.endCell);
+    const crossesMidnight = endTime < startTime;
+    const baseId = Date.now().toString();
+
+    if (crossesMidnight) {
+      // Today's portion: drag start → cell 143 (midnight)
+      onEventsChange(prev => [...prev, {
+        id: baseId,
+        title: popTitle.trim(), color: popColor, memo: popMemo,
+        startCell: popup.startCell, endCell: 143,
+        startTime, endTime: "00:00",
+        hasContinuation: true,
+      }]);
+      // Tomorrow's continuation: 00:00 → specified end time
+      const contEndCell = Math.max(0, timeToEndCell(endTime));
+      onSaveContinuation?.({
+        id: `${baseId}_cont`,
+        title: popTitle.trim(), color: popColor, memo: popMemo,
+        startCell: 0, endCell: contEndCell,
+        startTime: "00:00", endTime,
+        isContinuation: true, continuationOf: baseId,
+      });
+    } else {
+      const endCell = Math.max(popup.startCell, timeToEndCell(endTime));
+      onEventsChange(prev => [...prev, {
+        id: baseId,
+        title: popTitle.trim(), color: popColor, memo: popMemo,
+        startCell: popup.startCell, endCell,
+        startTime, endTime,
+      }]);
+    }
     setPopup(null);
   }
 
@@ -787,8 +811,20 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             borderRadius: 10, padding: 20,
             boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
           }}>
-            <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.45, marginBottom: 10, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-              {cellToTime(popup.startCell)} – {cellToTimeEnd(popup.endCell)}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, opacity: 0.5, fontFamily: "monospace" }}>
+                {cellToTime(popup.startCell)}
+              </span>
+              <span style={{ opacity: 0.35, fontSize: 12 }}>–</span>
+              <input
+                type="time"
+                value={popEndTime}
+                onChange={e => setPopEndTime(e.target.value)}
+                style={{ padding: "3px 7px", fontSize: 12, fontFamily: "inherit", border: `1px solid ${dark ? "#555" : "#ccc"}`, borderRadius: 4, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none" }}
+              />
+              {popEndTime && popEndTime < cellToTime(popup.startCell) && (
+                <span style={{ fontSize: 11, opacity: 0.75, color: acc }}>🌙 +1</span>
+              )}
             </div>
             <input
               value={popTitle}
@@ -888,6 +924,12 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
                 <div style={{ fontSize: 12, opacity: 0.5, marginBottom: viewEvent.memo ? 10 : 0 }}>
                   {viewEvent.startTime ?? cellToTime(viewEvent.startCell)} – {viewEvent.endTime ?? cellToTimeEnd(viewEvent.endCell)}
                 </div>
+                {viewEvent.hasContinuation && (
+                  <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 6 }}>→ {lang === "ko" ? "다음 날로 이어짐" : "Continues next day"}</div>
+                )}
+                {viewEvent.isContinuation && (
+                  <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 6 }}>↩ {lang === "ko" ? "전날에서 이어진 일정" : "Continued from previous day"}</div>
+                )}
                 {viewEvent.memo && <div style={{ fontSize: 13, lineHeight: 1.6, opacity: 0.8, wordBreak: "keep-all", whiteSpace: "pre-wrap" }}>{viewEvent.memo}</div>}
                 {viewEvent.fromCalendar && <div style={{ fontSize: 11, opacity: 0.4, marginTop: 8 }}>📅 {pl.fromCalendar}</div>}
                 {editMode && viewEvent._recurring && (

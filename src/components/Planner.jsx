@@ -136,6 +136,12 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
     setCalEvents(prev => ({ ...prev, [key]: [...(prev[key] ?? []), calEvt] }));
   };
 
+  // Save a midnight-crossing continuation event to tomorrow's calendar slot
+  const saveContinuation = (contEvt) => {
+    const key = tomorrowKey();
+    setCalEvents(prev => ({ ...prev, [key]: [...(prev[key] ?? []), { ...contEvt, fromCalendar: true }] }));
+  };
+
   // Delete a daily (today's) event — called from Monthly/Weekly view
   const deleteDailyEvent = (id) => setEvents(prev => prev.filter(e => e.id !== id));
 
@@ -545,6 +551,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
           lang={lang}
           onDeleteGroupEvent={handleDeleteGroupEvent}
           onEditGroupEvent={handleEditGroupEvent}
+          onSaveContinuation={saveContinuation}
           groupEvents={(() => {
             const yesterday = localKey(new Date(new Date().setDate(new Date().getDate() - 1)));
             return groupEvents.filter(e =>
