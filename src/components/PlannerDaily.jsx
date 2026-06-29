@@ -258,9 +258,9 @@ function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl,
     </div>
   );
 
-  const childrenSection = hasChildren && expanded && (
+  const childrenSection = (hasChildren && expanded) || showSubInput ? (
     <div style={{ borderBottom: `1px solid ${border}` }}>
-      {td.children.map(child => (
+      {hasChildren && expanded && td.children.map(child => (
         <div key={child.id} style={{
           display: "flex", alignItems: "center", gap: 6,
           padding: "5px 6px 5px 22px",
@@ -282,20 +282,22 @@ function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl,
         </div>
       ))}
       {showSubInput && (
-        <div style={{ display: "flex", gap: 6, padding: "5px 6px 5px 22px", background: subBg, borderTop: `1px solid ${border}44` }}>
+        <div style={{ display: "flex", gap: 6, padding: "6px 8px 6px 22px", background: subBg, borderTop: `1px solid ${border}44` }}>
           <input
             ref={subInputRef}
+            autoFocus
             value={subText}
             onChange={e => setSubText(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") commitSubtask(); if (e.key === "Escape") { setShowSubInput(false); setSubText(""); } }}
-            placeholder="Sub-task…"
-            style={{ flex: 1, fontSize: 12, padding: "3px 6px", fontFamily: "inherit", border: `1px solid ${dark ? "#444" : "#ccc"}`, borderRadius: 4, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none" }}
+            placeholder="Sub-task name… (Enter to add)"
+            style={{ flex: 1, fontSize: 12, padding: "4px 8px", fontFamily: "inherit", border: `1px solid ${acc}66`, borderRadius: 4, background: dark ? "#1e1d16" : "#fff", color: ink, outline: "none" }}
           />
-          <button onClick={commitSubtask} style={{ background: acc, color: "#fff", border: "none", borderRadius: 4, padding: "3px 8px", fontSize: 11, cursor: "pointer", fontWeight: 700 }}>✓</button>
+          <button onClick={commitSubtask} style={{ background: acc, color: "#fff", border: "none", borderRadius: 4, padding: "4px 10px", fontSize: 11, cursor: "pointer", fontWeight: 700 }}>Add</button>
+          <button onClick={() => { setShowSubInput(false); setSubText(""); }} style={{ background: "none", border: `1px solid ${ink}22`, borderRadius: 4, padding: "4px 8px", fontSize: 11, cursor: "pointer", color: ink, opacity: 0.5 }}>✕</button>
         </div>
       )}
     </div>
-  );
+  ) : null;
 
   if (!isMobile) return <div>{mainRow}{childrenSection}</div>;
 
