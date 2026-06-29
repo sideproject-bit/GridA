@@ -21,6 +21,29 @@ function tomorrowKey() {
   return localKey(d);
 }
 
+function nextDayKeyOf(dateStr) {
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() + 1);
+  return localKey(d);
+}
+
+function prevDayKeyOf(dateStr) {
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() - 1);
+  return localKey(d);
+}
+
+const TOTAL_CELLS = 24 * 6; // 144 — 10-min slots per day
+
+function cellToTime(cell) {
+  const h = Math.floor(cell / 6), m = (cell % 6) * 10;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+function cellToTimeEnd(cell) {
+  const total = Math.floor(cell / 6) * 60 + (cell % 6) * 10 + 10;
+  return `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
 const MON_RED  = "#C7382E";
 const MON_BLUE = "#2B3DCB";
 
@@ -204,6 +227,81 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
         }));
       }
       setCalEvents(prev => ({ ...prev, [newDateKey]: [...(prev[newDateKey] ?? []), clean] }));
+    }
+  };
+
+  // Move a midnight-crossing event pair as a single logical unit.
+  // Preserves total duration; merges into one event if new position no longer crosses midnight.
+  const moveMidnightEvent = (evt, origDateKey, newDateKey, newStartCell) => {
+    // Resolve which half we have and find the other
+    let origEvt, origDateK, contEvt, contDateK;
+    if (evt.hasContinuation) {
+      origEvt   = evt;
+      origDateK = origDateKey;
+      const nextDay = nextDayKeyOf(origDateKey);
+      contDateK = nextDay;
+      contEvt   = (calEvents[nextDay] ?? []).find(e => e.continuationOf === evt.id || e.id === `${evt.id}_cont`);
+    } else {
+      // isContinuation — find the original
+      contEvt   = evt;
+      contDateK = origDateKey;
+      const prevDay = prevDayKeyOf(origDateKey);
+      origDateK = prevDay;
+      origEvt   = (calEvents[prevDay] ?? []).find(e => e.id === evt.continuationOf)
+               ?? events.find(e => e.id === evt.continuationOf);
+    }
+
+    if (!origEvt) return; // can't resolve pair — bail
+
+    const origCells = (origEvt.endCell ?? TOTAL_CELLS - 1) - (origEvt.startCell ?? 0) + 1;
+    const contCells = contEvt ? (contEvt.endCell ?? 0) - (contEvt.startCell ?? 0) + 1 : 0;
+    const totalCells = origCells + contCells;
+    const newEndCell = newStartCell + totalCells - 1;
+
+    const removeFrom = (map, dateK, id) => ({
+      ...map,
+      [dateK]: (map[dateK] ?? []).filter(e => e.id !== id && e.continuationOf !== origEvt.id),
+    });
+
+    if (newEndCell < TOTAL_CELLS) {
+      // ── Merged: no longer crosses midnight ──
+      const merged = {
+        id: origEvt.id, title: origEvt.title, color: origEvt.color, memo: origEvt.memo ?? "",
+        startCell: newStartCell, endCell: newEndCell,
+        startTime: cellToTime(newStartCell), endTime: cellToTimeEnd(newEndCell),
+        fromCalendar: true,
+      };
+      if (origEvt._daily) setEvents(prev => prev.filter(e => e.id !== origEvt.id));
+      setCalEvents(prev => {
+        let next = removeFrom(prev, origDateK, origEvt.id);
+        if (contEvt) next = removeFrom(next, contDateK, contEvt.id);
+        next[newDateKey] = [...(next[newDateKey] ?? []).filter(e => e.id !== origEvt.id), merged];
+        return next;
+      });
+    } else {
+      // ── Still crosses midnight: split at midnight ──
+      const newContEndCell = newEndCell - TOTAL_CELLS;
+      const nextDateKey    = nextDayKeyOf(newDateKey);
+      const updatedOrig = {
+        id: origEvt.id, title: origEvt.title, color: origEvt.color, memo: origEvt.memo ?? "",
+        startCell: newStartCell, endCell: TOTAL_CELLS - 1,
+        startTime: cellToTime(newStartCell), endTime: "00:00",
+        hasContinuation: true, fromCalendar: true,
+      };
+      const updatedCont = {
+        id: `${origEvt.id}_cont`, title: origEvt.title, color: origEvt.color, memo: origEvt.memo ?? "",
+        startCell: 0, endCell: newContEndCell,
+        startTime: "00:00", endTime: cellToTimeEnd(newContEndCell),
+        isContinuation: true, continuationOf: origEvt.id, fromCalendar: true,
+      };
+      if (origEvt._daily) setEvents(prev => prev.filter(e => e.id !== origEvt.id));
+      setCalEvents(prev => {
+        let next = removeFrom(prev, origDateK, origEvt.id);
+        if (contEvt) next = removeFrom(next, contDateK, contEvt.id);
+        next[newDateKey] = [...(next[newDateKey] ?? []).filter(e => e.id !== origEvt.id), updatedOrig];
+        next[nextDateKey] = [...(next[nextDateKey] ?? []).filter(e => e.id !== updatedCont.id), updatedCont];
+        return next;
+      });
     }
   };
 
@@ -607,6 +705,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
           onDeleteDailyEvent={deleteDailyEvent}
           onDeleteContinuation={deleteContinuation}
           onDeleteOriginal={deleteOriginalEvent}
+          onMoveMidnightEvent={moveMidnightEvent}
         />
       )}
       {tab === "monthly" && (

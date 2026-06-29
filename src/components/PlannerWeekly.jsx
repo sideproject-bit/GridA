@@ -69,7 +69,7 @@ function prevDayKey(dateStr) {
   return localKey(d);
 }
 
-export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleCompact, editMode = true, calEvents, recurring, onEditDailyEvent, onEditCalEvent, onMoveEvent, onAddCalEvent, spans, theme, lang, groupEvents = [], onDeleteGroupEvent, onEditGroupEvent, onDeleteCalEvent, onDeleteDailyEvent, onDeleteContinuation, onDeleteOriginal }) {
+export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleCompact, editMode = true, calEvents, recurring, onEditDailyEvent, onEditCalEvent, onMoveEvent, onAddCalEvent, spans, theme, lang, groupEvents = [], onDeleteGroupEvent, onEditGroupEvent, onDeleteCalEvent, onDeleteDailyEvent, onDeleteContinuation, onDeleteOriginal, onMoveMidnightEvent }) {
   const pl  = t.planner;
   const wk  = pl.weekly ?? {};
   const { isMobile } = useViewport();
@@ -179,7 +179,9 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
       const deltaCell = Math.round(deltaY / PX_PER_CELL);
       const dKeys     = dayKeysRef.current;
       if (dr.type === "move") {
-        const duration  = dr.origEndCell - dr.origStartCell;
+        const totalCells = dr.totalCells ?? (dr.origEndCell - dr.origStartCell + 1);
+        const ghostEnd  = Math.min(HOURS * COLS_DAY - 1, dr.origStartCell + totalCells - 1);
+        const duration  = ghostEnd - dr.origStartCell;
         const maxStart  = HOURS * COLS_DAY - 1 - duration;
         const newStart  = Math.max(0, Math.min(maxStart, dr.origStartCell + deltaCell));
         const newEnd    = newStart + duration;
@@ -212,6 +214,13 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
       const newDayIdx  = dr.curDayIdx    ?? dr.origDayIdx;
       const newDateKey = dayKeysRef.current[newDayIdx];
       if (startCell === dr.origStartCell && endCell === dr.origEndCell && newDateKey === dr.dateKey) return;
+
+      // Midnight-crossing pair: delegate to unified handler
+      if (dr.type === "move" && (dr.evt.hasContinuation || dr.evt.isContinuation) && onMoveMidnightEvent) {
+        onMoveMidnightEvent(dr.evt, dr.dateKey, newDateKey, startCell);
+        return;
+      }
+
       onMoveEvent?.(dr.evt, dr.dateKey, newDateKey, {
         startCell, endCell,
         startTime: cellToTime(startCell),
@@ -231,12 +240,26 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
     const colWidth = gridRef.current
       ? (gridRef.current.scrollWidth - LABEL_W) / 7
       : 80;
+
+    // Calculate combined duration for midnight-crossing pairs
+    let totalCells = evt.endCell - evt.startCell + 1;
+    if (evt.hasContinuation) {
+      const nextDay = (() => { const d = new Date(dateKey + "T00:00:00"); d.setDate(d.getDate() + 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })();
+      const cont = (calEvents[nextDay] ?? []).find(e => e.continuationOf === evt.id || e.id === `${evt.id}_cont`);
+      if (cont) totalCells += cont.endCell - cont.startCell + 1;
+    } else if (evt.isContinuation) {
+      const prevDay = (() => { const d = new Date(dateKey + "T00:00:00"); d.setDate(d.getDate() - 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })();
+      const orig = (calEvents[prevDay] ?? []).find(e => e.id === evt.continuationOf);
+      if (orig) totalCells += orig.endCell - orig.startCell + 1;
+    }
+
     const dr = {
       type: "move", evt, dateKey,
       origStartCell: evt.startCell, origEndCell: evt.endCell,
       origDayIdx: dayKeysRef.current.indexOf(dateKey),
       startY: e.clientY, startX: e.clientX, colWidth,
       curStartCell: null, curEndCell: null, curDayIdx: null,
+      totalCells: (evt.hasContinuation || evt.isContinuation) ? totalCells : null,
     };
     dragRef.current = dr;
     setDraggingId(evt.id);
