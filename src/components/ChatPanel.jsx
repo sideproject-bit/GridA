@@ -385,7 +385,7 @@ export default function ChatPanel({ pal, dark = false, t, myId, myUsername, addN
               onClick={() => handleInviteRespond(inv, true)}
               style={{
                 flex: 1, padding: "6px 0", fontSize: 12, fontWeight: 700, border: "none",
-                background: inv.event.color ?? acc, color: "#fff", cursor: "pointer", borderRadius: 4,
+                background: acc, color: "#fff", cursor: "pointer", borderRadius: 4,
               }}
             >
               {t.social?.accept ?? "수락"}

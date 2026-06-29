@@ -78,6 +78,7 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
   const acc   = pal.accent;
   const bg    = pal.bg;
   const border = dark ? "#2a2920" : "#e0ddd2";
+  const resolveColor = (c) => c === "auto" ? (dark ? "#ffffff" : "#1B1A17") : (c ?? "#4A90D9");
 
   const CELL_H      = compact ? CELL_H_NARROW : CELL_H_WIDE;
   const PX_PER_CELL = CELL_H / COLS_DAY;
@@ -112,7 +113,7 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
 
   function openEditEvt(evt) {
     setEditTitle(evt.title);
-    setEditColor(evt._isGroupEvent ? (dark ? "#ffffff" : "#1B1A17") : evt.color);
+    setEditColor(evt._isGroupEvent ? resolveColor("auto") : evt.color);
     setEditMemo(evt.memo ?? "");
     setEditStart(evt.startTime ?? cellToTime(evt.startCell));
     setEditEnd(evt.endTime ?? cellToTimeEnd(evt.endCell));
@@ -563,7 +564,7 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
                           const topPx = startCell * PX_PER_CELL + 1;
                           const botPx = Math.min(totalH, (endCell + 1) * PX_PER_CELL) - 1;
                           const htPx  = Math.max(PX_PER_CELL - 2, botPx - topPx);
-                          const blockColor = ge.color ?? "#4A90D9";
+                          const blockColor = resolveColor(ge.color);
                           return (
                             <div key={`${ge.id}_${carryOver ? "co" : "s"}`}
                               data-evt="1"

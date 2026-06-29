@@ -102,6 +102,7 @@ function AppShell() {
 
   // Browser history integration: push state on navigation, restore on popstate
   const navigateTo = useCallback((newView, { mandalartId, friend, mandalart, resetConfirm } = {}) => {
+    if (newView === "home") { window.location.reload(); return; }
     if (mandalartId !== undefined) setCurrentMandalartId(mandalartId);
     if (friend !== undefined) setViewingFriend(friend);
     if (mandalart !== undefined) setViewingMandalart(mandalart);

@@ -39,11 +39,12 @@ const MON = { red: "#C7382E", blue: "#2B3DCB", yellow: "#E3B22E" };
 
 // Single event row. Mobile: swipe right = procrastinate, tap = open popup.
 // Desktop: click = open popup, right-click = context menu.
-function EventRow({ evt, isMobile, editMode, dark, ink, acc, border, pl, onMove, onSkip, onCheck, onTap, onContext }) {
+function EventRow({ evt, isMobile, editMode, dark, ink, acc, border, pl, onMove, onSkip, onCheck, onTap, onContext, onDelete }) {
   const [dx, setDx] = useState(0);
   const startX = useRef(null);
   const canProc = editMode && !evt._recurring;
   const canSkip = editMode && !!evt._recurring;
+  const canDel  = editMode && !evt._recurring;
   const THRESH = 80;
 
   const onTouchStart = (e) => { startX.current = e.touches[0].clientX; };
@@ -53,9 +54,10 @@ function EventRow({ evt, isMobile, editMode, dark, ink, acc, border, pl, onMove,
   };
   const onTouchEnd = () => {
     if (startX.current == null) return;
-    if (dx > THRESH && canProc) onMove(evt);
+    if (dx < -THRESH && canDel) onDelete?.(evt);
+    else if (dx > THRESH && canProc) onMove(evt);
     else if (dx > THRESH && canSkip) onSkip?.(evt);
-    else if (Math.abs(dx) < 10) onTap?.(evt); // tap → open popup
+    else if (Math.abs(dx) < 10) onTap?.(evt);
     startX.current = null;
     setDx(0);
   };
@@ -89,6 +91,7 @@ function EventRow({ evt, isMobile, editMode, dark, ink, acc, border, pl, onMove,
         checked={!!evt.done}
         onChange={(e) => { e.stopPropagation(); onCheck?.(evt.id); }}
         onClick={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => { e.stopPropagation(); onCheck?.(evt.id); }}
         style={{ accentColor: acc, cursor: "pointer", flexShrink: 0, marginTop: 2, width: 15, height: 15 }}
       />
     </div>
@@ -107,13 +110,18 @@ function EventRow({ evt, isMobile, editMode, dark, ink, acc, border, pl, onMove,
 
   return (
     <div style={{ position: "relative", marginBottom: 6, overflow: "hidden", borderRadius: 4 }}>
-      {(canProc || canSkip) && (
-        <div style={{ position: "absolute", inset: 0, display: "flex", justifyContent: "flex-start", alignItems: "center", paddingLeft: 14, fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-          <span style={{ color: MON.blue, opacity: dx > 20 ? 1 : 0.3 }}>
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "space-between", paddingLeft: 14, paddingRight: 14, pointerEvents: "none" }}>
+        {(canProc || canSkip) && (
+          <span style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em", color: MON.blue, opacity: dx > 20 ? 1 : 0.3 }}>
             {canSkip ? `✕ ${pl.skipOccurrence || "Skip today"}` : `→ ${pl.moveTomorrow || "Tomorrow"}`}
           </span>
-        </div>
-      )}
+        )}
+        {canDel && (
+          <span style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em", color: MON.red, opacity: dx < -20 ? 1 : 0.3, marginLeft: "auto" }}>
+            {pl.delete || "Delete"} ✕
+          </span>
+        )}
+      </div>
       <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
         {card}
       </div>
@@ -200,6 +208,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
   const acc   = pal.accent;
   const bg    = pal.bg;
   const border = dark ? "#2a2920" : "#e0ddd2";
+  const resolveColor = (c) => c === "auto" ? (dark ? "#ffffff" : "#1B1A17") : (c ?? "#4A90D9");
   const isMon  = theme === "mondrian";
   const { isMobile } = useViewport();
   const labelW = isMobile ? 24 : LABEL_W; // narrower hour-label column on mobile (push blocks left)
@@ -345,7 +354,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
 
   function openEditView(evt) {
     setEditTitle(evt.title);
-    setEditColor(evt._isGroupEvent ? (dark ? "#ffffff" : "#1B1A17") : evt.color);
+    setEditColor(evt._isGroupEvent ? resolveColor("auto") : evt.color);
     setEditMemo(evt.memo ?? "");
     setEditStart(evt.startTime ?? cellToTime(evt.startCell));
     setEditEnd(evt.endTime ?? cellToTimeEnd(evt.endCell));
@@ -510,7 +519,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             const bFill = !inSel ? fillFor(evt)  : null;
             const cFill = !inSel && !evt ? fillFor(cEvt)  : null;
             const rFill = !inSel && !evt && !cEvt ? fillFor(rEvt) : null;
-            const groupColor = gEvt?.color ?? "#4A90D9";
+            const groupColor = gEvt ? resolveColor(gEvt.color) : "#4A90D9";
             const gFill = gEvt && !inSel ? fillFor({
               startTime: gEvt.start_time, endTime: gEvt.end_time,
               startCell: timeToCell(gEvt.start_time) ?? 0,
@@ -527,7 +536,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
                 {bFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: bFill.left, width: bFill.width, background: evt.color + "bb" }} />}
                 {cFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: cFill.left, width: cFill.width, background: cEvt.color + "bb" }} />}
                 {rFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: rFill.left, width: rFill.width, background: rEvt.color + "44", borderLeft: `2px dashed ${rEvt.color}` }} />}
-                {gFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: gFill.left, width: gFill.width, border: `1.5px dashed ${groupColor}`, boxSizing: "border-box", opacity: 0.75, pointerEvents: "none" }} />}
+                {gFill && <div style={{ position: "absolute", top: 0, bottom: 0, left: gFill.left, width: gFill.width, border: `1.5px solid ${groupColor}`, boxSizing: "border-box", opacity: 0.75, pointerEvents: "none" }} />}
               </div>
             );
           })}
@@ -568,6 +577,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             }}
             onTap={(ev) => setViewEvent(ev)}
             onContext={(ev, x, y) => setCtxMenu({ evt: ev, x, y })}
+            onDelete={(ev) => deleteEvent(ev)}
           />
         ))
       }
@@ -575,7 +585,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
         <div key={ge.id} style={{
           display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 10px", marginBottom: 6,
           background: dark ? "#1e1d16" : "#f0ede2",
-          borderLeft: `3px dashed ${ge.color ?? "#4A90D9"}`,
+          borderLeft: `3px dashed ${resolveColor(ge.color)}`,
           borderRadius: 4, opacity: groupDone[ge.id] ? 0.6 : 0.9,
           cursor: ge._isAdmin ? "pointer" : "default",
         }}
@@ -614,7 +624,7 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
             checked={!!groupDone[ge.id]}
             onChange={(e) => { e.stopPropagation(); setGroupDone(prev => ({ ...prev, [ge.id]: !prev[ge.id] })); }}
             onClick={(e) => e.stopPropagation()}
-            style={{ accentColor: ge.color ?? acc, cursor: "pointer", flexShrink: 0, marginTop: 2, width: 15, height: 15 }}
+            style={{ accentColor: resolveColor(ge.color), cursor: "pointer", flexShrink: 0, marginTop: 2, width: 15, height: 15 }}
           />
         </div>
       ))}

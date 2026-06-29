@@ -14,7 +14,7 @@ export default function SharedEventForm({ pal, dark, onSave, onClose, t, error }
   const [date, setDate] = useState(localToday());
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const color = dark ? "#ffffff" : "#1B1A17";
+  const color = "auto";
   const [memo, setMemo] = useState("");
   const [showMemo, setShowMemo] = useState(false);
   const [saving, setSaving] = useState(false);
