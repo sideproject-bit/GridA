@@ -639,7 +639,7 @@ export default function ChatPanel({ pal, dark = false, t, myId, myUsername, addN
   if (chatView === "direct" && activeFriend) {
     const grouped = groupByDate(directMessages, t);
     return (
-      <div style={{ display: "flex", flexDirection: "column", minHeight: 420 }}>
+      <div style={{ display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
           <button onClick={goBack} style={{ background: "none", border: "none", color: ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 12, padding: 0 }}>
             <ArrowLeft size={14} />
@@ -663,7 +663,7 @@ export default function ChatPanel({ pal, dark = false, t, myId, myUsername, addN
 
         {InviteCards}
 
-        <div style={{ flex: 1, overflowY: "auto" }}>
+        <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 320px)", minHeight: 120 }}>
           {loading
             ? <div style={{ textAlign: "center", opacity: 0.3, fontSize: 12, marginTop: 40 }}>…</div>
             : directMessages.length === 0
@@ -709,7 +709,7 @@ export default function ChatPanel({ pal, dark = false, t, myId, myUsername, addN
     const invitableFriends = friends.filter(f => !groupMembers.find(m => m.user_id === f.id));
 
     return (
-      <div style={{ display: "flex", flexDirection: "column", minHeight: 420 }}>
+      <div style={{ display: "flex", flexDirection: "column" }}>
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
           <button onClick={goBack} style={{ background: "none", border: "none", color: ink, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 12, padding: 0 }}>
@@ -801,7 +801,7 @@ export default function ChatPanel({ pal, dark = false, t, myId, myUsername, addN
         {InviteCards}
 
         {/* Messages */}
-        <div style={{ flex: 1, overflowY: "auto" }}>
+        <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 320px)", minHeight: 120 }}>
           {loading
             ? <div style={{ textAlign: "center", opacity: 0.3, fontSize: 12, marginTop: 40 }}>…</div>
             : groupMessages.length === 0
