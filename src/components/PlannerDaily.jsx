@@ -249,7 +249,7 @@ function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl,
             </span>
           )}
           {hasChildren && (
-            <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.4 }}>{expanded ? "▾" : "▸"}</span>
+            <span style={{ marginLeft: 5, fontSize: 14, opacity: 0.6, fontWeight: 700 }}>{expanded ? "▾" : "▸"}</span>
           )}
         </span>
       )}
