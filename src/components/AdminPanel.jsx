@@ -9,9 +9,16 @@ export default function AdminPanel({ pal, dark }) {
   const [sending, setSending] = useState(false);
   const [filter, setFilter] = useState("all"); // "all" | "pending" | "replied"
 
+  const [loadError, setLoadError] = useState(null);
+
   const load = async () => {
     setLoading(true);
-    const { data } = await getAllContactMessages();
+    setLoadError(null);
+    const { data, error } = await getAllContactMessages();
+    if (error) {
+      console.error("AdminPanel load error:", error);
+      setLoadError(error.message ?? JSON.stringify(error));
+    }
     setMessages(data);
     setLoading(false);
   };
@@ -61,6 +68,12 @@ export default function AdminPanel({ pal, dark }) {
           </button>
         ))}
       </div>
+
+      {loadError && (
+        <div style={{ color: "#C7382E", fontSize: 12, marginBottom: 16, padding: "8px 12px", border: "1px solid #C7382E33" }}>
+          Error: {loadError}
+        </div>
+      )}
 
       {loading ? (
         <div style={{ opacity: 0.5, fontSize: 13 }}>Loading...</div>

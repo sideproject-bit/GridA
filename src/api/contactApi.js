@@ -21,7 +21,7 @@ export async function getContactMessages(userId) {
 export async function getAllContactMessages() {
   const { data, error } = await supabase
     .from("contact_messages")
-    .select("*, profiles(username, id)")
+    .select("*")
     .order("created_at", { ascending: false });
   return { data: data || [], error };
 }
