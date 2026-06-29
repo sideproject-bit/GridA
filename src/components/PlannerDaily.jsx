@@ -545,9 +545,8 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
     </div>
   );
 
-  const ownEvents = events.filter(e => !e.fromCalendar);
-  const doneEventsCount = ownEvents.filter(e => e.done).length;
-  const totalEventsCount = ownEvents.length;
+  const doneEventsCount = events.filter(e => e.done).length + groupEvents.filter(ge => groupDone[ge.id]).length;
+  const totalEventsCount = events.length + groupEvents.length;
   const eventsPct = totalEventsCount === 0 ? 0 : Math.round((doneEventsCount / totalEventsCount) * 100);
 
   const eventsBody = (
