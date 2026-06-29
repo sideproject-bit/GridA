@@ -4,7 +4,7 @@ import PlannerDaily from "./PlannerDaily";
 import PlannerMonthly from "./PlannerMonthly";
 import PlannerWeekly from "./PlannerWeekly";
 import { fetchGroupEventsForUser, deleteGroupEvent, updateGroupEvent } from "../api/groupEventsApi";
-import { pushPlannerSync, pullPlannerSync } from "../api/plannerSyncApi";
+import { pushPlannerSync, pullPlannerSync, pushPlannerSyncHistory } from "../api/plannerSyncApi";
 
 // Local-timezone date key (toISOString would use UTC and roll over early)
 function localKey(d) {
@@ -209,7 +209,8 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
   const border = dark ? "#333" : "#ddd";
 
   // ── Cloud Sync ──
-  const SYNC_TIME_KEY = `grida_sync_time_${userId}`;
+  const SYNC_TIME_KEY        = `grida_sync_time_${userId}`;
+  const DAILY_BACKUP_KEY     = `grida_daily_backup_${userId}`;
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 640);
   useEffect(() => {
     const h = () => setIsMobile(window.innerWidth <= 640);
@@ -217,10 +218,70 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
     return () => window.removeEventListener("resize", h);
   }, []);
 
-  const [syncOpen,   setSyncOpen]   = useState(false);
-  const [syncStatus, setSyncStatus] = useState(null); // null|"saving"|"loading"|"saved"|"loaded"|"no_data"|"error"
-  const [lastSynced, setLastSynced] = useState(() => localStorage.getItem(`grida_sync_time_${userId}`) ?? null);
-  const syncPanelRef = useRef(null);
+  const [syncOpen,      setSyncOpen]      = useState(false);
+  const [syncStatus,    setSyncStatus]    = useState(null); // null|"saving"|"loading"|"saved"|"loaded"|"no_data"|"error"
+  const [autoSaveStatus, setAutoSaveStatus] = useState(null); // null|"saving"|"saved"
+  const [lastSynced,    setLastSynced]    = useState(() => localStorage.getItem(SYNC_TIME_KEY) ?? null);
+  const syncPanelRef    = useRef(null);
+  const autoSaveTimer   = useRef(null);
+  const loadingFromCloud = useRef(false); // prevent auto-save echo after cloud load
+  const autoSyncInitDone = useRef(false);
+
+  // ── On mount: auto-load from cloud if cloud data is newer than local ──
+  useEffect(() => {
+    if (!userId || autoSyncInitDone.current) return;
+    autoSyncInitDone.current = true;
+    const localSyncTime = localStorage.getItem(SYNC_TIME_KEY);
+    pullPlannerSync(userId).then(remote => {
+      if (!remote) return;
+      const cloudIsNewer = !localSyncTime || new Date(remote.synced_at) > new Date(localSyncTime);
+      if (!cloudIsNewer) return;
+      loadingFromCloud.current = true;
+      const d = remote.data;
+      if (d.todos)     setTodos(d.todos);
+      if (d.calEvents) setCalEvents(d.calEvents);
+      if (d.recurring) setRecurring(d.recurring);
+      if (d.spans)     setSpans(d.spans);
+      if (d.dailyKey === todayKey() && d.dailyEvents) setEvents(d.dailyEvents);
+      localStorage.setItem(SYNC_TIME_KEY, remote.synced_at);
+      setLastSynced(remote.synced_at);
+      // Allow auto-save after state settles
+      setTimeout(() => { loadingFromCloud.current = false; }, 3000);
+    }).catch(() => {});
+  }, [userId]);
+
+  // ── Auto-save: debounced 2s after any data change ──
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    if (loadingFromCloud.current) return;
+    clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(async () => {
+      setAutoSaveStatus("saving");
+      try {
+        const payload = {
+          todos, calEvents, recurring, spans,
+          dailyKey: todayKey(), dailyEvents: events,
+          savedAt: new Date().toISOString(),
+        };
+        await pushPlannerSync(userId, payload);
+        const now = new Date().toISOString();
+        localStorage.setItem(SYNC_TIME_KEY, now);
+        setLastSynced(now);
+        setAutoSaveStatus("saved");
+        setTimeout(() => setAutoSaveStatus(null), 2000);
+        // Daily backup snapshot (once per calendar day)
+        const lastBackup = localStorage.getItem(DAILY_BACKUP_KEY);
+        if (lastBackup !== todayKey()) {
+          pushPlannerSyncHistory(userId, payload).catch(() => {});
+          localStorage.setItem(DAILY_BACKUP_KEY, todayKey());
+        }
+      } catch {
+        setAutoSaveStatus(null);
+      }
+    }, 2000);
+    return () => clearTimeout(autoSaveTimer.current);
+  }, [events, todos, calEvents, recurring, spans]);
 
   // Close panel on outside click
   useEffect(() => {
@@ -246,12 +307,8 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
     setSyncStatus("saving");
     try {
       const payload = {
-        todos,
-        calEvents,
-        recurring,
-        spans,
-        dailyKey: todayKey(),
-        dailyEvents: events,
+        todos, calEvents, recurring, spans,
+        dailyKey: todayKey(), dailyEvents: events,
         savedAt: new Date().toISOString(),
       };
       await pushPlannerSync(userId, payload);
@@ -259,6 +316,9 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
       localStorage.setItem(SYNC_TIME_KEY, now);
       setLastSynced(now);
       setSyncStatus("saved");
+      // Manual save always creates a history snapshot
+      pushPlannerSyncHistory(userId, payload).catch(() => {});
+      localStorage.setItem(DAILY_BACKUP_KEY, todayKey());
       setTimeout(() => setSyncStatus(null), 3000);
     } catch {
       setSyncStatus("error");
@@ -271,6 +331,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
     try {
       const remote = await pullPlannerSync(userId);
       if (!remote) { setSyncStatus("no_data"); setTimeout(() => setSyncStatus(null), 3000); return; }
+      loadingFromCloud.current = true;
       const d = remote.data;
       if (d.todos)     setTodos(d.todos);
       if (d.calEvents) setCalEvents(d.calEvents);
@@ -281,7 +342,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
       localStorage.setItem(SYNC_TIME_KEY, t);
       setLastSynced(t);
       setSyncStatus("loaded");
-      setTimeout(() => setSyncStatus(null), 3000);
+      setTimeout(() => { setSyncStatus(null); loadingFromCloud.current = false; }, 3000);
     } catch {
       setSyncStatus("error");
       setTimeout(() => setSyncStatus(null), 3000);
@@ -292,10 +353,10 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
     title:    lang === "ko" ? "플래너 동기화" : "Sync Planner",
     lastSave: lang === "ko" ? "마지막 저장" : "Last saved",
     never:    lang === "ko" ? "저장 기록 없음" : "Never saved",
-    push:     lang === "ko" ? "이 기기 → 클라우드" : "This device → Cloud",
-    pushDesc: lang === "ko" ? "현재 기기의 일정·할 일·달력 데이터를 클라우드에 저장해요." : "Saves your events, to-dos, and calendar data from this device to the cloud.",
-    pull:     lang === "ko" ? "클라우드 → 이 기기" : "Cloud → This device",
-    pullDesc: lang === "ko" ? "클라우드에 저장된 데이터를 불러와서 현재 기기에 적용해요." : "Loads the last saved version from the cloud and applies it to this device.",
+    push:     lang === "ko" ? "지금 바로 저장" : "Save now",
+    pushDesc: lang === "ko" ? "변경 사항은 자동으로 저장되지만, 즉시 저장하고 백업 스냅샷도 남기려면 누르세요." : "Changes auto-save, but press this to save immediately and create a backup snapshot.",
+    pull:     lang === "ko" ? "클라우드에서 복원" : "Restore from cloud",
+    pullDesc: lang === "ko" ? "클라우드에 저장된 최신 데이터를 불러와서 현재 기기에 적용해요." : "Loads the latest cloud version and applies it to this device.",
     pullWarn: lang === "ko" ? "현재 로컬 데이터를 덮어씁니다." : "This will overwrite your current local data.",
     saved:    lang === "ko" ? "클라우드에 저장됐어요" : "Saved to cloud",
     loaded:   lang === "ko" ? "데이터를 불러왔어요" : "Loaded from cloud",
@@ -377,8 +438,16 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
               fontFamily: "inherit",
             }}
           >
-            <Cloud size={13} />
-            {!isMobile && lastSynced && <span style={{ opacity: 0.65 }}>{formatSyncTime(lastSynced)}</span>}
+            <Cloud size={13} style={{ opacity: autoSaveStatus === "saving" ? 0.4 : 1, transition: "opacity 0.4s ease" }} />
+            {!isMobile && (
+              <span style={{ opacity: 0.65 }}>
+                {autoSaveStatus === "saving"
+                  ? (lang === "ko" ? "저장 중…" : "saving…")
+                  : autoSaveStatus === "saved"
+                  ? (lang === "ko" ? "저장됨" : "saved")
+                  : lastSynced ? formatSyncTime(lastSynced) : null}
+              </span>
+            )}
           </button>
 
           {/* Sync panel */}
