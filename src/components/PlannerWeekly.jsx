@@ -388,12 +388,12 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
         </button>
       </div>
 
-      {/* Scrollable grid wrapper */}
+      {/* Scrollable grid wrapper — both header and grid share the same scroll container so scrollbar width is accounted for in both */}
       <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-        <div style={{ minWidth: LABEL_W + DAY_MIN_W * 7 }}>
+        <div ref={scrollRef} style={{ minWidth: LABEL_W + DAY_MIN_W * 7, overflowY: "auto", maxHeight: "70vh" }}>
 
-          {/* Day-of-week headers */}
-          <div style={{ display: "flex", borderBottom: `2px solid ${ink}22`, marginLeft: LABEL_W, paddingLeft: 0 }}>
+          {/* Day-of-week headers — sticky so they stay visible while scrolling vertically */}
+          <div style={{ display: "flex", borderBottom: `2px solid ${ink}22`, marginLeft: LABEL_W, paddingLeft: 0, position: "sticky", top: 0, zIndex: 5, background: bg }}>
             {days.map((day, i) => {
               const isToday = dayKeys[i] === today;
               const daySpans = (spans ?? []).filter(s => s.startDate <= dayKeys[i] && dayKeys[i] <= s.endDate);
@@ -424,7 +424,6 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
           </div>
 
           {/* Time grid */}
-          <div ref={scrollRef} style={{ overflowY: "auto", maxHeight: "70vh" }}>
           <div ref={gridRef} style={{ display: "flex", position: "relative" }}>
 
             {/* Hour labels */}
@@ -629,7 +628,6 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
                 </div>
               );
             })}
-          </div>
           </div>
         </div>
       </div>
