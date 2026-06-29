@@ -335,7 +335,7 @@ function timeToEndCell(timeStr) {
   return Math.ceil((h * 60 + m) / 10) - 1;
 }
 
-export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, onEditEvent, onEditCalEvent, onDeleteCalEvent, todos, onTodosChange, onMoveToTomorrow, onSkipRecurring, spans, theme, lang, groupEvents = [], onDeleteGroupEvent, onEditGroupEvent, onSaveContinuation }) {
+export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsChange, onEditEvent, onEditCalEvent, onDeleteCalEvent, onDeleteContinuation, onDeleteOriginal, todos, onTodosChange, onMoveToTomorrow, onSkipRecurring, spans, theme, lang, groupEvents = [], onDeleteGroupEvent, onEditGroupEvent, onSaveContinuation }) {
   const pl    = t.planner;
   const ink   = pal.ink;
   const acc   = pal.accent;
@@ -545,8 +545,10 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
       onDeleteGroupEvent?.(evt.id);
     } else if (evt.fromCalendar) {
       onDeleteCalEvent?.(evt._dateKey, evt.id);
+      if (evt.isContinuation && evt.continuationOf) onDeleteOriginal?.(evt.continuationOf);
     } else {
       onEventsChange(prev => prev.filter(e => e.id !== evt.id));
+      if (evt.hasContinuation) onDeleteContinuation?.(evt.id);
     }
   }
 

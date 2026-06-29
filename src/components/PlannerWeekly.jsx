@@ -69,7 +69,7 @@ function prevDayKey(dateStr) {
   return localKey(d);
 }
 
-export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleCompact, editMode = true, calEvents, recurring, onEditDailyEvent, onEditCalEvent, onMoveEvent, onAddCalEvent, spans, theme, lang, groupEvents = [], onDeleteGroupEvent, onEditGroupEvent }) {
+export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleCompact, editMode = true, calEvents, recurring, onEditDailyEvent, onEditCalEvent, onMoveEvent, onAddCalEvent, spans, theme, lang, groupEvents = [], onDeleteGroupEvent, onEditGroupEvent, onDeleteCalEvent, onDeleteDailyEvent, onDeleteContinuation, onDeleteOriginal }) {
   const pl  = t.planner;
   const wk  = pl.weekly ?? {};
   const { isMobile } = useViewport();
@@ -94,6 +94,7 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
 
   // Drag-to-move / resize state
   const gridRef     = useRef(null);  // the time-grid flex container
+  const scrollRef   = useRef(null);  // the scrollable wrapper (for auto-scroll to current hour)
   const dragRef     = useRef(null);  // drag state (mutations don't re-render)
   const [dragGhost, setDragGhost]   = useState(null);  // { evt, dateKey, startCell, endCell }
   const [draggingId, setDraggingId] = useState(null);  // id of event being dragged (for dimming)
@@ -110,6 +111,29 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
   const dayKeys = days.map(localKey);
   const today   = localKey(new Date());
   const totalH  = HOURS * CELL_H;
+
+  // Auto-scroll to current hour on mount
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    const now = new Date();
+    const scrollPx = Math.max(0, (now.getHours() - 1) * CELL_H);
+    scrollRef.current.scrollTop = scrollPx;
+  }, [CELL_H]);
+
+  function deleteEvt(evt, dateKey) {
+    if (evt._isGroupEvent) {
+      onDeleteGroupEvent?.(evt.id);
+    } else if (evt._daily) {
+      onDeleteDailyEvent?.(evt.id);
+      if (evt.hasContinuation) onDeleteContinuation?.(evt.id);
+    } else {
+      onDeleteCalEvent?.(dateKey, evt.id);
+      if (evt.isContinuation && evt.continuationOf) onDeleteOriginal?.(evt.continuationOf);
+      if (evt.hasContinuation) onDeleteContinuation?.(evt.id);
+    }
+    setViewEvt(null);
+    setIsEditingView(false);
+  }
 
   function openEditEvt(evt) {
     setEditTitle(evt.title);
@@ -400,6 +424,7 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
           </div>
 
           {/* Time grid */}
+          <div ref={scrollRef} style={{ overflowY: "auto", maxHeight: "70vh" }}>
           <div ref={gridRef} style={{ display: "flex", position: "relative" }}>
 
             {/* Hour labels */}
@@ -489,7 +514,7 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
                               }}
                             >
                               <div style={{ fontSize: 9, fontWeight: 700, lineHeight: 1.3, color: dark ? "#fff" : "#111", overflow: "hidden" }}>
-                                {evt.title}
+                                {evt.isContinuation ? `↩ ${evt.title}` : evt.title}{evt.hasContinuation ? " →" : ""}
                               </div>
                               {htPx > PX_PER_CELL * 2 && (
                                 <div style={{ fontSize: 8, opacity: 0.7, color: dark ? "#fff" : "#111" }}>
@@ -605,6 +630,7 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
               );
             })}
           </div>
+          </div>
         </div>
       </div>
 
@@ -681,9 +707,9 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
                 {viewEvt.event.fromCalendar && (
                   <div style={{ fontSize: 10, opacity: 0.35, marginBottom: 8 }}>📅 {pl.fromCalendar}</div>
                 )}
-                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
-                  {viewEvt.event._isGroupEvent && (
-                    <button onClick={() => { onDeleteGroupEvent?.(viewEvt.event.id); setViewEvt(null); }}
+                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12, flexWrap: "wrap" }}>
+                  {editMode && !viewEvt.event.id?.startsWith("recur_") && (
+                    <button onClick={() => deleteEvt(viewEvt.event, viewEvt.dateKey)}
                       style={{ background: "none", border: `1px solid #C7382E`, color: "#C7382E", borderRadius: 6, padding: "6px 13px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>
                       {pl.delete || "Delete"}
                     </button>

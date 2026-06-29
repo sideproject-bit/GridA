@@ -145,6 +145,28 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
   // Delete a daily (today's) event — called from Monthly/Weekly view
   const deleteDailyEvent = (id) => setEvents(prev => prev.filter(e => e.id !== id));
 
+  // Cascade-delete a continuation saved to any calEvents date slot
+  const deleteContinuation = (originalId) =>
+    setCalEvents(prev => {
+      const updated = {};
+      for (const [key, evts] of Object.entries(prev)) {
+        updated[key] = evts.filter(e => e.id !== `${originalId}_cont` && e.continuationOf !== originalId);
+      }
+      return updated;
+    });
+
+  // Cascade-delete an original event when its continuation is deleted
+  const deleteOriginalEvent = (originalId) => {
+    setEvents(prev => prev.filter(e => e.id !== originalId));
+    setCalEvents(prev => {
+      const updated = {};
+      for (const [key, evts] of Object.entries(prev)) {
+        updated[key] = evts.filter(e => e.id !== originalId);
+      }
+      return updated;
+    });
+  };
+
   // Edit functions
   const editDailyEvent = (id, changes) =>
     setEvents(prev => prev.map(e => e.id === id ? { ...e, ...changes } : e));
@@ -542,6 +564,8 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
           onEditEvent={editDailyEvent}
           onEditCalEvent={editCalEvent}
           onDeleteCalEvent={deleteCalEvent}
+          onDeleteContinuation={deleteContinuation}
+          onDeleteOriginal={deleteOriginalEvent}
           todos={todos}
           onTodosChange={setTodos}
           onMoveToTomorrow={moveEventToTomorrow}
@@ -579,6 +603,10 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
           groupEvents={groupEvents}
           onDeleteGroupEvent={handleDeleteGroupEvent}
           onEditGroupEvent={handleEditGroupEvent}
+          onDeleteCalEvent={deleteCalEvent}
+          onDeleteDailyEvent={deleteDailyEvent}
+          onDeleteContinuation={deleteContinuation}
+          onDeleteOriginal={deleteOriginalEvent}
         />
       )}
       {tab === "monthly" && (
