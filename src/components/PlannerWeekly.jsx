@@ -476,8 +476,8 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
                     <div key={s.id} style={{
                       position: "absolute",
                       top: 2 + si * 13,
-                      left: `${s.colStart / 7 * 100}%`,
-                      width: `${(s.colEnd - s.colStart + 1) / 7 * 100}%`,
+                      left: `calc(${s.colStart / 7 * 100}% + 2px)`,
+                      width: `calc(${(s.colEnd - s.colStart + 1) / 7 * 100}% - 4px)`,
                       height: 11,
                       background: s.color + "cc",
                       borderRadius: `${s.isFirst ? 2 : 0}px ${s.colEnd === 6 || s.endDate <= dayKeys[6] ? 2 : 0}px ${s.colEnd === 6 || s.endDate <= dayKeys[6] ? 2 : 0}px ${s.isFirst ? 2 : 0}px`,

@@ -273,8 +273,8 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
                   <div key={bar.id} style={{
                     position: "absolute",
                     bottom: `${4 + bi * 13}px`,
-                    left: `${bar.colStart / 7 * 100}%`,
-                    width: `${(bar.colEnd - bar.colStart + 1) / 7 * 100}%`,
+                    left: `calc(${bar.colStart / 7 * 100}% + 2px)`,
+                    width: `calc(${(bar.colEnd - bar.colStart + 1) / 7 * 100}% - 4px)`,
                     height: 11,
                     background: bar.color + "cc",
                     borderRadius: `${bar.isSpanStart ? 2 : 0}px ${bar.isSpanEnd ? 2 : 0}px ${bar.isSpanEnd ? 2 : 0}px ${bar.isSpanStart ? 2 : 0}px`,
