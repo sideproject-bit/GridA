@@ -86,7 +86,11 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
     if (!userId) return;
     const today = todayKey();
     if (localStorage.getItem(TODO_RESET_KEY) !== today) {
-      setTodos(prev => prev.filter(td => !td.done));
+      setTodos(prev => prev.filter(td => {
+        const hasChildren = td.children?.length > 0;
+        const allDone = hasChildren ? td.children.every(c => c.done) : td.done;
+        return !allDone;
+      }));
       localStorage.setItem(TODO_RESET_KEY, today);
     }
   }, [userId]);
