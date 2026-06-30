@@ -65,8 +65,9 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
   const [spTo,     setSpTo]     = useState("");
   const [spColor,  setSpColor]  = useState(EVENT_COLORS[2]); // default light blue
 
-  // Span inline edit
-  const [editingSpanId, setEditingSpanId] = useState(null);
+  // Span inline edit + archive toggle
+  const [editingSpanId,  setEditingSpanId]  = useState(null);
+  const [showPastLabels, setShowPastLabels] = useState(false);
   const [espTitle, setEspTitle] = useState("");
   const [espFrom,  setEspFrom]  = useState("");
   const [espTo,    setEspTo]    = useState("");
@@ -493,9 +494,17 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
         {/* Labels sub-tab */}
         {subTab === "labels" && (
           <div>
-            {(spans ?? []).length === 0
-              ? <div style={{ fontSize: 12, opacity: 0.35, marginBottom: 14 }}>{pl.noLabels}</div>
-              : (spans ?? []).map(s => (
+            {(() => {
+              const allSpans   = spans ?? [];
+              const activeSpans = allSpans.filter(s => s.endDate >= todayStr);
+              const pastSpans   = allSpans.filter(s => s.endDate < todayStr);
+              const visibleSpans = showPastLabels ? allSpans : activeSpans;
+
+              return (
+                <>
+                  {allSpans.length === 0
+                    ? <div style={{ fontSize: 12, opacity: 0.35, marginBottom: 14 }}>{pl.noLabels}</div>
+                    : visibleSpans.map(s => (
                 <div key={s.id} style={{ marginBottom: 6 }}>
                   {/* Label row */}
                   <div style={{
@@ -561,8 +570,23 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
                     </div>
                   )}
                 </div>
-              ))
-            }
+                  ))
+                  }
+                  {pastSpans.length > 0 && (
+                    <button onClick={() => setShowPastLabels(v => !v)} style={{
+                      background: "none", border: `1px solid ${border}`, borderRadius: 6,
+                      padding: "6px 10px", marginBottom: visibleSpans.length > 0 ? 10 : 0,
+                      cursor: "pointer", fontSize: 11, fontWeight: 600, color: ink,
+                      opacity: 0.55, fontFamily: "inherit", width: "100%", textAlign: "left",
+                    }}>
+                      {showPastLabels
+                        ? (lang === "ko" ? `▲ 지난 라벨 숨기기 (${pastSpans.length})` : `▲ Hide past labels (${pastSpans.length})`)
+                        : (lang === "ko" ? `▼ 지난 라벨 보기 (${pastSpans.length})` : `▼ Show past labels (${pastSpans.length})`)}
+                    </button>
+                  )}
+                </>
+              );
+            })()}
             <div style={{ paddingTop: (spans ?? []).length > 0 ? 14 : 0, borderTop: (spans ?? []).length > 0 ? `1px solid ${border}` : "none" }}>
               <input value={spTitle} onChange={e => setSpTitle(e.target.value)}
                 placeholder={pl.labelTitlePlaceholder} style={inputSt} />

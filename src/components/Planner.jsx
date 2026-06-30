@@ -394,6 +394,7 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
   }, []);
 
   const [syncOpen,      setSyncOpen]      = useState(false);
+  const [confirmReset,  setConfirmReset]  = useState(false);
   const [syncStatus,    setSyncStatus]    = useState(null); // null|"saving"|"loading"|"saved"|"loaded"|"no_data"|"error"
   const [autoSaveStatus, setAutoSaveStatus] = useState(null); // null|"saving"|"saved"
   const [lastSynced,    setLastSynced]    = useState(() => localStorage.getItem(SYNC_TIME_KEY) ?? null);
@@ -524,6 +525,16 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
     }
   };
 
+  function handleResetPlanner() {
+    setTodos([]);
+    setCalEvents({});
+    setRecurring([]);
+    setSpans([]);
+    setEvents([]);
+    setConfirmReset(false);
+    setSyncOpen(false);
+  }
+
   const syncCopy = {
     title:    lang === "ko" ? "플래너 동기화" : "Sync Planner",
     lastSave: lang === "ko" ? "마지막 저장" : "Last saved",
@@ -533,6 +544,12 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
     pull:     lang === "ko" ? "클라우드에서 복원" : "Restore from cloud",
     pullDesc: lang === "ko" ? "클라우드에 저장된 최신 데이터를 불러와서 현재 기기에 적용해요." : "Loads the latest cloud version and applies it to this device.",
     pullWarn: lang === "ko" ? "현재 로컬 데이터를 덮어씁니다." : "This will overwrite your current local data.",
+    reset:     lang === "ko" ? "플래너 데이터 초기화" : "Reset Planner Data",
+    resetDesc: lang === "ko" ? "모든 일정, 할 일, 반복 일정, 라벨을 삭제합니다." : "Deletes all events, todos, recurring events, and labels.",
+    resetWarn: lang === "ko" ? "이 작업은 되돌릴 수 없습니다." : "This cannot be undone.",
+    resetConfirm: lang === "ko" ? "정말 초기화할까요?" : "Are you sure?",
+    resetYes:  lang === "ko" ? "초기화" : "Reset",
+    resetNo:   lang === "ko" ? "취소" : "Cancel",
     saved:    lang === "ko" ? "클라우드에 저장됐어요" : "Saved to cloud",
     loaded:   lang === "ko" ? "데이터를 불러왔어요" : "Loaded from cloud",
     no_data:  lang === "ko" ? "저장된 데이터가 없어요" : "No cloud data found",
@@ -695,6 +712,37 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
                 <div style={{ fontSize: 11, opacity: 0.55, color: ink, lineHeight: 1.5, marginBottom: 4 }}>{syncCopy.pullDesc}</div>
                 <div style={{ fontSize: 10, color: "#C7382E", opacity: 0.8 }}>{syncCopy.pullWarn}</div>
               </button>
+
+              {/* Reset section */}
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${border}` }}>
+                {!confirmReset ? (
+                  <button onClick={() => setConfirmReset(true)} style={{
+                    width: "100%", textAlign: "left", padding: "8px 12px",
+                    background: "none", border: `1px solid #C7382E44`,
+                    borderRadius: 6, cursor: "pointer", color: "#C7382E",
+                  }}>
+                    <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 2 }}>{syncCopy.reset}</div>
+                    <div style={{ fontSize: 11, opacity: 0.7, lineHeight: 1.4 }}>{syncCopy.resetDesc}</div>
+                  </button>
+                ) : (
+                  <div style={{ padding: "10px 12px", background: "#C7382E11", border: `1px solid #C7382E44`, borderRadius: 6 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#C7382E", marginBottom: 4 }}>{syncCopy.resetConfirm}</div>
+                    <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 10, color: ink }}>{syncCopy.resetWarn}</div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button onClick={() => setConfirmReset(false)} style={{
+                        flex: 1, padding: "6px", background: "none", border: `1px solid ${border}`,
+                        borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 700,
+                        color: ink, fontFamily: "inherit",
+                      }}>{syncCopy.resetNo}</button>
+                      <button onClick={handleResetPlanner} style={{
+                        flex: 1, padding: "6px", background: "#C7382E", border: "none",
+                        borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 700,
+                        color: "#fff", fontFamily: "inherit",
+                      }}>{syncCopy.resetYes}</button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
