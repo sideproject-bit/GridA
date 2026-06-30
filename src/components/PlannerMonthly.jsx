@@ -269,6 +269,18 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
               return [{ ...s, colStart, colEnd, isSpanStart: startIdx >= rowStart, isSpanEnd: endIdx <= rowStart + 6 }];
             });
 
+            // Assign lanes: sort by duration desc so longest spans get lane 0,
+            // then invert bottom offset so lane 0 renders at the top.
+            const sortedRowBars = [...rowBars].sort((a, b) => (b.colEnd - b.colStart) - (a.colEnd - a.colStart));
+            const laneEnds = [];
+            const barsWithLane = sortedRowBars.map(bar => {
+              const lane = laneEnds.findIndex(end => end < bar.colStart);
+              const assignedLane = lane === -1 ? laneEnds.length : lane;
+              laneEnds[assignedLane] = bar.colEnd;
+              return { ...bar, lane: assignedLane };
+            });
+            const totalLanes = laneEnds.length;
+
             return (
               <div key={row} style={{ position: "relative", marginBottom: 2, overflow: "hidden" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>
@@ -303,11 +315,11 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
                     );
                   })}
                 </div>
-                {/* Connected span bars — one bar per span, spanning the correct columns */}
-                {rowBars.map((bar, bi) => (
+                {/* Connected span bars — lane-assigned so non-overlapping spans share a row */}
+                {barsWithLane.map((bar) => (
                   <div key={bar.id} style={{
                     position: "absolute",
-                    bottom: `${4 + bi * 13}px`,
+                    bottom: `${4 + (totalLanes - 1 - bar.lane) * 13}px`,
                     left: `calc(${bar.colStart / 7 * 100}% + 2px)`,
                     width: `calc(${(bar.colEnd - bar.colStart + 1) / 7 * 100}% - 4px)`,
                     height: 11,
