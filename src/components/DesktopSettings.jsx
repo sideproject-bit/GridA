@@ -14,10 +14,11 @@ export default function DesktopSettings({
   pal, dark, setDark, lang, setLang, theme, setTheme,
   soundOn, setSoundOn, notifOn, toggleNotif,
   startView, setStartView, weeklyCompact, onToggleWeeklyCompact,
-  music, t, play, onClose, onPlannerReset, onNavigate, profile, updateProfile,
+  music, t, play, onClose, onPlannerReset, onNavigate, profile, updateProfile, signOut,
 }) {
   const [cat, setCat] = useState("profile");
   const [unameInput, setUnameInput] = useState("");
+  const [tagInput, setTagInput] = useState("");
   const [unameStatus, setUnameStatus] = useState(null); // null | "ok" | "error" | "saving" | "taken"
   const [pwNew, setPwNew] = useState("");
   const [pwConfirm, setPwConfirm] = useState("");
@@ -129,37 +130,59 @@ export default function DesktopSettings({
 
     if (cat === "profile") return (
       <>
-        <Section title={lang === "ko" ? "사용자 이름" : "Username"}>
+        <Section title={lang === "ko" ? "사용자 이름 변경" : "Change username"}>
           {profile?.username && (
             <div style={{ fontSize: 12, opacity: 0.45, marginBottom: 10 }}>
-              {lang === "ko" ? "현재" : "Current"}: <strong>{profile.username}</strong>
+              {lang === "ko" ? "현재" : "Current"}: <strong>{profile.username}#{profile.tag}</strong>
             </div>
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <input
-              type="text" value={unameInput} onChange={e => { setUnameInput(e.target.value); setUnameStatus(null); }}
-              placeholder={lang === "ko" ? "새 사용자 이름" : "New username"}
-              style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", fontSize: 13, fontFamily: "inherit", border: `1px solid ${ink}22`, borderRadius: 6, background: "transparent", color: ink, outline: "none" }}
-            />
-            {unameStatus === "taken"  && <div style={{ fontSize: 11, color: "#C7382E" }}>{lang === "ko" ? "이미 사용 중인 이름이에요." : "Username already taken."}</div>}
+            <div style={{ display: "flex", gap: 6 }}>
+              <input
+                type="text" value={unameInput} onChange={e => { setUnameInput(e.target.value); setUnameStatus(null); }}
+                placeholder={lang === "ko" ? "새 이름" : "New username"}
+                style={{ flex: 1, boxSizing: "border-box", padding: "10px 12px", fontSize: 13, fontFamily: "inherit", border: `1px solid ${ink}22`, borderRadius: 6, background: "transparent", color: ink, outline: "none" }}
+              />
+              <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                <span style={{ opacity: 0.4, fontSize: 13 }}>#</span>
+                <input
+                  type="text" value={tagInput} maxLength={4}
+                  onChange={e => { setTagInput(e.target.value.replace(/\D/g, "").slice(0, 4)); setUnameStatus(null); }}
+                  placeholder="0000"
+                  style={{ width: 60, boxSizing: "border-box", padding: "10px 8px", fontSize: 13, fontFamily: "inherit", border: `1px solid ${ink}22`, borderRadius: 6, background: "transparent", color: ink, outline: "none", textAlign: "center" }}
+                />
+              </div>
+            </div>
+            <div style={{ fontSize: 11, opacity: 0.35, lineHeight: 1.5 }}>
+              {lang === "ko"
+                ? "이름은 중복 가능하지만 이름+코드 조합은 고유해야 해요."
+                : "Usernames can be duplicated, but the name+code combination must be unique."}
+            </div>
+            {unameStatus === "taken"  && <div style={{ fontSize: 11, color: "#C7382E" }}>{lang === "ko" ? "이미 사용 중인 이름+코드 조합이에요." : "This username+code combination is already taken."}</div>}
             {unameStatus === "error"  && <div style={{ fontSize: 11, color: "#C7382E" }}>{lang === "ko" ? "변경에 실패했어요. 다시 시도해주세요." : "Failed to update. Please try again."}</div>}
-            {unameStatus === "ok"     && <div style={{ fontSize: 11, color: "#4caf50", display: "flex", alignItems: "center", gap: 4 }}><Check size={12} />{lang === "ko" ? "이름이 변경됐어요!" : "Username updated!"}</div>}
+            {unameStatus === "ok"     && <div style={{ fontSize: 11, color: "#4caf50", display: "flex", alignItems: "center", gap: 4 }}><Check size={12} />{lang === "ko" ? "변경됐어요!" : "Updated!"}</div>}
             <button
-              disabled={unameStatus === "saving" || !unameInput.trim()}
+              disabled={unameStatus === "saving" || !unameInput.trim() || tagInput.length !== 4}
               onClick={async () => {
                 const newName = unameInput.trim();
-                if (!newName) return;
+                const newTag  = tagInput;
+                if (!newName || newTag.length !== 4) return;
                 setUnameStatus("saving");
-                const { data: existing } = await supabase.from("profiles").select("id").eq("username", newName).maybeSingle();
+                const { data: existing } = await supabase
+                  .from("profiles").select("id")
+                  .eq("username", newName).eq("tag", newTag)
+                  .neq("id", profile?.id ?? "")
+                  .maybeSingle();
                 if (existing) { setUnameStatus("taken"); return; }
-                const { error } = await updateProfile?.({ username: newName });
-                if (error) { setUnameStatus("error"); } else { setUnameStatus("ok"); setUnameInput(""); }
+                const { error } = await updateProfile?.({ username: newName, tag: newTag });
+                if (error) { setUnameStatus("error"); } else { setUnameStatus("ok"); setUnameInput(""); setTagInput(""); }
               }}
               style={{ padding: "10px", background: unameStatus === "saving" ? ink + "44" : acc, color: "#fff", border: "none", fontWeight: 800, fontSize: 12, cursor: unameStatus === "saving" ? "not-allowed" : "pointer", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.04em" }}>
               {unameStatus === "saving" ? (lang === "ko" ? "저장 중…" : "Saving…") : (lang === "ko" ? "변경" : "Update")}
             </button>
           </div>
         </Section>
+
         <Section title={lang === "ko" ? "비밀번호 변경" : "Change password"}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {[
@@ -185,6 +208,17 @@ export default function DesktopSettings({
               style={{ padding: "10px", background: pwStatus === "saving" ? ink + "44" : acc, color: "#fff", border: "none", fontWeight: 800, fontSize: 12, cursor: pwStatus === "saving" ? "not-allowed" : "pointer", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.04em" }}>
               {pwStatus === "saving" ? (lang === "ko" ? "저장 중…" : "Saving…") : (lang === "ko" ? "변경" : "Update")}
             </button>
+          </div>
+        </Section>
+
+        <Section title={lang === "ko" ? "계정" : "Account"}>
+          <Row onClick={() => { signOut?.(); onClose(); }} danger>
+            {lang === "ko" ? "로그아웃" : "Sign out"}
+          </Row>
+          <div style={{ fontSize: 11, opacity: 0.35, marginTop: 8, lineHeight: 1.6 }}>
+            {lang === "ko"
+              ? "계정 삭제는 프로필/소셜 탭에서 할 수 있어요."
+              : "To delete your account, go to the Profile / Social page."}
           </div>
         </Section>
       </>

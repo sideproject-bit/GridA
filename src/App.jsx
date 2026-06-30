@@ -317,7 +317,7 @@ function AppShell() {
             if (view === "about" && opts?.tab) setAboutTab(opts.tab);
             navigateTo(view, opts);
           }}
-          profile={profile} updateProfile={updateProfile}
+          profile={profile} updateProfile={updateProfile} signOut={signOut}
           onPlannerReset={() => setPlannerResetConfirm(true)}
         />
       )}
