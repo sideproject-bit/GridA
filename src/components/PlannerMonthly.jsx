@@ -322,15 +322,15 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
                 {barsWithLane.map((bar) => (
                   <div key={bar.id} style={{
                     position: "absolute",
-                    top: `${26 + bar.lane * 13}px`,
+                    top: `${(isMobile ? 26 : 28) + bar.lane * (isMobile ? 13 : 15)}px`,
                     left: `calc(${bar.colStart / 7 * 100}% + 2px)`,
                     width: `calc(${(bar.colEnd - bar.colStart + 1) / 7 * 100}% - 4px)`,
-                    height: 11,
+                    height: isMobile ? 11 : 13,
                     background: bar.color + "cc",
                     borderRadius: `${bar.isSpanStart ? 2 : 0}px ${bar.isSpanEnd ? 2 : 0}px ${bar.isSpanEnd ? 2 : 0}px ${bar.isSpanStart ? 2 : 0}px`,
                     overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis",
                     paddingLeft: bar.isSpanStart ? 4 : 2,
-                    fontSize: 7, fontWeight: 700, color: "#fff", lineHeight: "11px",
+                    fontSize: isMobile ? 7 : 9, fontWeight: 700, color: "#fff", lineHeight: isMobile ? "11px" : "13px",
                     pointerEvents: "none", zIndex: 2,
                   }}>
                     {bar.isSpanStart && bar.title}

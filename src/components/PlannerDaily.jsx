@@ -851,8 +851,32 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
   const totalEventsCount = events.length + groupEvents.length;
   const eventsPct = totalEventsCount === 0 ? 0 : Math.round((doneEventsCount / totalEventsCount) * 100);
 
+  const todayForSpans = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`; })();
+  const activeSpans = (spans ?? []).filter(s => s.startDate <= todayForSpans && todayForSpans <= s.endDate);
+
   const eventsBody = (
     <>
+      {activeSpans.length > 0 && (
+        <div style={{ marginBottom: 10 }}>
+          {activeSpans.map(s => (
+            <div key={s.id} style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "5px 10px 5px 12px",
+              borderLeft: `3px solid ${s.color}`,
+              marginBottom: 4,
+            }}>
+              <span style={{
+                fontSize: 8, fontWeight: 900, letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                background: s.color + "22",
+                color: s.color,
+                padding: "2px 5px", borderRadius: 2, flexShrink: 0,
+              }}>LABEL</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: s.color }}>{s.title}</span>
+            </div>
+          ))}
+        </div>
+      )}
       {totalEventsCount > 0 && (
         <div style={{ marginBottom: 10 }}>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, opacity: 0.55, marginBottom: 3, color: ink }}>
@@ -1026,37 +1050,18 @@ export default function PlannerDaily({ t, pal, dark, editMode, events, onEventsC
 
   return (
     <div>
-      {/* Date — larger and color-accented on mobile (dark→yellow, light→blue) */}
+      {/* Date — color-accented on both mobile and desktop */}
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
         <div style={{
-          fontSize: isMobile ? 22 : 13,
-          fontWeight: isMobile ? 900 : 700,
-          letterSpacing: isMobile ? "-0.01em" : "normal",
-          color: isMobile ? (dark ? "#F5C800" : "#2B3DCB") : ink,
-          opacity: isMobile ? 1 : 0.5,
+          fontSize: isMobile ? 22 : 20,
+          fontWeight: 900,
+          letterSpacing: "-0.01em",
+          color: dark ? "#F5C800" : "#2B3DCB",
         }}>
           {new Date().toLocaleDateString(lang === "ko" ? "ko-KR" : "en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         </div>
         <div style={{ fontSize: 11, opacity: 0.3, fontStyle: "italic" }}>{pl.resetNote}</div>
       </div>
-
-      {/* Active date labels (spans) for today */}
-      {(() => {
-        const todayStr = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`; })();
-        const active = (spans ?? []).filter(s => s.startDate <= todayStr && todayStr <= s.endDate);
-        if (!active.length) return null;
-        return (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
-            {active.map(s => (
-              <div key={s.id} style={{
-                fontSize: 11, fontWeight: 700, padding: "3px 10px",
-                background: s.color + "28", border: `1px solid ${s.color}77`,
-                color: ink, borderRadius: 3,
-              }}>{s.title}</div>
-            ))}
-          </div>
-        );
-      })()}
 
       {isMobile ? (
         /* ── Mobile: Mondrian segmented control, one section at a time ── */
