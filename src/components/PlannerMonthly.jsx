@@ -65,6 +65,29 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
   const [spTo,     setSpTo]     = useState("");
   const [spColor,  setSpColor]  = useState(EVENT_COLORS[2]); // default light blue
 
+  // Span inline edit
+  const [editingSpanId, setEditingSpanId] = useState(null);
+  const [espTitle, setEspTitle] = useState("");
+  const [espFrom,  setEspFrom]  = useState("");
+  const [espTo,    setEspTo]    = useState("");
+  const [espColor, setEspColor] = useState(EVENT_COLORS[2]);
+
+  function openEditSpan(s) {
+    setEditingSpanId(s.id);
+    setEspTitle(s.title);
+    setEspFrom(s.startDate);
+    setEspTo(s.endDate);
+    setEspColor(s.color);
+  }
+
+  function saveEditSpan() {
+    if (!espTitle.trim() || !espFrom || !espTo || espFrom > espTo) return;
+    onSpansChange(prev => prev.map(s => s.id === editingSpanId
+      ? { ...s, title: espTitle.trim(), startDate: espFrom, endDate: espTo, color: espColor }
+      : s));
+    setEditingSpanId(null);
+  }
+
   // Edit event
   const [editEvt,    setEditEvt]    = useState(null); // { evt, dateKey }
   const [editTitle,  setEditTitle]  = useState("");
@@ -473,16 +496,70 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
             {(spans ?? []).length === 0
               ? <div style={{ fontSize: 12, opacity: 0.35, marginBottom: 14 }}>{pl.noLabels}</div>
               : (spans ?? []).map(s => (
-                <div key={s.id} style={{
-                  display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", marginBottom: 6,
-                  borderLeft: `3px solid ${s.color}`, borderRadius: 4,
-                  background: dark ? "#1e1d16" : "#f0ede2",
-                }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: 12 }}>{s.title}</div>
-                    <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>{s.startDate} – {s.endDate}</div>
+                <div key={s.id} style={{ marginBottom: 6 }}>
+                  {/* Label row */}
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 8, padding: "7px 10px",
+                    borderLeft: `3px solid ${s.color}`, borderRadius: editingSpanId === s.id ? "4px 4px 0 0" : 4,
+                    background: dark ? "#1e1d16" : "#f0ede2",
+                  }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 12 }}>{s.title}</div>
+                      <div style={{ fontSize: 11, opacity: 0.45, marginTop: 2 }}>{s.startDate} – {s.endDate}</div>
+                    </div>
+                    <button onClick={() => editingSpanId === s.id ? setEditingSpanId(null) : openEditSpan(s)}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: editingSpanId === s.id ? 0.7 : 0.3, fontSize: 13, padding: "0 2px", lineHeight: 1, fontFamily: "inherit" }}>
+                      ✎
+                    </button>
+                    <button onClick={() => deleteSpan(s.id)} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.3, fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
                   </div>
-                  <button onClick={() => deleteSpan(s.id)} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.3, fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
+                  {/* Inline edit form */}
+                  {editingSpanId === s.id && (
+                    <div style={{
+                      padding: "10px 10px", borderLeft: `3px solid ${espColor}`,
+                      borderRadius: "0 0 4px 4px",
+                      background: dark ? "#151510" : "#e8e4d8",
+                    }}>
+                      <input value={espTitle} onChange={e => setEspTitle(e.target.value)}
+                        placeholder={pl.labelTitlePlaceholder} style={{ ...inputSt, marginBottom: 8 }} />
+                      <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 10, opacity: 0.55, marginBottom: 3 }}>{pl.labelFrom}</div>
+                          <input type="date" value={espFrom} onChange={e => setEspFrom(e.target.value)}
+                            style={{ ...inputSt, marginBottom: 0, padding: "6px 8px" }} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 10, opacity: 0.55, marginBottom: 3 }}>{pl.labelTo}</div>
+                          <input type="date" value={espTo} onChange={e => setEspTo(e.target.value)}
+                            style={{ ...inputSt, marginBottom: 0, padding: "6px 8px" }} />
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                        {EVENT_COLORS.map(c => (
+                          <div key={c} onClick={() => setEspColor(c)} style={{
+                            width: 20, height: 20, borderRadius: 3, background: c, cursor: "pointer",
+                            outline: espColor === c ? `2.5px solid ${ink}` : "none", outlineOffset: 2,
+                          }} />
+                        ))}
+                      </div>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button onClick={() => setEditingSpanId(null)} style={{
+                          flex: 1, background: "none", border: `1px solid ${ink}33`, color: ink,
+                          borderRadius: 6, padding: "7px", fontSize: 12, fontWeight: 700,
+                          cursor: "pointer", fontFamily: "inherit",
+                        }}>{lang === "ko" ? "취소" : "Cancel"}</button>
+                        <button onClick={saveEditSpan}
+                          disabled={!espTitle.trim() || !espFrom || !espTo || espFrom > espTo}
+                          style={{
+                            flex: 2, background: acc, color: "#fff", border: "none",
+                            borderRadius: 6, padding: "7px", fontSize: 12, fontWeight: 700,
+                            cursor: (espTitle.trim() && espFrom && espTo && espFrom <= espTo) ? "pointer" : "not-allowed",
+                            opacity: (espTitle.trim() && espFrom && espTo && espFrom <= espTo) ? 1 : 0.4,
+                            fontFamily: "inherit",
+                          }}>{lang === "ko" ? "저장" : "Save"}</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))
             }
