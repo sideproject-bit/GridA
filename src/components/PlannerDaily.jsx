@@ -249,7 +249,7 @@ function TodoItem({ td, isMobile, editMode, dark, ink, acc, border, pl,
         >
           {td.text}
           {hasChildren && (
-            <span style={{ marginLeft: 7, fontSize: 10, opacity: 0.5, fontWeight: 700, verticalAlign: "middle" }}>
+            <span style={{ marginLeft: 7, fontSize: 10, opacity: 0.5, fontWeight: 700, display: "inline-block", verticalAlign: "middle", textDecoration: effectiveDone ? "line-through" : "none", lineHeight: 1 }}>
               {doneChildren}/{totalChildren} {Math.round(doneChildren / totalChildren * 100)}%
             </span>
           )}
