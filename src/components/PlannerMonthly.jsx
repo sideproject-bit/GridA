@@ -212,44 +212,79 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
           ))}
         </div>
 
-        {/* Calendar grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>
-          {calCells.map((d, i) => {
-            if (!d) return <div key={i} />;
-            const key   = dateKey(d);
-            const isToday    = key === todayStr;
-            const isSelected = d === selectedDay;
-            const cellDow    = new Date(key + "T00:00:00").getDay();
-            const hasRecurring = recurring.some(r => r.days.includes(cellDow) && !(r.exceptions ?? []).includes(key));
-            const hasEvents     = (calEvents[key] ?? []).length > 0 || hasRecurring;
-            const hasGroupEvts  = groupEvents.some(ge => ge.date === key || (ge.start_time && ge.end_time && ge.start_time > ge.end_time && (() => { const d = new Date(ge.date + "T00:00:00"); d.setDate(d.getDate() + 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })() === key));
-            const cellSpans     = (spans ?? []).filter(s => s.startDate <= key && key <= s.endDate);
+        {/* Calendar grid — rendered row-by-row so span labels can connect across cells */}
+        <div>
+          {Array.from({ length: totalCells / 7 }, (_, row) => {
+            const rowCells = calCells.slice(row * 7, row * 7 + 7);
+            const rowStart = row * 7;
+            const monthLastDay = new Date(year, month + 1, 0).getDate();
+            const monthFirstKey = `${year}-${String(month + 1).padStart(2, "0")}-01`;
+            const monthLastKey  = `${year}-${String(month + 1).padStart(2, "0")}-${String(monthLastDay).padStart(2, "0")}`;
+
+            // Compute connected span bars for this row
+            const rowBars = (spans ?? []).flatMap(s => {
+              if (s.endDate < monthFirstKey || s.startDate > monthLastKey) return [];
+              const clampedStartDay = s.startDate < monthFirstKey ? 1 : new Date(s.startDate + "T00:00:00").getDate();
+              const clampedEndDay   = s.endDate   > monthLastKey  ? monthLastDay : new Date(s.endDate + "T00:00:00").getDate();
+              const startIdx = clampedStartDay - 1 + firstDow;
+              const endIdx   = clampedEndDay   - 1 + firstDow;
+              if (endIdx < rowStart || startIdx > rowStart + 6) return [];
+              const colStart    = Math.max(startIdx, rowStart) - rowStart;
+              const colEnd      = Math.min(endIdx,   rowStart + 6) - rowStart;
+              return [{ ...s, colStart, colEnd, isSpanStart: startIdx >= rowStart, isSpanEnd: endIdx <= rowStart + 6 }];
+            });
+
             return (
-              <div key={i}
-                onClick={() => setSelectedDay(d === selectedDay ? null : d)}
-                style={{
-                  height: 64, borderRadius: 4, cursor: "pointer",
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                  background: isSelected ? acc : isToday ? acc + "22" : "transparent",
-                  border: `1px solid ${isSelected ? acc : border}`,
-                  transition: "background 0.1s", padding: "2px 2px 3px", boxSizing: "border-box",
-                }}
-              >
-                <span style={{ fontSize: 13, fontWeight: isToday ? 900 : 400, color: isSelected ? "#fff" : ink }}>
-                  {d}
-                </span>
-                <div style={{ display: "flex", gap: 2, marginTop: 2 }}>
-                  {hasEvents && <div style={{ width: 4, height: 4, borderRadius: 2, background: isSelected ? "#fff" : acc }} />}
-                  {hasGroupEvts && <div style={{ width: 4, height: 4, borderRadius: 2, background: isSelected ? "#fff" : "#4A90D9", opacity: 0.8 }} />}
+              <div key={row} style={{ position: "relative", marginBottom: 2 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>
+                  {rowCells.map((d, ci) => {
+                    if (!d) return <div key={ci} style={{ minWidth: 0 }} />;
+                    const key = dateKey(d);
+                    const isToday    = key === todayStr;
+                    const isSelected = d === selectedDay;
+                    const cellDow    = new Date(key + "T00:00:00").getDay();
+                    const hasRecurring  = recurring.some(r => r.days.includes(cellDow) && !(r.exceptions ?? []).includes(key));
+                    const hasEvents     = (calEvents[key] ?? []).length > 0 || hasRecurring;
+                    const hasGroupEvts  = groupEvents.some(ge => ge.date === key || (ge.start_time && ge.end_time && ge.start_time > ge.end_time && (() => { const nd = new Date(ge.date + "T00:00:00"); nd.setDate(nd.getDate() + 1); return `${nd.getFullYear()}-${String(nd.getMonth()+1).padStart(2,"0")}-${String(nd.getDate()).padStart(2,"0")}`; })() === key));
+                    return (
+                      <div key={ci}
+                        onClick={() => setSelectedDay(d === selectedDay ? null : d)}
+                        style={{
+                          height: 64, borderRadius: 4, cursor: "pointer", minWidth: 0,
+                          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start",
+                          background: isSelected ? acc : isToday ? acc + "22" : "transparent",
+                          border: `1px solid ${isSelected ? acc : border}`,
+                          transition: "background 0.1s", padding: "6px 2px 3px", boxSizing: "border-box",
+                        }}
+                      >
+                        <span style={{ fontSize: 13, fontWeight: isToday ? 900 : 400, color: isSelected ? "#fff" : ink }}>
+                          {d}
+                        </span>
+                        <div style={{ display: "flex", gap: 2, marginTop: 4 }}>
+                          {hasEvents    && <div style={{ width: 4, height: 4, borderRadius: 2, background: isSelected ? "#fff" : acc }} />}
+                          {hasGroupEvts && <div style={{ width: 4, height: 4, borderRadius: 2, background: isSelected ? "#fff" : "#4A90D9", opacity: 0.8 }} />}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                {cellSpans.slice(0, 2).map(s => (
-                  <div key={s.id} style={{
-                    fontSize: 7, fontWeight: 700, padding: "0 3px", marginTop: 2,
-                    background: isSelected ? "#ffffff44" : s.color + "cc",
-                    color: isSelected ? "#fff" : "#fff",
-                    borderRadius: 2, width: "90%", textAlign: "center",
-                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  }}>{s.title}</div>
+                {/* Connected span bars — one bar per span, spanning the correct columns */}
+                {rowBars.map((bar, bi) => (
+                  <div key={bar.id} style={{
+                    position: "absolute",
+                    bottom: `${4 + bi * 13}px`,
+                    left: `${bar.colStart / 7 * 100}%`,
+                    width: `${(bar.colEnd - bar.colStart + 1) / 7 * 100}%`,
+                    height: 11,
+                    background: bar.color + "cc",
+                    borderRadius: `${bar.isSpanStart ? 2 : 0}px ${bar.isSpanEnd ? 2 : 0}px ${bar.isSpanEnd ? 2 : 0}px ${bar.isSpanStart ? 2 : 0}px`,
+                    overflow: "hidden", whiteSpace: "nowrap",
+                    paddingLeft: bar.isSpanStart ? 4 : 2,
+                    fontSize: 7, fontWeight: 700, color: "#fff", lineHeight: "11px",
+                    pointerEvents: "none", zIndex: 2,
+                  }}>
+                    {bar.isSpanStart && bar.title}
+                  </div>
                 ))}
               </div>
             );

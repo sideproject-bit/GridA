@@ -8,7 +8,7 @@ const HOURS         = 24;
 const CELL_H_WIDE   = 48;   // px per hour row — wide mode
 const CELL_H_NARROW = 22;   // px per hour row — compact mode
 const LABEL_W       = 32;   // px for time-label column
-const DAY_MIN_W     = 56;   // min px per day column (mobile horizontal scroll)
+const DAY_MIN_W     = 88;   // min px per day column (mobile horizontal scroll)
 
 const MON = { red: "#C7382E", blue: "#2B3DCB", yellow: "#F5C800" };
 
@@ -439,34 +439,59 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
         <div ref={scrollRef} style={{ minWidth: LABEL_W + DAY_MIN_W * 7, overflowY: "auto", maxHeight: "70vh" }}>
 
           {/* Day-of-week headers — sticky so they stay visible while scrolling vertically */}
-          <div style={{ display: "flex", borderBottom: `2px solid ${ink}22`, marginLeft: LABEL_W, paddingLeft: 0, position: "sticky", top: 0, zIndex: 5, background: bg }}>
-            {days.map((day, i) => {
-              const isToday = dayKeys[i] === today;
-              const daySpans = (spans ?? []).filter(s => s.startDate <= dayKeys[i] && dayKeys[i] <= s.endDate);
+          <div style={{ position: "sticky", top: 0, zIndex: 5, background: bg, borderBottom: `2px solid ${ink}22` }}>
+            {/* Day labels row */}
+            <div style={{ display: "flex", marginLeft: LABEL_W }}>
+              {days.map((day, i) => {
+                const isToday = dayKeys[i] === today;
+                return (
+                  <div key={i} style={{
+                    flex: 1, minWidth: DAY_MIN_W,
+                    padding: "5px 2px 4px",
+                    textAlign: "center",
+                    background: isToday ? todayAccent : "transparent",
+                    borderLeft: i > 0 ? `1px solid ${border}` : "none",
+                  }}>
+                    <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", color: isToday ? "#1a1a1a" : ink, opacity: isToday ? 1 : 0.45, letterSpacing: "0.06em" }}>
+                      {fmtDow(day, lang)}
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 900, color: isToday ? "#1a1a1a" : ink, lineHeight: 1.2 }}>
+                      {day.getDate()}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {/* Connected span bars row */}
+            {(() => {
+              const weekSpans = (spans ?? []).map(s => {
+                const cols = dayKeys.map((k, i) => (k >= s.startDate && k <= s.endDate ? i : -1)).filter(i => i >= 0);
+                if (cols.length === 0) return null;
+                return { ...s, colStart: cols[0], colEnd: cols[cols.length - 1], isFirst: s.startDate >= dayKeys[0] };
+              }).filter(Boolean);
+              if (weekSpans.length === 0) return null;
               return (
-                <div key={i} style={{
-                  flex: 1, minWidth: DAY_MIN_W,
-                  padding: "5px 2px 4px",
-                  textAlign: "center",
-                  background: isToday ? todayAccent : "transparent",
-                  borderLeft: i > 0 ? `1px solid ${border}` : "none",
-                }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", color: isToday ? "#1a1a1a" : ink, opacity: isToday ? 1 : 0.45, letterSpacing: "0.06em" }}>
-                    {fmtDow(day, lang)}
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 900, color: isToday ? "#1a1a1a" : ink, lineHeight: 1.2 }}>
-                    {day.getDate()}
-                  </div>
-                  {daySpans.map(s => (
+                <div style={{ position: "relative", height: weekSpans.length * 13 + 4, marginLeft: LABEL_W }}>
+                  {weekSpans.map((s, si) => (
                     <div key={s.id} style={{
-                      fontSize: 7, fontWeight: 700, padding: "1px 3px", marginTop: 2,
-                      background: s.color, color: "#fff", borderRadius: 2,
-                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                    }}>{s.title}</div>
+                      position: "absolute",
+                      top: 2 + si * 13,
+                      left: `${s.colStart / 7 * 100}%`,
+                      width: `${(s.colEnd - s.colStart + 1) / 7 * 100}%`,
+                      height: 11,
+                      background: s.color + "cc",
+                      borderRadius: `${s.isFirst ? 2 : 0}px ${s.colEnd === 6 || s.endDate <= dayKeys[6] ? 2 : 0}px ${s.colEnd === 6 || s.endDate <= dayKeys[6] ? 2 : 0}px ${s.isFirst ? 2 : 0}px`,
+                      overflow: "hidden", whiteSpace: "nowrap",
+                      paddingLeft: s.isFirst ? 4 : 2,
+                      fontSize: 7, fontWeight: 700, color: "#fff", lineHeight: "11px",
+                      pointerEvents: "none",
+                    }}>
+                      {s.isFirst && s.title}
+                    </div>
                   ))}
                 </div>
               );
-            })}
+            })()}
           </div>
 
           {/* Time grid */}
