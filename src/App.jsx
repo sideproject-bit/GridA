@@ -529,17 +529,29 @@ function AppShell() {
               <div className="home-logo" style={{ position: "relative", zIndex: 1 }}>
                 <img src="/logo.png" alt="GridA" style={{ height: 40, objectFit: "contain", display: "block" }} />
               </div>
-              {/* Bell — top right of title block */}
-              <button onClick={() => { setNotifPanelOpen(true); play("C5", "16n"); }} aria-label="Notifications" style={{
+              {/* Bell + Settings — top right of title block */}
+              <div style={{
                 position: "absolute", top: "clamp(16px, 3.5vw, 48px)", right: "clamp(16px, 3.5vw, 48px)",
-                zIndex: 2, width: 44, height: 44,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.25)",
-                color: "#fff", cursor: "pointer",
+                zIndex: 2, display: "flex", gap: 6,
               }}>
-                <Bell size={20} />
-                {unreadCount > 0 && <span style={{ position: "absolute", top: 9, right: 9, width: 8, height: 8, background: "#C7382E", borderRadius: "50%", pointerEvents: "none" }} />}
-              </button>
+                <button onClick={() => { setNotifPanelOpen(true); play("C5", "16n"); }} aria-label="Notifications" style={{
+                  position: "relative", width: 44, height: 44,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.25)",
+                  color: "#fff", cursor: "pointer",
+                }}>
+                  <Bell size={20} />
+                  {unreadCount > 0 && <span style={{ position: "absolute", top: 9, right: 9, width: 8, height: 8, background: "#C7382E", borderRadius: "50%", pointerEvents: "none" }} />}
+                </button>
+                <button onClick={() => { setDesktopSettingsOpen(true); play("F5", "16n"); }} aria-label="Settings" style={{
+                  width: 44, height: 44,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.25)",
+                  color: "#fff", cursor: "pointer",
+                }}>
+                  <Settings size={20} />
+                </button>
+              </div>
               <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
                 <h1 className="home-title" style={{
                   fontWeight: 900,
@@ -579,25 +591,19 @@ function AppShell() {
               ))}
             </div>
 
-            {/* Bottom bar — Profile / About / Settings / Admin */}
-            <div style={{ gridRow: "2", gridColumn: "1", display: "grid", gap: 4, background: "#000", gridTemplateColumns: isAdmin ? "1fr 1fr 1fr 100px" : "1fr 1fr 1fr", minHeight: 0 }}>
-              <button onClick={() => { navigateTo("profile"); play("C5", "16n"); }} onMouseEnter={() => play("A5", "64n")}
-                className="home-tile"
-                style={{ background: profileBg, border: "none", padding: "16px 22px", cursor: "pointer", color: profileFg, textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
-                <User size={18} color={profileFg} />
-                <span style={{ fontWeight: 800, fontSize: 13, textTransform: "uppercase" }}>{t.menu.setting}</span>
-              </button>
+            {/* Bottom bar — About / Profile / Admin */}
+            <div style={{ gridRow: "2", gridColumn: "1", display: "grid", gap: 4, background: "#000", gridTemplateColumns: isAdmin ? "1fr 1fr 100px" : "1fr 1fr", minHeight: 0 }}>
               <button onClick={() => { navigateTo("about"); play("G4", "16n"); }} onMouseEnter={() => play("B5", "64n")}
                 className="home-tile"
                 style={{ background: pal.bg, border: "none", padding: "16px 22px", cursor: "pointer", color: pal.ink, textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
                 <BookOpen size={18} color={pal.ink} />
                 <span style={{ fontWeight: 800, fontSize: 13, textTransform: "uppercase", opacity: 0.65 }}>{t.menu.about}</span>
               </button>
-              <button onClick={() => { setDesktopSettingsOpen(true); play("F5", "16n"); }} onMouseEnter={() => play("D5", "64n")}
+              <button onClick={() => { navigateTo("profile"); play("C5", "16n"); }} onMouseEnter={() => play("A5", "64n")}
                 className="home-tile"
-                style={{ background: dark ? "#1e1d16" : "#e8e4d8", border: "none", padding: "16px 22px", cursor: "pointer", color: pal.ink, textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
-                <Settings size={18} color={pal.ink} />
-                <span style={{ fontWeight: 800, fontSize: 13, textTransform: "uppercase", opacity: 0.65 }}>{t.settings || (lang === "ko" ? "설정" : "Settings")}</span>
+                style={{ background: profileBg, border: "none", padding: "16px 22px", cursor: "pointer", color: profileFg, textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
+                <User size={18} color={profileFg} />
+                <span style={{ fontWeight: 800, fontSize: 13, textTransform: "uppercase" }}>{t.menu.setting}</span>
               </button>
               {isAdmin && (
                 <button onClick={() => { navigateTo("admin"); play("F5", "16n"); }} onMouseEnter={() => play("D5", "64n")}
@@ -634,7 +640,7 @@ function AppShell() {
                   <Settings size={18} />
                 </button>
               </div>
-            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} onBellClick={() => setNotifPanelOpen(true)} unreadCount={unreadCount} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} onBellClick={() => setNotifPanelOpen(true)} unreadCount={unreadCount} onSettingsClick={() => { setDesktopSettingsOpen(true); play("F5", "16n"); }} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <MandalartGrid key={currentMandalartId} mandalartId={currentMandalartId} pal={pal} t={t} soundOn={soundOn} />
         </div>
@@ -663,7 +669,7 @@ function AppShell() {
                   <Settings size={18} />
                 </button>
               </div>
-            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} onBellClick={() => setNotifPanelOpen(true)} unreadCount={unreadCount} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} onBellClick={() => setNotifPanelOpen(true)} unreadCount={unreadCount} onSettingsClick={() => { setDesktopSettingsOpen(true); play("F5", "16n"); }} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <Manage
             pal={pal}
@@ -693,7 +699,7 @@ function AppShell() {
                   <Settings size={18} />
                 </button>
               </div>
-            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} onBellClick={() => setNotifPanelOpen(true)} unreadCount={unreadCount} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} onBellClick={() => setNotifPanelOpen(true)} unreadCount={unreadCount} onSettingsClick={() => { setDesktopSettingsOpen(true); play("F5", "16n"); }} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           {/* Mobile: segmented tabs; Desktop: 2-column */}
           {isMobile && (
@@ -837,7 +843,7 @@ function AppShell() {
                   <Settings size={18} />
                 </button>
               </div>
-            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} onBellClick={() => setNotifPanelOpen(true)} unreadCount={unreadCount} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} onBellClick={() => setNotifPanelOpen(true)} unreadCount={unreadCount} onSettingsClick={() => { setDesktopSettingsOpen(true); play("F5", "16n"); }} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <FriendMandalartList
             friend={viewingFriend}
@@ -866,7 +872,7 @@ function AppShell() {
                   <Settings size={18} />
                 </button>
               </div>
-            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} onBellClick={() => setNotifPanelOpen(true)} unreadCount={unreadCount} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} onBellClick={() => setNotifPanelOpen(true)} unreadCount={unreadCount} onSettingsClick={() => { setDesktopSettingsOpen(true); play("F5", "16n"); }} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           {/* About / Guide sub-tabs */}
           <div style={{ display: "flex", marginBottom: 24, border: `2px solid ${pal.ink}`, overflow: "hidden" }}>
@@ -912,7 +918,7 @@ function AppShell() {
                   <Settings size={18} />
                 </button>
               </div>
-            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} onBellClick={() => setNotifPanelOpen(true)} unreadCount={unreadCount} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} onBellClick={() => setNotifPanelOpen(true)} unreadCount={unreadCount} onSettingsClick={() => { setDesktopSettingsOpen(true); play("F5", "16n"); }} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <MandalartAboutPage pal={pal} t={t} />
         </div>
@@ -941,7 +947,7 @@ function AppShell() {
                   <Settings size={18} />
                 </button>
               </div>
-            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} onBellClick={() => setNotifPanelOpen(true)} unreadCount={unreadCount} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} onBellClick={() => setNotifPanelOpen(true)} unreadCount={unreadCount} onSettingsClick={() => { setDesktopSettingsOpen(true); play("F5", "16n"); }} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <Planner t={t} pal={pal} dark={dark} userId={myId} theme={theme} lang={lang} groupEventsVersion={groupEventsVersion} weeklyCompact={weeklyCompact} setWeeklyCompact={setWeeklyCompact} />
         </div>
@@ -970,7 +976,7 @@ function AppShell() {
                   <Settings size={18} />
                 </button>
               </div>
-            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} onBellClick={() => setNotifPanelOpen(true)} unreadCount={unreadCount} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} onBellClick={() => setNotifPanelOpen(true)} unreadCount={unreadCount} onSettingsClick={() => { setDesktopSettingsOpen(true); play("F5", "16n"); }} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <PomodoroTimer t={t} pal={pal} dark={dark} theme={theme} notifOn={notifOn} userId={myId} onNotif={addNotification} />
         </div>
@@ -994,7 +1000,7 @@ function AppShell() {
                   <Settings size={18} />
                 </button>
               </div>
-            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} onBellClick={() => setNotifPanelOpen(true)} unreadCount={unreadCount} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
+            ) : <TopControls pal={pal} dark={dark} setDark={setDark} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} soundOn={soundOn} setSoundOn={setSoundOn} onBellClick={() => setNotifPanelOpen(true)} unreadCount={unreadCount} onSettingsClick={() => { setDesktopSettingsOpen(true); play("F5", "16n"); }} t={t} play={play} music={music} dropdownUp={false} onHome={() => navigateTo("home")} />}
           </div>
           <MandalartGrid
             key={`viewer-${viewingMandalart.id}`}

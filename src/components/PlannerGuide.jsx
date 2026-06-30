@@ -110,7 +110,27 @@ const STEP_VISUALS = [
       })}
     </svg>
   ),
-  // Step 6: cloud sync
+  // Step 6: labels — connected span bar across week
+  ({ accent }) => (
+    <svg width={180} height={90} viewBox="0 0 180 90">
+      {/* Calendar grid 7 cols x 4 rows */}
+      {Array.from({ length: 28 }).map((_, i) => {
+        const col = i % 7, row = Math.floor(i / 7);
+        return (
+          <rect key={i} x={14 + col * 22} y={10 + row * 18} width={20} height={14} rx={2}
+            fill="#ffffff06" stroke="#ffffff10" strokeWidth={0.5} />
+        );
+      })}
+      {/* Label bar row 1: spans col 2–6 */}
+      <rect x={14 + 2 * 22 + 2} y={24} width={22 * 5 - 4} height={6} rx={1}
+        fill={accent + "cc"} />
+      {/* Label bar row 2: spans col 0–3 */}
+      <rect x={14 + 2} y={42} width={22 * 4 - 4} height={6} rx={1}
+        fill={"#AAD4FF99"} />
+      <text x={90} y={84} textAnchor="middle" fill={accent} fontSize={7} fontWeight={700} opacity={0.7}>LABELS</text>
+    </svg>
+  ),
+  // Step 7: cloud sync
   ({ accent }) => (
     <svg width={180} height={90} viewBox="0 0 180 90">
       {/* Cloud icon */}

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Volume2, VolumeX, Moon, Sun, Globe, Music2, Bell } from "lucide-react";
+import { Volume2, VolumeX, Moon, Sun, Globe, Music2, Bell, Settings } from "lucide-react";
 import { THEMES } from "../theme";
 
 const hex6 = (c) => (c && c.length === 4 ? "#" + c[1] + c[1] + c[2] + c[2] + c[3] + c[3] : c);
@@ -17,8 +17,8 @@ const BOX = (color, active = false, bare = false) => {
   };
 };
 
-// Order: Bell | Dark/Light | Sound | Music | Language | Theme | Home
-export default function TopControls({ pal, dark, setDark, lang, setLang, theme, setTheme, soundOn, setSoundOn, t, play, music, dropdownUp = false, onHome, onBellClick, unreadCount = 0, onSettings }) {
+// Order: Settings | Bell | Dark/Light | Sound | Music | Language | Theme | Home
+export default function TopControls({ pal, dark, setDark, lang, setLang, theme, setTheme, soundOn, setSoundOn, t, play, music, dropdownUp = false, onHome, onBellClick, unreadCount = 0, onSettingsClick }) {
   const [themeOpen, setThemeOpen] = useState(false);
   const [musicOpen, setMusicOpen] = useState(false);
   const dropdownInk = pal.bg === "#F4F0E4" ? "#1B1A17" : "#F2EDE1";
@@ -29,6 +29,13 @@ export default function TopControls({ pal, dark, setDark, lang, setLang, theme, 
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 4, position: "relative" }}>
+
+      {/* Settings */}
+      {onSettingsClick && (
+        <button onClick={onSettingsClick} title={t.settings || "Settings"} style={BOX(ink, false, bare)}>
+          <Settings size={18} />
+        </button>
+      )}
 
       {/* Bell — opens notification panel */}
       {onBellClick && (

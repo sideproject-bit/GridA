@@ -304,6 +304,7 @@ export const T = {
         { t: "Manage to-dos", b: "To-dos persist across dates. Check the box to mark as done — completed to-dos are automatically removed at midnight. On desktop, use × to delete manually. On mobile, swipe left to delete." },
         { t: "Weekly view", b: "Switch to the Weekly tab to see all 7 days side by side on a time grid. Events from daily and monthly views appear here automatically — scroll horizontally on mobile." },
         { t: "Monthly view & recurring", b: "In the Monthly tab, add events to future dates or set recurring events by day of week. They'll appear automatically in the daily view on the right day." },
+        { t: "Labels", b: "In the Labels sub-tab, create multi-day range labels like 'Vacation' or 'Sprint Week'. They show as connected color bars spanning the days in Monthly and Weekly views. Tap a label to edit or delete it." },
         { t: "Cloud sync", b: "Tap the ☁ button next to the tab bar to sync your planner across devices. ↑ (this device → cloud) saves your current data; ↓ (cloud → this device) restores a previously saved version. Downloading will overwrite your local data." },
       ],
       mobileSteps: [
@@ -352,6 +353,7 @@ export const T = {
             { t: "Sound & Music", b: "Toggle sound on/off and select a background music track — it loops until you stop it. Some tracks were produced with Suno AI as a base and further edited by hand." },
             { t: "Friends & Sharing", b: "Share your friend code from the Profile page. Friends you add can view your public content. They cannot edit anything — view only." },
             { t: "Saving", b: "Your work auto-saves when your connection is stable. After major edits, press the save button to be safe. Refreshing the page always returns you to the home screen." },
+            { t: "Notifications", b: "The bell icon (top bar or home screen) opens the in-app notification panel. You'll receive notifications for event start times, friend requests, group invites, and contact replies. On desktop, browser notification alerts can be enabled in Settings → Notifications." },
           ],
         },
         {
@@ -363,6 +365,7 @@ export const T = {
             { t: "Sub-tasks", b: "Click '+ sub' on any to-do to add sub-tasks beneath it. The parent shows a live X/Y progress count. Checking the parent toggles all sub-tasks at once. The folder counts as one task in the main progress bar — it's marked done only when all sub-tasks are complete." },
             { t: "Weekly View", b: "The Weekly tab shows all 7 days side-by-side on a time grid. Events from daily and monthly views appear here automatically. Scroll horizontally on mobile. Tap an event to see its details." },
             { t: "Monthly View & Recurring", b: "In the Monthly tab, add events to future dates or set events that repeat by day of week. They appear automatically in the daily view on the right day. You can also edit or delete daily events from here." },
+            { t: "Labels", b: "In the Monthly tab, open the Labels sub-tab to create multi-day range labels (e.g. 'Japan Trip', 'Project Sprint'). Set a title, color, and date range — the label appears as a connected color bar spanning across the matching days in both Monthly and Weekly views. Tap a label to edit or delete it. Past labels are hidden by default but can be revealed with the toggle at the bottom." },
             { t: "Midnight Reset", b: "Time blocks reset at midnight each day. Daily events are automatically moved to Monthly view and kept for up to 60 days. Completed to-dos are removed at midnight; incomplete ones remain. Monthly events are not affected." },
             { t: "Cloud Sync", b: "Tap the ☁ button next to the tab bar to sync your planner across devices. Use ↑ (this device → cloud) to back up your current data, or ↓ (cloud → this device) to restore a previously saved version. Loading from cloud will overwrite your local data." },
           ],
@@ -392,7 +395,7 @@ export const T = {
             { t: "1:1 Chat", b: "Go to Profile → Social and select a friend to start a private conversation. Messages are kept for 30 days. Tap the + button in the chat header to add a shared calendar event visible in both planners." },
             { t: "Groups", b: "Tap 'New Group' to create a group (name up to 15 characters). Invite friends who are already in your friends list. The creator becomes the group admin automatically." },
             { t: "Admin & Members", b: "Admins can add shared events (+ button), invite new members after creation, transfer the admin role, or delete the group entirely. Members can chat and view shared events in their planners — read-only." },
-            { t: "Shared Calendar Events", b: "The + button in any chat (1:1 or group) opens an event form. Saved events appear in all members' Daily, Weekly, and Monthly planner views with a [Group Name] or [Username] prefix. Only admins can delete group events." },
+            { t: "Shared Calendar Events", b: "The + button in any chat (1:1 or group) opens an event form. Saved events appear in all members' Daily, Weekly, and Monthly planner views with a [Group Name] or [Username] prefix. Group admins can edit shared events (✏ icon) and delete them (× icon) directly from the Monthly and Weekly views. Non-admin members can only remove the event from their own view." },
           ],
         },
         {
@@ -774,6 +777,7 @@ export const T = {
         { t: "할 일 관리", b: "할 일은 날짜와 무관하게 유지돼요. 체크박스로 완료 표시하면 자정에 자동으로 삭제돼요. 데스크탑에서는 × 버튼으로, 모바일에서는 왼쪽으로 밀어서 삭제할 수 있어요." },
         { t: "주간 뷰", b: "주간 탭으로 이동하면 7일 일정을 타임 그리드 위에서 한눈에 볼 수 있어요. 일일·월간에서 등록한 일정이 자동으로 표시돼요. 모바일에서는 가로로 스크롤하면 돼요." },
         { t: "월간 뷰 & 반복 일정", b: "월간 탭에서 미래 날짜의 일정을 미리 등록하거나 요일 기반 반복 일정을 설정할 수 있어요. 해당 날짜가 되면 일일 뷰에 자동으로 표시돼요." },
+        { t: "라벨", b: "라벨 서브탭에서 '일본여행', '스프린트 주간' 같은 여러 날 범위 라벨을 만들 수 있어요. 월간·주간 뷰에서 해당 날짜에 걸친 연결 색상 바로 표시돼요. 탭하면 편집·삭제가 가능해요." },
         { t: "클라우드 동기화", b: "탭바 옆 ☁ 버튼으로 기기 간 플래너 데이터를 동기화할 수 있어요. ↑(이 기기 → 클라우드)로 현재 데이터를 저장하고, ↓(클라우드 → 이 기기)로 이전에 저장한 데이터를 불러와요. 불러오기 시 현재 로컬 데이터를 덮어씁니다." },
       ],
       mobileSteps: [
@@ -822,6 +826,7 @@ export const T = {
             { t: "사운드 & 음악", b: "사운드 켜기/끄기와 배경 음악 선택이 가능해요. 음악은 직접 끄기 전까지 반복 재생돼요. 일부 음악은 Suno AI를 베이스로 추가 편집해 제작됐어요." },
             { t: "친구 & 공유", b: "프로필 페이지에서 친구 코드를 공유하세요. 추가된 친구는 내가 공개로 설정한 콘텐츠를 볼 수 있어요. 수정은 불가능하고 보기만 가능해요." },
             { t: "저장", b: "인터넷 연결이 안정적이면 자동으로 저장돼요. 중요한 작업 후에는 저장 버튼을 누르는 걸 권장해요. 새로고침하면 항상 홈 화면으로 돌아가요." },
+            { t: "알림", b: "상단 바 또는 홈 화면의 벨 아이콘을 누르면 인앱 알림 패널이 열려요. 일정 시작, 친구 요청, 그룹 초대, 문의 답변 등의 알림을 받을 수 있어요. 데스크탑에서는 설정 → 알림에서 브라우저 알림도 켤 수 있어요." },
           ],
         },
         {
@@ -833,6 +838,7 @@ export const T = {
             { t: "서브태스크", b: "할 일 오른쪽의 '+ sub' 버튼을 클릭하면 하위 항목을 추가할 수 있어요. 부모 항목에 X/Y 진행 현황이 실시간으로 표시돼요. 부모 체크박스를 클릭하면 모든 서브태스크가 한 번에 토글돼요. 메인 진행 게이지에서 폴더 전체가 태스크 1개로 집계되며, 서브태스크가 전부 완료돼야 완료로 처리돼요." },
             { t: "주간 보기", b: "주간 탭은 7일을 타임 그리드 위에 나란히 보여줘요. 일일·월간에서 등록한 일정이 자동으로 표시돼요. 모바일에서는 가로로 스크롤하면 돼요. 일정을 탭하면 상세 정보를 볼 수 있어요." },
             { t: "월간 보기 & 반복 일정", b: "월간 탭에서 미래 날짜에 일정을 추가하거나 요일별 반복 일정을 설정할 수 있어요. 일일에서 등록한 일정도 여기서 편집하거나 삭제할 수 있어요." },
+            { t: "라벨", b: "월간 탭의 라벨 서브탭에서 여러 날에 걸친 범위 라벨을 만들 수 있어요 (예: '일본여행', '스프린트 주간'). 제목·색상·날짜 범위를 설정하면 월간·주간 뷰에서 해당 날짜에 걸친 연결 색상 바로 표시돼요. 라벨을 탭하면 편집하거나 삭제할 수 있어요. 지난 라벨은 기본적으로 숨겨지지만 하단 토글로 볼 수 있어요." },
             { t: "자정 초기화", b: "타임 블럭은 매일 자정에 초기화돼요. 일일 일정은 자동으로 월간 뷰로 이동되어 최대 60일간 보관돼요. 완료된 할 일은 자정에 삭제되고, 미완료 항목은 유지돼요. 월간 일정은 영향 없어요." },
             { t: "클라우드 동기화", b: "탭바 옆 ☁ 버튼으로 플래너 데이터를 기기 간에 동기화할 수 있어요. ↑(이 기기 → 클라우드)로 현재 데이터를 백업하고, ↓(클라우드 → 이 기기)로 저장된 데이터를 복원해요. 불러오기 시 현재 로컬 데이터를 덮어씁니다." },
           ],
@@ -862,7 +868,7 @@ export const T = {
             { t: "1:1 채팅", b: "프로필 → 소셜 탭에서 친구를 선택하면 1:1 대화를 시작할 수 있어요. 메시지는 30일간 보관돼요. 채팅 헤더의 + 버튼으로 공유 일정을 추가하면 두 사람의 플래너에 동시에 표시돼요." },
             { t: "그룹", b: "'새 그룹' 버튼으로 그룹을 만들 수 있어요. 그룹명은 최대 15자. 이미 친구로 등록된 사람만 초대할 수 있어요. 그룹을 만든 사람이 자동으로 관리자가 돼요." },
             { t: "관리자 & 멤버", b: "관리자는 공유 일정 추가(+ 버튼), 생성 후 멤버 초대, 관리자 이양, 그룹 삭제를 할 수 있어요. 멤버는 채팅 참여와 플래너에서 공유 일정 확인만 가능해요(읽기 전용)." },
-            { t: "공유 캘린더 일정", b: "채팅(1:1 또는 그룹)의 + 버튼으로 일정을 추가할 수 있어요. 저장된 일정은 모든 멤버의 일간·주간·월간 플래너에 [그룹명] 또는 [유저명] 접두어와 함께 표시돼요. 그룹 일정 삭제는 관리자만 가능해요." },
+            { t: "공유 캘린더 일정", b: "채팅(1:1 또는 그룹)의 + 버튼으로 일정을 추가할 수 있어요. 저장된 일정은 모든 멤버의 일간·주간·월간 플래너에 [그룹명] 또는 [유저명] 접두어와 함께 표시돼요. 그룹 관리자는 월간·주간 뷰에서 공유 일정을 직접 편집(✏ 아이콘)하거나 삭제(× 아이콘)할 수 있어요. 일반 멤버는 자신의 뷰에서만 일정을 삭제할 수 있어요." },
           ],
         },
         {

@@ -82,7 +82,9 @@ export default function NotificationPanel({ pal, lang, t, notifications, unreadC
   useEffect(() => { onMarkAllRead(); }, []);  // mark all read on open
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 130, display: "flex", flexDirection: "column", background: pal.bg, color: pal.ink }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 130, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.55)" }}
+      onClick={onClose}>
+    <div onClick={e => e.stopPropagation()} style={{ position: "relative", width: 480, maxWidth: "95vw", maxHeight: "85vh", display: "flex", flexDirection: "column", background: pal.bg, color: pal.ink, border: `2px solid ${pal.accent}`, boxShadow: "0 16px 60px rgba(0,0,0,0.45)" }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 16px 12px", borderBottom: `1px solid ${pal.ink}22` }}>
         <span style={{ fontWeight: 900, fontSize: 17, textTransform: "uppercase", letterSpacing: "-0.01em" }}>
@@ -119,6 +121,7 @@ export default function NotificationPanel({ pal, lang, t, notifications, unreadC
           {txt.swipeHint || (lang === "ko" ? "← 스와이프로 삭제" : "← Swipe to delete")}
         </div>
       )}
+    </div>
     </div>
   );
 }

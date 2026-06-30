@@ -190,9 +190,17 @@ export default function DesktopSettings({
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 120,
+      background: "rgba(0,0,0,0.55)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontFamily: "inherit",
+    }}
+      onClick={onClose}>
+    <div onClick={e => e.stopPropagation()} style={{
+      position: "relative", width: 680, maxWidth: "96vw", height: "82vh",
       background: bg, color: ink,
       display: "flex", flexDirection: "column",
-      fontFamily: "inherit",
+      border: `2px solid ${ink}18`,
+      boxShadow: "0 20px 70px rgba(0,0,0,0.45)",
     }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 24px 14px", borderBottom: border, flexShrink: 0 }}>
@@ -230,6 +238,7 @@ export default function DesktopSettings({
           {renderContent()}
         </div>
       </div>
+    </div>
     </div>
   );
 }
