@@ -1025,8 +1025,8 @@ function AppShell() {
         </div>
       )}
 
-      {/* Copyright footer */}
-      <footer style={{
+      {/* Copyright footer — hidden on home screen */}
+      {view !== "home" && <footer style={{
         marginTop: 48,
         paddingTop: 16,
         borderTop: `1px solid ${pal.ink}18`,
@@ -1037,7 +1037,7 @@ function AppShell() {
         userSelect: "none",
       }}>
         © {new Date().getFullYear()} Miley N. All rights reserved.
-      </footer>
+      </footer>}
     </div>
   );
 }

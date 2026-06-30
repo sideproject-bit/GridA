@@ -103,7 +103,7 @@ export default function NotificationPanel({ pal, lang, t, notifications, unreadC
       </div>
 
       {/* List */}
-      <div style={{ flex: 1, overflowY: "auto" }}>
+      <div style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain" }}>
         {notifications.length === 0 ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, height: "60%", opacity: 0.35 }}>
             <BellOff size={36} color={pal.ink} />

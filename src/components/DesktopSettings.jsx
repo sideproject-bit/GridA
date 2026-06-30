@@ -215,7 +215,7 @@ export default function DesktopSettings({
       {/* Body: sidebar + content */}
       <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
         {/* Category sidebar */}
-        <div style={{ width: 180, flexShrink: 0, borderRight: border, padding: "16px 12px", overflowY: "auto" }}>
+        <div style={{ width: 180, flexShrink: 0, borderRight: border, padding: "16px 12px", overflowY: "auto", overscrollBehavior: "contain" }}>
           {CATS.map(c => (
             <button key={c} onClick={() => setCat(c)} style={{
               width: "100%", textAlign: "left", padding: "10px 12px",
@@ -231,7 +231,7 @@ export default function DesktopSettings({
         </div>
 
         {/* Content */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
+        <div style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain", padding: "24px 28px" }}>
           <div style={{ fontWeight: 900, fontSize: 15, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 20, opacity: 0.7 }}>
             {labels[cat]}
           </div>
