@@ -3,20 +3,22 @@ import { Volume2, VolumeX, Moon, Sun, Globe, Music2, Bell, BellOff, BookOpen, X,
 import { THEMES } from "../theme";
 import { supabase } from "../lib/supabaseClient";
 
-const CATS = ["appearance", "planner", "pomodoro", "notifications", "music", "profile", "guide"];
+const CATS = ["profile", "appearance", "notifications", "planner", "mandalart", "pomodoro", "music", "guide"];
 
 const CAT_LABELS = {
-  en: { appearance: "Appearance", planner: "Planner", pomodoro: "Pomodoro", notifications: "Notifications", music: "Music", profile: "Profile", guide: "Guide" },
-  ko: { appearance: "화면", planner: "플래너", pomodoro: "뽀모도로", notifications: "알림", music: "음악", profile: "프로필", guide: "가이드" },
+  en: { profile: "Profile", appearance: "Appearance", notifications: "Notifications", planner: "Planner", mandalart: "Mandalart", pomodoro: "Pomodoro", music: "Music", guide: "Guide" },
+  ko: { profile: "프로필", appearance: "화면", notifications: "알림", planner: "플래너", mandalart: "만다라트", pomodoro: "뽀모도로", music: "음악", guide: "가이드" },
 };
 
 export default function DesktopSettings({
   pal, dark, setDark, lang, setLang, theme, setTheme,
   soundOn, setSoundOn, notifOn, toggleNotif,
   startView, setStartView, weeklyCompact, onToggleWeeklyCompact,
-  music, t, play, onClose, onPlannerReset, onNavigate,
+  music, t, play, onClose, onPlannerReset, onNavigate, profile, updateProfile,
 }) {
-  const [cat, setCat] = useState("appearance");
+  const [cat, setCat] = useState("profile");
+  const [unameInput, setUnameInput] = useState("");
+  const [unameStatus, setUnameStatus] = useState(null); // null | "ok" | "error" | "saving" | "taken"
   const [pwNew, setPwNew] = useState("");
   const [pwConfirm, setPwConfirm] = useState("");
   const [pwStatus, setPwStatus] = useState(null); // null | "ok" | "error" | "mismatch" | "saving"
@@ -127,12 +129,36 @@ export default function DesktopSettings({
 
     if (cat === "profile") return (
       <>
-        <Section title={lang === "ko" ? "계정" : "Account"}>
-          <Row onClick={() => { onNavigate?.("profile"); onClose(); }}>
-            <User size={16} />
-            {lang === "ko" ? "프로필 편집 (아이디, 소개 등)" : "Edit profile (username, bio, etc.)"}
-            <ChevronRight size={14} style={{ marginLeft: "auto", opacity: 0.4 }} />
-          </Row>
+        <Section title={lang === "ko" ? "사용자 이름" : "Username"}>
+          {profile?.username && (
+            <div style={{ fontSize: 12, opacity: 0.45, marginBottom: 10 }}>
+              {lang === "ko" ? "현재" : "Current"}: <strong>{profile.username}</strong>
+            </div>
+          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <input
+              type="text" value={unameInput} onChange={e => { setUnameInput(e.target.value); setUnameStatus(null); }}
+              placeholder={lang === "ko" ? "새 사용자 이름" : "New username"}
+              style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", fontSize: 13, fontFamily: "inherit", border: `1px solid ${ink}22`, borderRadius: 6, background: "transparent", color: ink, outline: "none" }}
+            />
+            {unameStatus === "taken"  && <div style={{ fontSize: 11, color: "#C7382E" }}>{lang === "ko" ? "이미 사용 중인 이름이에요." : "Username already taken."}</div>}
+            {unameStatus === "error"  && <div style={{ fontSize: 11, color: "#C7382E" }}>{lang === "ko" ? "변경에 실패했어요. 다시 시도해주세요." : "Failed to update. Please try again."}</div>}
+            {unameStatus === "ok"     && <div style={{ fontSize: 11, color: "#4caf50", display: "flex", alignItems: "center", gap: 4 }}><Check size={12} />{lang === "ko" ? "이름이 변경됐어요!" : "Username updated!"}</div>}
+            <button
+              disabled={unameStatus === "saving" || !unameInput.trim()}
+              onClick={async () => {
+                const newName = unameInput.trim();
+                if (!newName) return;
+                setUnameStatus("saving");
+                const { data: existing } = await supabase.from("profiles").select("id").eq("username", newName).maybeSingle();
+                if (existing) { setUnameStatus("taken"); return; }
+                const { error } = await updateProfile?.({ username: newName });
+                if (error) { setUnameStatus("error"); } else { setUnameStatus("ok"); setUnameInput(""); }
+              }}
+              style={{ padding: "10px", background: unameStatus === "saving" ? ink + "44" : acc, color: "#fff", border: "none", fontWeight: 800, fontSize: 12, cursor: unameStatus === "saving" ? "not-allowed" : "pointer", fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              {unameStatus === "saving" ? (lang === "ko" ? "저장 중…" : "Saving…") : (lang === "ko" ? "변경" : "Update")}
+            </button>
+          </div>
         </Section>
         <Section title={lang === "ko" ? "비밀번호 변경" : "Change password"}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -164,16 +190,24 @@ export default function DesktopSettings({
       </>
     );
 
+    if (cat === "mandalart") return (
+      <div style={{ fontSize: 12, opacity: 0.45, lineHeight: 1.8 }}>
+        {lang === "ko"
+          ? "만다라트(Mandalart)는 일본의 만다라(Manda-la)에서 유래한 목표 시각화 도구예요. 9×9 격자의 중앙에 핵심 목표를 적고, 주변 8칸에 하위 목표, 그 바깥 64칸에 구체적인 실행 항목을 채워나가세요."
+          : "Mandalart is a goal visualization tool derived from the Japanese Manda-la. Place your main goal in the center, surround it with 8 sub-goals, then fill the outer 64 cells with concrete action items."}
+      </div>
+    );
+
     if (cat === "guide") return (
       <>
         <Section title={lang === "ko" ? "사용 가이드" : "User guide"}>
-          <Row onClick={() => { onNavigate?.("about", { tab: "guide" }); onClose(); }}>
+          <Row onClick={() => onNavigate?.("about", { tab: "guide" })}>
             <BookOpen size={16} />
             {lang === "ko" ? "전체 기능 가이드 보기" : "View full feature guide"}
             <ChevronRight size={14} style={{ marginLeft: "auto", opacity: 0.4 }} />
           </Row>
         </Section>
-        <div style={{ fontSize: 12, opacity: 0.35, lineHeight: 1.75 }}>
+        <div style={{ fontSize: 12, opacity: 0.4, lineHeight: 1.8 }}>
           {lang === "ko"
             ? "플래너, 만다라트, 뽀모도로, 소셜 등 GridA의 모든 기능에 대한 설명을 확인할 수 있어요."
             : "Learn about all GridA features — Planner, Mandalart, Pomodoro, Social, and more."}
