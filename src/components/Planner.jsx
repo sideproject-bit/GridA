@@ -820,6 +820,8 @@ export default function Planner({ t, pal, dark, userId, theme, lang, groupEvents
           spans={spans}
           onSpansChange={setSpans}
           groupEvents={groupEvents}
+          onDeleteGroupEvent={handleDeleteGroupEvent}
+          onEditGroupEvent={handleEditGroupEvent}
         />
       )}
     </div>

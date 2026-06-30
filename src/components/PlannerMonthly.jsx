@@ -32,7 +32,7 @@ function evtTime(evt) {
   return start && end ? `${start} – ${end}` : null;
 }
 
-export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEventsChange, onDeleteDailyEvent, onEditDailyEvent, onEditCalEvent, recurring, onRecurringChange, onSkipRecurring, spans, onSpansChange, groupEvents = [] }) {
+export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEventsChange, onDeleteDailyEvent, onEditDailyEvent, onEditCalEvent, recurring, onRecurringChange, onSkipRecurring, spans, onSpansChange, groupEvents = [], onDeleteGroupEvent, onEditGroupEvent }) {
   const pl  = t.planner;
   const ink = pal.ink;
   const acc = pal.accent;
@@ -188,6 +188,15 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
     setEditEvt({ evt, dateKey });
   }
 
+  function openEditGroupEvt(ge, key) {
+    setEditTitle(ge.title);
+    setEditColor(ge.color ?? EVENT_COLORS[0]);
+    setEditMemo(ge.memo ?? "");
+    setEditStart(ge.start_time ?? "");
+    setEditEnd(ge.end_time ?? "");
+    setEditEvt({ evt: { ...ge, _isGroupEvent: true }, dateKey: key });
+  }
+
   function saveEditEvt() {
     if (!editEvt || !editTitle.trim()) return;
     const newStartCell = editStart ? timeToCell(editStart) : editEvt.evt.startCell;
@@ -198,7 +207,9 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
       ...(editStart && { startTime: editStart, startCell: newStartCell }),
       ...(editEnd   && { endTime:   editEnd,   endCell:   newEndCell }),
     };
-    if (editEvt.evt._daily) {
+    if (editEvt.evt._isGroupEvent) {
+      onEditGroupEvent?.(editEvt.evt.id, { title: editTitle.trim(), color: editColor, memo: editMemo, startTime: editStart || editEvt.evt.start_time, endTime: editEnd || editEvt.evt.end_time });
+    } else if (editEvt.evt._daily) {
       onEditDailyEvent?.(editEvt.evt.id, changes);
     } else {
       onEditCalEvent?.(editEvt.dateKey, editEvt.evt.id, changes);
@@ -381,7 +392,7 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
                 </div>
               ))}
 
-              {/* Group events (read-only) */}
+              {/* Group events */}
               {dayGroupEvents.map(ge => (
                 <div key={ge.id} style={{
                   display: "flex", alignItems: "flex-start", gap: 8, padding: "7px 10px", marginBottom: 6,
@@ -399,6 +410,10 @@ export default function PlannerMonthly({ t, pal, dark, lang, calEvents, onCalEve
                     )}
                     {ge.memo && <div style={{ fontSize: 11, opacity: 0.55, marginTop: 3 }}>{ge.memo}</div>}
                   </div>
+                  {ge._isAdmin && (
+                    <button onClick={() => openEditGroupEvt(ge, key)} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.45, fontSize: 12, padding: "0 2px", lineHeight: 1 }}>✏</button>
+                  )}
+                  <button onClick={() => onDeleteGroupEvent?.(ge.id)} style={{ background: "none", border: "none", cursor: "pointer", color: ink, opacity: 0.3, fontSize: 16, padding: 0, lineHeight: 1 }}>×</button>
                 </div>
               ))}
 

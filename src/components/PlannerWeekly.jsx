@@ -233,6 +233,16 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
       const newDateKey = dayKeysRef.current[newDayIdx];
       if (startCell === dr.origStartCell && endCell === dr.origEndCell && newDateKey === dr.dateKey) return;
 
+      // Group event drag: save via onEditGroupEvent
+      if (dr.evt._isGroupEvent) {
+        onEditGroupEvent?.(dr.evt.id, {
+          date: newDateKey,
+          startTime: cellToTime(startCell),
+          endTime:   cellToTimeEnd(endCell),
+        });
+        return;
+      }
+
       // Delegate to unified midnight handler if:
       // (a) event is already a pair, or (b) new position crosses midnight
       if (dr.type === "move" && onMoveMidnightEvent) {
@@ -566,9 +576,11 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
                     const groupCells = dayGroupEvts.map(({ ge, carryOver }) => {
                       const isCross = ge.start_time && ge.end_time && ge.start_time > ge.end_time;
                       const sc = timeToCell(ge.start_time);
+                      const ec = ge.end_time ? timeToCell(ge.end_time) : sc;
                       return {
                         startCell: carryOver ? 0 : sc,
-                        endCell:   isCross ? (HOURS * COLS_DAY - 1) : (ge.end_time ? timeToCell(ge.end_time) : sc),
+                        // carryOver = next day of a midnight-crossing event → use actual end time, not full day
+                        endCell: carryOver ? ec : (isCross ? (HOURS * COLS_DAY - 1) : ec),
                       };
                     });
 
@@ -677,7 +689,8 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
                           const ec = ge.end_time ? timeToCell(ge.end_time) : sc;
                           if (sc == null) return null;
                           const startCell = carryOver ? 0 : sc;
-                          const endCell   = isCross ? (HOURS * COLS_DAY - 1) : ec;
+                          // carryOver = next day portion → use actual end time; otherwise full-day if midnight-crossing
+                          const endCell = carryOver ? ec : (isCross ? (HOURS * COLS_DAY - 1) : ec);
                           const topPx = startCell * PX_PER_CELL + 1;
                           const botPx = Math.min(totalH, (endCell + 1) * PX_PER_CELL) - 1;
                           const htPx  = Math.max(PX_PER_CELL - 2, botPx - topPx);
@@ -686,9 +699,26 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
                           return (
                             <div key={`${ge.id}_${carryOver ? "co" : "s"}`}
                               data-evt="1"
-                              onClick={ge._isAdmin ? () => {
-                                const sc = timeToCell(ge.start_time) ?? 0;
-                                const ec = ge.end_time ? timeToEndCell(ge.end_time) : sc;
+                              onPointerDown={ge._isAdmin && editMode && !carryOver ? (e) => {
+                                if (e.button !== 0) return;
+                                e.stopPropagation();
+                                e.preventDefault();
+                                const colWidth = gridRef.current ? (gridRef.current.scrollWidth - LABEL_W) / 7 : 80;
+                                const dr = {
+                                  type: "move",
+                                  evt: { ...ge, _isGroupEvent: true, startCell, endCell },
+                                  dateKey,
+                                  origStartCell: startCell, origEndCell: endCell,
+                                  origDayIdx: dayKeysRef.current.indexOf(dateKey),
+                                  startY: e.clientY, startX: e.clientX, colWidth,
+                                  curStartCell: null, curEndCell: null, curDayIdx: null,
+                                  moved: false,
+                                };
+                                dragRef.current = dr;
+                                setDraggingId(ge.id);
+                                attachDrag(dr);
+                              } : undefined}
+                              onClick={ge._isAdmin && !dragRef.current ? () => {
                                 setViewEvt({
                                   dateKey: ge.date,
                                   event: {
@@ -696,8 +726,7 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
                                     _isGroupEvent: true,
                                     startTime: ge.start_time ?? "",
                                     endTime: ge.end_time ?? "",
-                                    startCell: sc,
-                                    endCell: ec,
+                                    startCell, endCell,
                                   },
                                 });
                               } : undefined}
@@ -707,7 +736,9 @@ export default function PlannerWeekly({ t, pal, dark, compact = false, onToggleC
                                 borderLeft: `2px dashed ${blockColor}`,
                                 borderRadius: 2, padding: "1px 3px",
                                 overflow: "hidden", zIndex: 1,
-                                cursor: ge._isAdmin ? "pointer" : "default",
+                                cursor: ge._isAdmin ? (editMode ? "grab" : "pointer") : "default",
+                                touchAction: ge._isAdmin && editMode ? "none" : undefined,
+                                userSelect: "none",
                               }}>
                               <div style={{ fontSize: 8, opacity: 0.55, lineHeight: 1.2, color: dark ? "#fff" : "#111" }}>{ge._groupLabel}</div>
                               <div style={{ fontSize: 9, fontWeight: 700, lineHeight: 1.3, color: dark ? "#fff" : "#111", overflow: "hidden" }}>
